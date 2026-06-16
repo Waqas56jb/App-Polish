@@ -7,10 +7,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import {
-  BookOpen, Search, Copy, Trash2, Edit3,
+  BookOpen, Search, Copy, Trash2, Edit3, Maximize2,
   FileText, Calendar, Film, LayoutGrid, MessageSquare,
   Filter
 } from 'lucide-react'
+import { ContentCardModal } from './content-modal'
 
 type FilterType = 'todos' | 'reel' | 'carrusel' | 'story'
 type FilterObjetivo = '' | 'autoridad' | 'reservas' | 'visibilidad' | 'educación' | 'venta' | 'deseo' | 'objeción'
@@ -21,6 +22,8 @@ export function Biblioteca() {
   const [filterObjetivo, setFilterObjetivo] = useState<FilterObjetivo>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [openItem, setOpenItem] = useState<ContentItem | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   const filteredItems = libraryItems.filter((item) => {
     if (filterType !== 'todos' && item.tipo !== filterType) return false
@@ -195,12 +198,25 @@ export function Biblioteca() {
                   </div>
 
                   <div className="flex gap-1 ml-3 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setOpenItem(item)
+                        setModalOpen(true)
+                      }}
+                      className="text-[#7D2E42] hover:text-[#933A54] hover:bg-[#F3E8E5]"
+                      title="Abrir contenido"
+                    >
+                      <Maximize2 className="w-4 h-4" />
+                    </Button>
                     {(item.guion || item.copy) && (
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => copyToClipboard([item.guion, item.copy, item.hashtags].filter(Boolean).join('\n\n'))}
                         className="text-[#C17C83] hover:text-[#7D2E42] hover:bg-[#F3E8E5]"
+                        title="Copiar"
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -211,6 +227,7 @@ export function Biblioteca() {
                         variant="ghost"
                         onClick={() => scheduleContentItem(item.id, new Date().toISOString().split('T')[0])}
                         className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        title="Programar"
                       >
                         <Calendar className="w-4 h-4" />
                       </Button>
@@ -220,6 +237,7 @@ export function Biblioteca() {
                       variant="ghost"
                       onClick={() => removeLibraryItem(item.id)}
                       className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                      title="Eliminar"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -230,6 +248,15 @@ export function Biblioteca() {
           ))
         )}
       </div>
+
+      {/* Content Modal */}
+      <ContentCardModal
+        item={openItem}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onDelete={removeLibraryItem}
+      />
     </div>
   )
 }
+

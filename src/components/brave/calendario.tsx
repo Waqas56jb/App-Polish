@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useAppStore, ContentItem } from '@/lib/store'
+import { useState } from 'react'
+import { useAppStore, ContentItem, generateId } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   ChevronLeft, ChevronRight, Film, LayoutGrid,
-  MessageSquare, Trash2, Edit3, Calendar as CalendarIcon
+  MessageSquare, Trash2, Calendar as CalendarIcon,
+  RefreshCw, Maximize2, Pencil
 } from 'lucide-react'
 import {
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
@@ -15,31 +16,41 @@ import {
   isSameMonth, isSameDay, parseISO, isValid
 } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { ContentCardModal } from './content-modal'
 
 type ViewMode = 'mes' | 'semana'
 
 export function CalendarioView() {
-  const { libraryItems, removeLibraryItem, updateLibraryItem } = useAppStore()
+  const { libraryItems, removeLibraryItem, updateLibraryItem, replaceLibraryItem, setIsLoading, brandProfile } = useAppStore()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [viewMode, setViewMode] = useState<ViewMode>('mes')
+  const [openItem, setOpenItem] = useState<ContentItem | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editingDateId, setEditingDateId] = useState<string | null>(null)
 
   const scheduledItems = libraryItems.filter(
     (item) => item.estado === 'programado' || item.estado === 'aprobado'
   )
 
   const getItemsForDate = (date: Date) => {
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+    const dayName = dayNames[date.getDay()]
     return scheduledItems.filter((item) => {
-      if (!item.fecha) return false
-      try {
-        const itemDate = parseISO(item.fecha)
-        return isValid(itemDate) && isSameDay(itemDate, date)
-      } catch {
-        return false
+      // Match by exact fecha
+      if (item.fecha) {
+        try {
+          const itemDate = parseISO(item.fecha)
+          if (isValid(itemDate) && isSameDay(itemDate, date)) return true
+        } catch {
+          // ignore
+        }
       }
+      // Also match by diaSemana if no fecha
+      if (!item.fecha && item.diaSemana === dayName) return true
+      return false
     })
   }
 
-  // Monthly view
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
   const calStart = startOfWeek(monthStart, { weekStartsOn: 1 })
@@ -52,7 +63,6 @@ export function CalendarioView() {
     day = addDays(day, 1)
   }
 
-  // Weekly view
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
@@ -85,6 +95,54 @@ export function CalendarioView() {
   const goToToday = () => setCurrentDate(new Date())
 
   const weekDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+  const handleOpen = (item: ContentItem) => {
+    // Get latest from store
+    const current = libraryItems.find(c => c.id === item.id) || item
+    setOpenItem(current)
+    setModalOpen(true)
+  }
+
+  const handleRegenerate = async (item: ContentItem) => {
+    setIsLoading(true, 'Regenerando contenido...')
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'script',
+          brandProfile,
+          context: {
+            titulo: item.titulo,
+            tipo: item.tipo,
+            objetivo: item.objetivo,
+            servicio: item.servicio,
+            formato: item.formato,
+          },
+        }),
+      })
+      const data = await res.json()
+      if (data.result && !data.result.raw) {
+        const updated: ContentItem = {
+          ...item,
+          guion: data.result.guion || item.guion,
+          copy: data.result.copy || item.copy,
+          hashtags: data.result.hashtags || item.hashtags,
+          textoPortada: data.result.textoPortada || item.textoPortada,
+        }
+        replaceLibraryItem(item.id, updated)
+      }
+    } catch (error) {
+      console.error('Regenerate error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleChangeDate = (id: string, fecha: string) => {
+    updateLibraryItem(id, { fecha, estado: 'programado' })
+    setEditingDateId(null)
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -153,7 +211,6 @@ export function CalendarioView() {
       {/* Monthly View */}
       {viewMode === 'mes' && (
         <Card className="border-none shadow-md overflow-hidden">
-          {/* Week day headers */}
           <div className="grid grid-cols-7 bg-[#F3E8E5]">
             {weekDayNames.map((d) => (
               <div key={d} className="p-3 text-center text-xs font-bold text-[#7D2E42] uppercase tracking-wider">
@@ -162,7 +219,6 @@ export function CalendarioView() {
             ))}
           </div>
 
-          {/* Calendar grid */}
           <div className="grid grid-cols-7">
             {calendarDays.map((date, idx) => {
               const items = getItemsForDate(date)
@@ -192,6 +248,7 @@ export function CalendarioView() {
                         key={item.id}
                         className={`${getTipoColor(item.tipo)} text-white text-[10px] px-1.5 py-0.5 rounded-md truncate flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity`}
                         title={item.titulo}
+                        onClick={() => handleOpen(item)}
                       >
                         {getTipoIcon(item.tipo)}
                         <span className="truncate">{item.titulo}</span>
@@ -210,7 +267,7 @@ export function CalendarioView() {
         </Card>
       )}
 
-      {/* Weekly View */}
+      {/* Weekly View with full controls */}
       {viewMode === 'semana' && (
         <div className="space-y-3">
           {weekDays.map((date, idx) => {
@@ -241,15 +298,55 @@ export function CalendarioView() {
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm truncate">{item.titulo}</p>
                               <p className="text-xs opacity-80 truncate">{item.servicio} · {item.objetivo}</p>
+                              {editingDateId === item.id && (
+                                <div className="mt-2 bg-white/20 p-2 rounded-lg">
+                                  <label className="text-xs text-white/90 block mb-1">Cambiar fecha:</label>
+                                  <input
+                                    type="date"
+                                    value={item.fecha || ''}
+                                    onChange={(e) => handleChangeDate(item.id, e.target.value)}
+                                    className="text-xs px-2 py-1 rounded text-[#2D1F22]"
+                                    autoFocus
+                                  />
+                                </div>
+                              )}
                             </div>
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 shrink-0">
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="text-white/70 hover:text-white hover:bg-white/20 h-7 w-7 p-0"
-                                onClick={() => removeLibraryItem(item.id)}
+                                className="text-white/80 hover:text-white hover:bg-white/20 h-7 w-7 p-0"
+                                onClick={() => handleOpen(item)}
+                                title="Abrir contenido"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Maximize2 className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-white/80 hover:text-white hover:bg-white/20 h-7 w-7 p-0"
+                                onClick={() => handleRegenerate(item)}
+                                title="Regenerar contenido"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-white/80 hover:text-white hover:bg-white/20 h-7 w-7 p-0"
+                                onClick={() => setEditingDateId(editingDateId === item.id ? null : item.id)}
+                                title="Cambiar fecha"
+                              >
+                                {editingDateId === item.id ? <Pencil className="w-3.5 h-3.5 fill-white" /> : <CalendarIcon className="w-3.5 h-3.5" />}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-white/80 hover:text-white hover:bg-white/20 h-7 w-7 p-0"
+                                onClick={() => removeLibraryItem(item.id)}
+                                title="Eliminar"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </div>
                           </div>
@@ -269,26 +366,67 @@ export function CalendarioView() {
         <Card className="border-none shadow-md mt-6">
           <CardContent className="p-5">
             <h3 className="text-base font-bold text-[#2D1F22] mb-4">Todos los Contenidos Programados</h3>
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-96 overflow-y-auto">
               {scheduledItems.map((item) => (
                 <div
                   key={item.id}
                   className="flex items-center gap-3 p-3 rounded-xl bg-[#FBF7F5] hover:bg-[#F3E8E5] transition-colors"
                 >
-                  <div className={`${getTipoColor(item.tipo)} text-white p-2 rounded-lg`}>
+                  <div className={`${getTipoColor(item.tipo)} text-white p-2 rounded-lg shrink-0`}>
                     {getTipoIcon(item.tipo)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-[#2D1F22] truncate">{item.titulo}</p>
                     <p className="text-xs text-muted-foreground">{item.servicio} · {item.objetivo}</p>
                   </div>
-                  <div className="flex gap-2 items-center">
-                    {item.fecha && (
-                      <span className="text-xs text-muted-foreground">{item.fecha}</span>
+                  <div className="flex gap-1 items-center shrink-0">
+                    {editingDateId === item.id ? (
+                      <input
+                        type="date"
+                        value={item.fecha || ''}
+                        onChange={(e) => handleChangeDate(item.id, e.target.value)}
+                        className="text-xs px-2 py-1 border border-[#E0D5D1] rounded text-[#2D1F22]"
+                        autoFocus
+                      />
+                    ) : (
+                      <span className="text-xs text-muted-foreground mr-2">{item.fecha || 'Sin fecha'}</span>
                     )}
-                    <Badge className={`${getTipoColor(item.tipo)} text-white text-xs`}>
-                      {item.tipo}
-                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-[#7D2E42] hover:bg-[#F3E8E5]"
+                      onClick={() => handleOpen(item)}
+                      title="Abrir contenido"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-[#C17C83] hover:bg-[#F3E8E5]"
+                      onClick={() => handleRegenerate(item)}
+                      title="Regenerar"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-[#7D2E42] hover:bg-[#F3E8E5]"
+                      onClick={() => setEditingDateId(editingDateId === item.id ? null : item.id)}
+                      title="Cambiar fecha"
+                    >
+                      <CalendarIcon className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => removeLibraryItem(item.id)}
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -296,6 +434,14 @@ export function CalendarioView() {
           </CardContent>
         </Card>
       )}
+
+      {/* Content Modal */}
+      <ContentCardModal
+        item={openItem}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onDelete={removeLibraryItem}
+      />
     </div>
   )
 }

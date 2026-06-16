@@ -8,12 +8,14 @@ import {
   BookOpen,
   Crown,
   Lightbulb,
+  Instagram,
 } from 'lucide-react'
 
 const modules: { key: ModuleType; label: string; icon: React.ReactNode }[] = [
   { key: 'marca', label: 'Mi Marca', icon: <Crown className="w-5 h-5" /> },
   { key: 'planificar', label: 'Planificar', icon: <Calendar className="w-5 h-5" /> },
   { key: 'crear', label: 'Crear', icon: <PenTool className="w-5 h-5" /> },
+  { key: 'stories', label: 'Stories BRÄVE', icon: <Instagram className="w-5 h-5" /> },
   { key: 'biblioteca', label: 'Biblioteca', icon: <BookOpen className="w-5 h-5" /> },
   { key: 'calendario', label: 'Calendario', icon: <Sparkles className="w-5 h-5" /> },
 ]

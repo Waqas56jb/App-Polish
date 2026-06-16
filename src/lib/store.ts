@@ -46,8 +46,10 @@ export interface ContentItem {
   formato: string
   estado: 'borrador' | 'aprobado' | 'programado'
   fecha: string
+  diaSemana: string
   slides: SlideData[]
   storiesData: StoryData[]
+  descripcion: string
   planId: string
   createdAt: string
 }
@@ -62,7 +64,7 @@ export interface ContentPlan {
   createdAt: string
 }
 
-export type ModuleType = 'marca' | 'planificar' | 'crear' | 'biblioteca' | 'calendario'
+export type ModuleType = 'marca' | 'planificar' | 'crear' | 'biblioteca' | 'calendario' | 'stories'
 
 interface AppState {
   activeModule: ModuleType
@@ -72,6 +74,14 @@ interface AppState {
   crearSubModule: 'reels' | 'stories' | 'carruseles'
   isLoading: boolean
   loadingMessage: string
+  currentPlanItems: ContentItem[]
+  currentPlanConfig: {
+    tipo: 'semanal' | 'mensual'
+    tipoContenido: 'reels' | 'carruseles' | 'mezcla'
+    servicios: string[]
+    frecuencia: number
+    objetivo: string
+  } | null
 
   setActiveModule: (module: ModuleType) => void
   setBrandProfile: (profile: BrandProfile) => void
@@ -85,6 +95,14 @@ interface AppState {
   scheduleContentItem: (id: string, fecha: string) => void
   setCrearSubModule: (sub: 'reels' | 'stories' | 'carruseles') => void
   setIsLoading: (loading: boolean, message?: string) => void
+  replaceLibraryItem: (id: string, newItem: ContentItem) => void
+  reorderLibraryItems: (ids: string[]) => void
+  setCurrentPlanItems: (items: ContentItem[]) => void
+  updateCurrentPlanItem: (id: string, updates: Partial<ContentItem>) => void
+  removeCurrentPlanItem: (id: string) => void
+  addCurrentPlanItem: (item: ContentItem) => void
+  setCurrentPlanConfig: (config: AppState['currentPlanConfig']) => void
+  clearCurrentPlan: () => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -97,13 +115,27 @@ export const useAppStore = create<AppState>()(
       crearSubModule: 'reels',
       isLoading: false,
       loadingMessage: '',
+      currentPlanItems: [],
+      currentPlanConfig: null,
 
       setActiveModule: (module) => set({ activeModule: module }),
       setBrandProfile: (profile) => set({ brandProfile: profile }),
-      addContentPlan: (plan) => set((state) => ({ contentPlans: [...state.contentPlans, plan] })),
+      addContentPlan: (plan) => set((state) => {
+        // Idempotent: skip if plan with same id exists
+        if (state.contentPlans.some(p => p.id === plan.id)) return state
+        return { contentPlans: [...state.contentPlans, plan] }
+      }),
       removeContentPlan: (id) => set((state) => ({ contentPlans: state.contentPlans.filter(p => p.id !== id) })),
-      addLibraryItem: (item) => set((state) => ({ libraryItems: [...state.libraryItems, item] })),
-      addLibraryItems: (items) => set((state) => ({ libraryItems: [...state.libraryItems, ...items] })),
+      addLibraryItem: (item) => set((state) => {
+        if (state.libraryItems.some(i => i.id === item.id)) return state
+        return { libraryItems: [...state.libraryItems, item] }
+      }),
+      addLibraryItems: (items) => set((state) => {
+        const existingIds = new Set(state.libraryItems.map(i => i.id))
+        const newItems = items.filter(i => !existingIds.has(i.id))
+        if (newItems.length === 0) return state
+        return { libraryItems: [...state.libraryItems, ...newItems] }
+      }),
       updateLibraryItem: (id, updates) => set((state) => ({
         libraryItems: state.libraryItems.map(item => item.id === id ? { ...item, ...updates } : item)
       })),
@@ -118,6 +150,27 @@ export const useAppStore = create<AppState>()(
       })),
       setCrearSubModule: (sub) => set({ crearSubModule: sub }),
       setIsLoading: (loading, message = '') => set({ isLoading: loading, loadingMessage: message }),
+      replaceLibraryItem: (id, newItem) => set((state) => ({
+        libraryItems: state.libraryItems.map(item => item.id === id ? newItem : item)
+      })),
+      reorderLibraryItems: (ids) => set((state) => {
+        const map = new Map(state.libraryItems.map(item => [item.id, item]))
+        const reordered = ids.map(id => map.get(id)).filter(Boolean) as ContentItem[]
+        const others = state.libraryItems.filter(item => !ids.includes(item.id))
+        return { libraryItems: [...reordered, ...others] }
+      }),
+      setCurrentPlanItems: (items) => set({ currentPlanItems: items }),
+      updateCurrentPlanItem: (id, updates) => set((state) => ({
+        currentPlanItems: state.currentPlanItems.map(item => item.id === id ? { ...item, ...updates } : item)
+      })),
+      removeCurrentPlanItem: (id) => set((state) => ({
+        currentPlanItems: state.currentPlanItems.filter(item => item.id !== id)
+      })),
+      addCurrentPlanItem: (item) => set((state) => ({
+        currentPlanItems: [...state.currentPlanItems, item]
+      })),
+      setCurrentPlanConfig: (config) => set({ currentPlanConfig: config }),
+      clearCurrentPlan: () => set({ currentPlanItems: [], currentPlanConfig: null }),
     }),
     {
       name: 'brave-studio-storage',
@@ -127,6 +180,8 @@ export const useAppStore = create<AppState>()(
         contentPlans: state.contentPlans,
         libraryItems: state.libraryItems,
         crearSubModule: state.crearSubModule,
+        currentPlanItems: state.currentPlanItems,
+        currentPlanConfig: state.currentPlanConfig,
       }),
     }
   )

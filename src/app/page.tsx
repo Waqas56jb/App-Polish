@@ -7,6 +7,7 @@ import { Planificar } from '@/components/brave/planificar'
 import { Crear } from '@/components/brave/crear'
 import { Biblioteca } from '@/components/brave/biblioteca'
 import { CalendarioView } from '@/components/brave/calendario'
+import { StoriesBrave } from '@/components/brave/stories-brave'
 import { DameUnaIdea } from '@/components/brave/dame-una-idea'
 import { Lightbulb } from 'lucide-react'
 import { useSyncExternalStore } from 'react'
@@ -36,6 +37,7 @@ export default function Home() {
       case 'marca': return <MiMarca />
       case 'planificar': return <Planificar />
       case 'crear': return <Crear />
+      case 'stories': return <StoriesBrave />
       case 'biblioteca': return <Biblioteca />
       case 'calendario': return <CalendarioView />
       default: return <MiMarca />
