@@ -61,3 +61,58 @@ Stage Summary:
 - The 3-story structure strictly follows the BRÄVE methodology: Story 1 opens with a clienta-centered problem, Story 2 explains what the stylist detected/analyzed/decided (authority), Story 3 shows the client benefit + CTA with keyword
 - Both Modo Texto and Hablando a cámara modes are wired through to the AI prompt
 - Stories can be saved to the existing library as ContentItem with tipo='story' for reuse in Biblioteca/Calendario
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Evolve the Stories BRÄVE module per user request: remove copy caption, ask how many stories (default 3), add audio input, support poll questions with text+answers, and add a Caja de Preguntas mode for generating fictional client questions + answers per service.
+
+Work Log:
+- Updated /api/ai route 'stories-brave' case:
+  · Added numStories param (default 3, clamped 1-10)
+  · Added optional 'encuesta' object per story { pregunta, respuestas[] }
+  · Removed copyCaption requirement from response shape
+  · Updated system+user prompts to instruct: at least one story should include an encuesta
+  · Made structure flexible for arbitrary number of stories (Story 1 = Problema, intermediate = Autoridad, last = Resultado+Acción)
+- Added new 'preguntas-caja' case in /api/ai route:
+  · Accepts servicios[], numPreguntas, modo (texto|camara)
+  · Generates fictional but realistic client questions distributed across selected services
+  · Each question includes a professional answer in the selected mode (text vs camera script)
+  · Returns { servicios[], preguntas[] } where each pregunta has { id, servicio, pregunta, respuesta, modo }
+- Added new /api/asr/route.ts endpoint:
+  · Accepts { audioBase64 } POST body
+  · Uses z-ai-web-dev-sdk audio.asr.create() to transcribe
+  · Returns { text } with transcribed text
+- Completely rewrote src/components/brave/stories-brave.tsx with two-tab layout:
+  · Top tab toggle: "Secuencia de Stories" | "Caja de Preguntas"
+  · Secuencia tab:
+    - Service chip selector (17 predefined services)
+    - Free-text description of the work
+    - AUDIO RECORDING: MediaRecorder API captures audio (webm), in-browser playback, "Transcribir a texto" button calls /api/asr and appends transcription to trabajoRealizado
+    - Optional extra-details field
+    - numStories input (number + quick chips 2/3/4/5/6) with "Recomendado: 3" badge
+    - Mode selector (Texto / Hablando a cámara)
+    - Result: summary card (trabajo, problemaCliente, palabraClave), stories cards with copy buttons, NEW encuesta block (question + numbered options) when story.encuesta is present, hashtags block, action buttons (Copiar todo, Guardar en biblioteca, Regenerar)
+    - Removed copyCaption from UI entirely
+  · Caja de Preguntas tab:
+    - Explanation card explaining how a question box works
+    - Multi-select service chips (with check marks, removable)
+    - Custom service input (Enter to add)
+    - numPreguntas input (1-20) with quick chips 3/5/8/10/15
+    - Mode selector (Texto / Hablando a cámara) — affects how answers are written
+    - Result: summary card (servicios, total preguntas, modo), per-question card with client question (italic, in quotes) + stylist answer in a gold-tinted box, copy answer / copy pair buttons, global action buttons
+    - Save to library creates one ContentItem per question (tipo='story', titulo='Pregunta caja — servicio', guion contains both Q and A)
+- Verified end-to-end via agent-browser:
+  · Secuencia tab: selected Balayage → clicked "Crear 3 Stories BRÄVE" → AI returned 3 stories with Story 1 containing encuesta (pregunta + 4 respuestas), no copyCaption field
+  · Caja de Preguntas tab: selected Balayage + Alisado → clicked "Generar 5 preguntas" → AI returned 5 fictional client questions distributed between both services, each with professional answer, all action buttons (Copiar, Copiar pregunta+respuesta, Copiar todo, Guardar, Regenerar) visible and functional
+- Saved two screenshots:
+  · /home/z/my-project/download/stories-brave-secuencia-encuesta.png
+  · /home/z/my-project/download/stories-brave-caja-preguntas.png
+- No JS console errors
+
+Stage Summary:
+- Stories BRÄVE module now has two modes via top tab toggle: Secuencia de Stories (work→sequence) and Caja de Preguntas (services→Q&A)
+- Secuencia: numStories configurable (default 3, recommended), audio input with in-browser recording + ASR transcription, optional encuesta per story with question + answers, no copy caption (user-requested)
+- Caja de Preguntas: multi-service selection, configurable number of questions, mode toggle (texto/cámara) affects answer style, each Q+A pair copyable individually
+- Both modes save to library as ContentItems for reuse in Biblioteca/Calendario
+- ASR endpoint (/api/asr) functional for future voice input across other modules
