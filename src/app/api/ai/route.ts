@@ -460,6 +460,216 @@ Responde SOLO con un JSON:
         break
       }
 
+      case 'asistente-brave': {
+        const { mensaje, historial, roadmap } = context
+        const scores = roadmap || { comunicacion: 5, stories: 5, constancia: 5, autoridad: 5, ventas: 5 }
+        const weakerAreas = Object.entries(scores)
+          .sort((a: any, b: any) => a[1] - b[1])
+          .slice(0, 2)
+          .map(([k]) => k)
+        systemPrompt = [
+          'Eres el Asistente BRÄVE, el acompañante estratégico de estilistas y dueñas de salón de belleza.',
+          'Hablas en español, en primera persona, con un tono cercano, claro, profesional y motivador.',
+          'NO hablas como una marketer avanzada. Hablas como una amiga experta que acompaña paso a paso.',
+          'Sin tecnicismos. Sin emojis excesivos. Sin listas largas cuando basta una respuesta corta.',
+          '',
+          'PRINCIPIOS DE TUS RESPUESTAS:',
+          '· Empieza validando lo que siente la clienta (bloqueo, duda, cansancio, incertidumbre).',
+          '· Da UN siguiente paso concreto y pequeño, no cinco.',
+          '· Si la clienta no sabe qué publicar, ofrece 2-3 opciones concretas y pide que elija.',
+          '· Si la clienta está bloqueada, ofrece una sola micro-acción de 5 minutos.',
+          '· Siempre cierras con una pregunta que invite a continuar la conversación.',
+          '',
+          'PUEDES RESPONDER CON:',
+          '· Ideas de contenido concretas',
+          '· Esquemas cortos de guion (GANCHO → CONTEXTO → SOLUCIÓN → CTA)',
+          '· Secuencias de stories (problema → autoridad → resultado + CTA)',
+          '· Recomendaciones del día (qué publicar/grabar/mejorar hoy)',
+          '· Sugerencias basadas en el roadmap (métricas internas)',
+          '· Explicaciones sencillas de cualquier parte de la plataforma',
+          '',
+          'CONEXIÓN CON EL ROADMAP:',
+          'El roadmap tiene 5 áreas: comunicación, stories, constancia, autoridad, ventas (escala 0-10).',
+          'Si un área está baja, puedes sugerir trabajo enfocado en esa área.',
+          'Las áreas más débiles actuales de la clienta son: ' + weakerAreas.join(' y ') + '.',
+          'Si la clienta pregunta "qué debería mejorar primero", orienta por esas áreas.',
+          '',
+          'REGLAS DE FORMATO:',
+          '· Responde en texto plano, no en JSON.',
+          '· Máximo 3 párrafos cortos por respuesta.',
+          '· Si ofreces ideas, enuméralas en líneas separadas (1. 2. 3.) pero sin listas largas.',
+          '· Si la respuesta requiere generar contenido completo (guion, stories), dile que vaya a la sección correspondiente y ofrécele un resumen aquí.',
+          '· Termina SIEMPRE con 2-3 sugerencias rápidas en este formato:',
+          '',
+          'SUGERENCIAS:',
+          '· Sugerencia 1',
+          '· Sugerencia 2',
+          '· Sugerencia 3',
+          '',
+          'Las sugerencias deben ser frases cortas que la clienta pueda pulsar para continuar la conversación.',
+        ].join('\n')
+
+        const historialTexto = (historial || [])
+          .slice(-6)
+          .map((m: any) => (m.rol === 'user' ? 'CLIENTA: ' : 'ASISTENTE: ') + m.texto)
+          .join('\n\n')
+
+        userPrompt = [
+          brandContext,
+          '',
+          'ESTADO ACTUAL DEL ROADMAP (0-10):',
+          '· Comunicación: ' + scores.comunicacion,
+          '· Stories: ' + scores.stories,
+          '· Constancia: ' + scores.constancia,
+          '· Autoridad: ' + scores.autoridad,
+          '· Ventas: ' + scores.ventas,
+          '',
+          'HISTORIAL RECIENTE:',
+          historialTexto || '(primera interacción)',
+          '',
+          'MENSAJE ACTUAL DE LA CLIENTA:',
+          mensaje,
+          '',
+          'Responde como el Asistente BRÄVE siguiendo todas las reglas anteriores.',
+          'Recuerda terminar con la sección SUGERENCIAS: y 2-3 sugerencias rápidas.',
+        ].filter(Boolean).join('\n')
+        break
+      }
+
+      case 'generar-desde-gancho': {
+        const { gancho, tipoContenido, tono, modo, servicio } = context
+        const tonoDesc = tono === 'educativo'
+          ? 'EDUCATIVO: enseña, explica, demuestra conocimiento. Tono didáctico pero cercano.'
+          : tono === 'cercano'
+          ? 'CERCANO: conversacional, como si hablaras con una amiga. Tono cálido y personal.'
+          : tono === 'vendedor'
+          ? 'VENDEDOR: enfocado en conversión, con CTA claro para reservar o escribir por DM.'
+          : 'Tono equilibrado entre educativo y cercano.'
+
+        const modoDesc = modo === 'camara'
+          ? 'HABLANDO A CÁMARA: guion conversacional en primera persona, listo para grabar, natural.'
+          : 'TEXTO EN PANTALLA: textos cortos para superponer en el vídeo o carrusel, frases directas.'
+
+        systemPrompt = [
+          'Eres una experta en contenido para Instagram de salones de belleza.',
+          'Generas contenido siguiendo la METODOLOGÍA BRÄVE.',
+          'Siempre respondes en español.',
+          'El formato de salida debe ser JSON válido.',
+          '',
+          'METODOLOGÍA BRÄVE:',
+          '· GANCHO: primera frase que captura la atención en 3-5 segundos.',
+          '· CONTEXTO: desarrolla el tema conectando con un problema/deseo de la clienta.',
+          '· SOLUCIÓN: presenta el valor o la solución desde la autoridad.',
+          '· CTA: llamada a la acción clara, humana, conversacional.',
+        ].join('\n')
+
+        userPrompt = [
+          brandContext,
+          '',
+          'GANCHO DE PARTIDA:',
+          gancho,
+          '',
+          'ESPECIFICACIONES:',
+          '· Tipo de contenido: ' + (tipoContenido || 'reel'),
+          '· Tono: ' + tonoDesc,
+          '· Modo: ' + modoDesc,
+          '· Servicio relacionado: ' + (servicio || 'no especificado'),
+          '',
+          'Genera el contenido aplicando la METODOLOGÍA BRÄVE.',
+          '',
+          tipoContenido === 'carrusel'
+            ? 'Para CARRUSEL: genera 5 slides. Slide 1 = gancho. Slides 2-4 = desarrollo. Slide 5 = CTA.'
+            : tipoContenido === 'story'
+            ? 'Para STORIES: genera 3 stories. Story 1 = problema/intriga. Story 2 = autoridad. Story 3 = resultado + CTA.'
+            : 'Para REEL: genera un guion de 40-50 segundos con marcadores GANCHO, CONTEXTO, SOLUCIÓN, CTA.',
+          '',
+          'Responde SOLO con un JSON OBJECT con esta estructura:',
+          tipoContenido === 'carrusel'
+            ? ['{',
+               '  "tipo": "carrusel",',
+               '  "titulo": "título adaptado del gancho",',
+               '  "slides": [{"numero": 1, "texto": "..."}, {"numero": 2, "texto": "..."}],',
+               '  "copy": "descripción del post",',
+               '  "hashtags": "#h1 #h2 #h3 #h4 #h5",',
+               '  "textoPortada": "texto para la portada"',
+               '}'].join('\n')
+            : tipoContenido === 'story'
+            ? ['{',
+               '  "tipo": "story",',
+               '  "titulo": "título de la secuencia",',
+               '  "stories": [',
+               '    {"numero": 1, "tipo": "Problema", "texto": "...", "sticker": "...", "ideaVisual": "..."},',
+               '    {"numero": 2, "tipo": "Autoridad", "texto": "...", "sticker": "...", "ideaVisual": "..."},',
+               '    {"numero": 3, "tipo": "Resultado+Acción", "texto": "...", "sticker": "...", "ideaVisual": "..."}',
+               '  ],',
+               '  "hashtags": "#h1 #h2 #h3 #h4 #h5"',
+               '}'].join('\n')
+            : ['{',
+               '  "tipo": "reel",',
+               '  "titulo": "título adaptado del gancho",',
+               '  "guion": "guion completo con marcadores GANCHO, CONTEXTO, SOLUCIÓN, CTA",',
+               '  "copy": "descripción del post",',
+               '  "hashtags": "#h1 #h2 #h3 #h4 #h5",',
+               '  "textoPortada": "texto corto para la portada"',
+               '}'].join('\n'),
+        ].filter(Boolean).join('\n')
+        break
+      }
+
+      case 'ganchos-extra': {
+        const { categoria, tipo, numGanchos } = context
+        const total = Math.min(Math.max(parseInt(numGanchos, 10) || 10, 1), 30)
+        systemPrompt = [
+          'Eres una experta en ganchos para contenido de Instagram de salones de belleza.',
+          'Generas ganchos llamativos, estratégicos y originales para reels, stories y carruseles.',
+          'Siempre respondes en español.',
+          'El formato de salida debe ser JSON válido.',
+          '',
+          'Cada gancho debe tener un ángulo diferente: dolor, deseo, objeción, mito, tendencia, autoridad, etc.',
+          'Los ganchos NO deben repetir patrones. Cada uno debe abordar el tema desde un ángulo distinto.',
+        ].join('\n')
+
+        userPrompt = [
+          brandContext,
+          '',
+          'Genera ' + total + ' ganchos para contenido de salón de belleza.',
+          categoria ? ('Categoría: ' + categoria) : 'Categoría: libre (mezcla variada)',
+          tipo ? ('Tipo de gancho: ' + tipo) : 'Tipo: libre (mezcla viral, educativo, autoridad, etc.)',
+          '',
+          'Cada gancho debe tener:',
+          '· titulo: el texto del gancho (máximo 12 palabras, llamativo)',
+          '· categoria: una de las categorías BRÄVE (Balayage, Rubios, Color, Tratamientos, Alisados, Cortes, Canas, Cuidado en casa, Errores comunes, Tendencias, Mitos, Antes y después, Autoridad, Ventas, Stories, Reels virales)',
+          '· tipo: uno de (Viral, Educativo, Autoridad, Venta, Engagement, Dolor, Deseo, Objeción, Tendencia)',
+          '· objetivo: autoridad, reservas o visibilidad',
+          '· servicio: servicio relacionado concreto',
+          '· impacto: Alto, Medio o Bajo',
+          '· explicacion: por qué funciona este gancho (1-2 frases)',
+          '· dolor: qué dolor de la clienta toca',
+          '· deseo: qué deseo activa',
+          '· ideaVisual: idea visual concreta para el contenido',
+          '',
+          'Responde SOLO con un JSON OBJECT:',
+          '{',
+          '  "ganchos": [',
+          '    {',
+          '      "titulo": "...",',
+          '      "categoria": "...",',
+          '      "tipo": "...",',
+          '      "objetivo": "...",',
+          '      "servicio": "...",',
+          '      "impacto": "...",',
+          '      "explicacion": "...",',
+          '      "dolor": "...",',
+          '      "deseo": "...",',
+          '      "ideaVisual": "..."',
+          '    }',
+          '    // ... ' + total + ' ganchos',
+          '  ]',
+          '}',
+        ].filter(Boolean).join('\n')
+        break
+      }
+
       default:
         return NextResponse.json({ error: 'Tipo no válido' }, { status: 400 })
     }

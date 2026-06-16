@@ -9,6 +9,8 @@ import {
   Crown,
   Lightbulb,
   Instagram,
+  Bot,
+  LayoutGrid,
 } from 'lucide-react'
 
 const modules: { key: ModuleType; label: string; icon: React.ReactNode }[] = [
@@ -16,6 +18,8 @@ const modules: { key: ModuleType; label: string; icon: React.ReactNode }[] = [
   { key: 'planificar', label: 'Planificar', icon: <Calendar className="w-5 h-5" /> },
   { key: 'crear', label: 'Crear', icon: <PenTool className="w-5 h-5" /> },
   { key: 'stories', label: 'Stories BRÄVE', icon: <Instagram className="w-5 h-5" /> },
+  { key: 'ganchos', label: 'Banco de Ganchos', icon: <LayoutGrid className="w-5 h-5" /> },
+  { key: 'asistente', label: 'Asistente BRÄVE', icon: <Bot className="w-5 h-5" /> },
   { key: 'biblioteca', label: 'Biblioteca', icon: <BookOpen className="w-5 h-5" /> },
   { key: 'calendario', label: 'Calendario', icon: <Sparkles className="w-5 h-5" /> },
 ]

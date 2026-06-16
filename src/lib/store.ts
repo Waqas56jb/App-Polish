@@ -64,7 +64,93 @@ export interface ContentPlan {
   createdAt: string
 }
 
-export type ModuleType = 'marca' | 'planificar' | 'crear' | 'biblioteca' | 'calendario' | 'stories'
+export type ModuleType =
+  | 'marca'
+  | 'planificar'
+  | 'crear'
+  | 'biblioteca'
+  | 'calendario'
+  | 'stories'
+  | 'asistente'
+  | 'ganchos'
+
+// ============================================================
+// BANCO DE GANCHOS
+// ============================================================
+
+export type HookTipo =
+  | 'Viral'
+  | 'Educativo'
+  | 'Autoridad'
+  | 'Venta'
+  | 'Engagement'
+  | 'Dolor'
+  | 'Deseo'
+  | 'Objeción'
+  | 'Tendencia'
+
+export type HookImpacto = 'Alto' | 'Medio' | 'Bajo'
+
+export interface HookCard {
+  id: string
+  titulo: string
+  categoria: string
+  tipo: HookTipo
+  objetivo: string
+  servicio: string
+  impacto: HookImpacto
+  explicacion: string
+  dolor: string
+  deseo: string
+  ideaVisual: string
+  esCustom?: boolean
+}
+
+export type SavedHookEstado =
+  | 'idea'
+  | 'pendiente'
+  | 'grabado'
+  | 'publicado'
+
+export interface SavedHook {
+  id: string
+  hookId: string
+  titulo: string
+  tipoContenido: 'reel' | 'story' | 'carrusel' | ''
+  servicio: string
+  guionGenerado: string
+  estado: SavedHookEstado
+  fechaProgramada: string | null
+  fechaGrabacion: string | null
+  createdAt: string
+}
+
+// ============================================================
+// ASISTENTE BRÄVE
+// ============================================================
+
+export type AsistenteRol = 'user' | 'assistant'
+
+export interface AsistenteMessage {
+  id: string
+  rol: AsistenteRol
+  texto: string
+  modo: 'texto' | 'audio'
+  timestamp: number
+  sugerencias?: string[]
+}
+
+// ============================================================
+// ROADMAP BRÄVE (métricas para recomendaciones del asistente)
+// ============================================================
+
+export interface RoadmapScore {
+  comunicacion: number
+  stories: number
+  constancia: number
+  autoridad: number
+  ventas: number
+}
 
 interface AppState {
   activeModule: ModuleType
@@ -82,6 +168,14 @@ interface AppState {
     frecuencia: number
     objetivo: string
   } | null
+  // Banco de Ganchos
+  customHooks: HookCard[]
+  savedHooks: SavedHook[]
+  // Asistente BRÄVE
+  asistenteMensajes: AsistenteMessage[]
+  asistenteAbierto: boolean
+  // Roadmap (calcular a partir del estado de la marca)
+  roadmapOverride: RoadmapScore | null
 
   setActiveModule: (module: ModuleType) => void
   setBrandProfile: (profile: BrandProfile) => void
@@ -103,6 +197,19 @@ interface AppState {
   addCurrentPlanItem: (item: ContentItem) => void
   setCurrentPlanConfig: (config: AppState['currentPlanConfig']) => void
   clearCurrentPlan: () => void
+  // Banco de Ganchos
+  addCustomHook: (hook: HookCard) => void
+  updateCustomHook: (id: string, updates: Partial<HookCard>) => void
+  removeCustomHook: (id: string) => void
+  saveHook: (hook: SavedHook) => void
+  updateSavedHook: (id: string, updates: Partial<SavedHook>) => void
+  removeSavedHook: (id: string) => void
+  // Asistente BRÄVE
+  addAsistenteMensaje: (msg: AsistenteMessage) => void
+  clearAsistenteMensajes: () => void
+  setAsistenteAbierto: (abierto: boolean) => void
+  // Roadmap
+  setRoadmapOverride: (scores: RoadmapScore | null) => void
 }
 
 export const useAppStore = create<AppState>()(
@@ -117,6 +224,11 @@ export const useAppStore = create<AppState>()(
       loadingMessage: '',
       currentPlanItems: [],
       currentPlanConfig: null,
+      customHooks: [],
+      savedHooks: [],
+      asistenteMensajes: [],
+      asistenteAbierto: false,
+      roadmapOverride: null,
 
       setActiveModule: (module) => set({ activeModule: module }),
       setBrandProfile: (profile) => set({ brandProfile: profile }),
@@ -171,6 +283,34 @@ export const useAppStore = create<AppState>()(
       })),
       setCurrentPlanConfig: (config) => set({ currentPlanConfig: config }),
       clearCurrentPlan: () => set({ currentPlanItems: [], currentPlanConfig: null }),
+      // Banco de Ganchos
+      addCustomHook: (hook) => set((state) => ({
+        customHooks: [hook, ...state.customHooks]
+      })),
+      updateCustomHook: (id, updates) => set((state) => ({
+        customHooks: state.customHooks.map(h => h.id === id ? { ...h, ...updates } : h)
+      })),
+      removeCustomHook: (id) => set((state) => ({
+        customHooks: state.customHooks.filter(h => h.id !== id)
+      })),
+      saveHook: (hook) => set((state) => ({
+        savedHooks: state.savedHooks.some(h => h.id === hook.id)
+          ? state.savedHooks.map(h => h.id === hook.id ? hook : h)
+          : [hook, ...state.savedHooks]
+      })),
+      updateSavedHook: (id, updates) => set((state) => ({
+        savedHooks: state.savedHooks.map(h => h.id === id ? { ...h, ...updates } : h)
+      })),
+      removeSavedHook: (id) => set((state) => ({
+        savedHooks: state.savedHooks.filter(h => h.id !== id)
+      })),
+      // Asistente BRÄVE
+      addAsistenteMensaje: (msg) => set((state) => ({
+        asistenteMensajes: [...state.asistenteMensajes, msg]
+      })),
+      clearAsistenteMensajes: () => set({ asistenteMensajes: [] }),
+      setAsistenteAbierto: (abierto) => set({ asistenteAbierto: abierto }),
+      setRoadmapOverride: (scores) => set({ roadmapOverride: scores }),
     }),
     {
       name: 'brave-studio-storage',
@@ -182,6 +322,9 @@ export const useAppStore = create<AppState>()(
         crearSubModule: state.crearSubModule,
         currentPlanItems: state.currentPlanItems,
         currentPlanConfig: state.currentPlanConfig,
+        customHooks: state.customHooks,
+        savedHooks: state.savedHooks,
+        asistenteMensajes: state.asistenteMensajes,
       }),
     }
   )
