@@ -17,6 +17,8 @@ export interface BrandProfile {
   erroresFrecuentes: string
   nivelCamara: string
   facturacion: string
+  documentText?: string
+  documentName?: string
 }
 
 export interface SlideData {

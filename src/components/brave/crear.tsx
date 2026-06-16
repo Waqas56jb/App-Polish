@@ -30,7 +30,7 @@ const FORMATOS = [
 type CrearSubModule = 'reels' | 'stories' | 'carruseles'
 
 export function Crear() {
-  const { brandProfile, addLibraryItems, setActiveModule, setIsLoading, isLoading } = useAppStore()
+  const { brandProfile, addLibraryItems, setActiveModule, setIsLoading, isLoading, setBrandProfile } = useAppStore()
   const [subModule, setSubModule] = useState<CrearSubModule>('reels')
 
   // Reels state
@@ -55,20 +55,53 @@ export function Crear() {
 
   const servicios = brandProfile?.serviciosPrioritarios?.length
     ? brandProfile.serviciosPrioritarios
-    : brandProfile?.servicios || []
+    : brandProfile?.servicios?.length
+      ? brandProfile.servicios
+      : ['Balayage', 'Mechas', 'Tinte', 'Corte', 'Peinado', 'Alisado', 'Permanente', 'Tratamientos', 'Keratina', 'Extensiones', 'Canas', 'Decoloración', 'Reflejos', 'Matizadores', 'Cepillado', 'Recogidos']
 
   if (!brandProfile) {
+    // Show banner encouraging completion, but allow continuing
     return (
-      <div className="max-w-2xl mx-auto text-center py-20">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#F3E8E5] mb-4">
-          <PenTool className="w-8 h-8 text-[#C17C83]" />
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="text-center space-y-3 mb-4">
+          <h2 className="text-3xl font-bold text-[#2D1F22]">Crear</h2>
+          <p className="text-muted-foreground text-base">Genera contenidos individuales para tu Instagram</p>
         </div>
-        <h3 className="text-xl font-bold text-[#2D1F22] mb-2">Primero crea tu Marca BRÄVE</h3>
-        <p className="text-muted-foreground mb-6">Necesitamos conocer tu salón para generar contenido personalizado.</p>
-        <Button onClick={() => setActiveModule('marca')} className="bg-[#7D2E42] hover:bg-[#933A54] text-white">
-          Ir a Mi Marca BRÄVE
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+
+        <Card className="border-l-4 border-l-[#C9A96E] bg-[#FBF7F5] shadow-md">
+          <CardContent className="p-5 flex items-start gap-4">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F3E8E5] shrink-0">
+              <PenTool className="w-6 h-6 text-[#C17C83]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-[#2D1F22] mb-1">Personaliza tu contenido</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Aunque puedes crear contenido sin tu Marca BRÄVE, completarla hará que las ideas sean mucho más personalizadas para tu salón.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#7D2E42] hover:bg-[#933A54] text-white">
+                  Crear Mi Marca BRÄVE
+                  <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+                <Button
+                  onClick={() => {
+                    setBrandProfile({
+                      nombre: '', salon: '', ciudad: '', instagram: '',
+                      experiencia: '', servicios: [], serviciosPrioritarios: [],
+                      objetivos: '', clientaIdeal: '', preguntasFrecuentes: '',
+                      erroresFrecuentes: '', nivelCamara: '', facturacion: '',
+                    })
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                >
+                  Continuar sin marca
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }

@@ -153,6 +153,35 @@ Responde SOLO con un JSON con esta estructura:
         break
       }
 
+      case 'extract-brand': {
+        const { documentText } = context
+        systemPrompt = `Eres una experta en marketing para salones de belleza. Analizas documentos de marca y extraes información estructurada. Siempre respondes en español. El formato de salida debe ser JSON válido.`
+        userPrompt = `Analiza el siguiente documento de marca de un salón de belleza y extrae la información estructurada.
+
+DOCUMENTO:
+${documentText}
+
+Extrae toda la información relevante y reorganízala en estos campos. Si algún campo no está presente en el documento, déjalo como string vacío "".
+
+Responde SOLO con un JSON con esta estructura exacta:
+{
+  "nombre": "nombre de la estilista",
+  "salon": "nombre del salón",
+  "ciudad": "ciudad",
+  "instagram": "usuario de instagram con @",
+  "experiencia": "años de experiencia como string",
+  "servicios": ["lista de servicios que ofrece"],
+  "serviciosPrioritarios": ["máximo 3 servicios prioritarios"],
+  "objetivos": "objetivos con el contenido",
+  "clientaIdeal": "descripción de la clienta ideal",
+  "preguntasFrecuentes": "preguntas frecuentes de las clientas",
+  "erroresFrecuentes": "errores frecuentes que ven en las clientas",
+  "nivelCamara": "nivel de comodidad a cámara: 'Muy cómoda', 'Bastante cómoda', 'Algo incómoda' o 'Nada cómoda'",
+  "facturacion": "facturación mensual aproximada"
+}`
+        break
+      }
+
       case 'quick-idea': {
         systemPrompt = `Eres una experta en contenido para Instagram de salones de belleza. Das ideas rápidas y accionables. Siempre respondes en español. El formato de salida debe ser JSON válido.`
         userPrompt = `${brandContext}

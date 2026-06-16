@@ -19,7 +19,7 @@ const OBJETIVOS = [
 const FRECUENCIAS = [2, 3, 4, 5]
 
 export function Planificar() {
-  const { brandProfile, contentPlans, addContentPlan, addLibraryItems, setActiveModule, setCrearSubModule, setIsLoading, isLoading } = useAppStore()
+  const { brandProfile, contentPlans, addContentPlan, addLibraryItems, setActiveModule, setCrearSubModule, setIsLoading, isLoading, setBrandProfile } = useAppStore()
   const [tipo, setTipo] = useState<'semanal' | 'mensual'>('semanal')
   const [serviciosSeleccionados, setServiciosSeleccionados] = useState<string[]>([])
   const [frecuencia, setFrecuencia] = useState(3)
@@ -27,7 +27,13 @@ export function Planificar() {
   const [generatedContent, setGeneratedContent] = useState<ContentItem[]>([])
   const [showResults, setShowResults] = useState(false)
 
-  const servicios = brandProfile?.serviciosPrioritarios || brandProfile?.servicios || []
+  const servicios = brandProfile?.serviciosPrioritarios?.length
+    ? brandProfile.serviciosPrioritarios
+    : brandProfile?.servicios?.length
+      ? brandProfile.servicios
+      : ['Balayage', 'Mechas', 'Tinte', 'Corte', 'Peinado', 'Alisado', 'Permanente', 'Tratamientos', 'Keratina', 'Extensiones', 'Canas', 'Decoloración', 'Reflejos', 'Matizadores', 'Cepillado', 'Recogidos']
+
+  const hasBrandProfile = !!(brandProfile && (brandProfile.nombre || brandProfile.salon || brandProfile.documentText))
 
   const toggleServicio = (s: string) => {
     if (serviciosSeleccionados.includes(s)) {
@@ -175,17 +181,49 @@ export function Planificar() {
   }
 
   if (!brandProfile) {
+    // Show banner encouraging completion, but allow continuing
     return (
-      <div className="max-w-2xl mx-auto text-center py-20">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#F3E8E5] mb-4">
-          <Sparkles className="w-8 h-8 text-[#C17C83]" />
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="text-center space-y-3 mb-4">
+          <h2 className="text-3xl font-bold text-[#2D1F22]">Planificar</h2>
+          <p className="text-muted-foreground text-base">Crea tu planificación de contenido en minutos</p>
         </div>
-        <h3 className="text-xl font-bold text-[#2D1F22] mb-2">Primero crea tu Marca BRÄVE</h3>
-        <p className="text-muted-foreground mb-6">Necesitamos conocer tu salón para generar contenido personalizado.</p>
-        <Button onClick={() => setActiveModule('marca')} className="bg-[#7D2E42] hover:bg-[#933A54] text-white">
-          Ir a Mi Marca BRÄVE
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+
+        <Card className="border-l-4 border-l-[#C9A96E] bg-[#FBF7F5] shadow-md">
+          <CardContent className="p-5 flex items-start gap-4">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F3E8E5] shrink-0">
+              <Sparkles className="w-6 h-6 text-[#C17C83]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-[#2D1F22] mb-1">Personaliza tu planificación</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Aunque puedes planificar sin tu Marca BRÄVE, completarla hará que las ideas sean mucho más personalizadas para tu salón.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#7D2E42] hover:bg-[#933A54] text-white">
+                  Crear Mi Marca BRÄVE
+                  <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+                <Button
+                  onClick={() => {
+                    // Initialize a default empty brand profile so user can proceed
+                    setBrandProfile({
+                      nombre: '', salon: '', ciudad: '', instagram: '',
+                      experiencia: '', servicios: [], serviciosPrioritarios: [],
+                      objetivos: '', clientaIdeal: '', preguntasFrecuentes: '',
+                      erroresFrecuentes: '', nivelCamara: '', facturacion: '',
+                    })
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                >
+                  Continuar sin marca
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
