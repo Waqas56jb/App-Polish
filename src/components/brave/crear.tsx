@@ -12,6 +12,7 @@ import {
   RefreshCw, Save, Copy, FileText, CheckCircle2,
   ArrowRight, MessageSquare
 } from 'lucide-react'
+import { fetchJSON } from '@/lib/fetch-safe'
 
 const OBJETIVOS_REEL = [
   { value: 'autoridad', label: 'Autoridad' },
@@ -112,17 +113,15 @@ export function Crear() {
     if (!reelServicio || !reelObjetivo) return
     setIsLoading(true, 'Generando ideas de Reel...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'reel-ideas',
           brandProfile,
           context: { servicio: reelServicio, objetivo: reelObjetivo, formato: reelFormato },
         }),
       })
-      const data = await res.json()
-      if (Array.isArray(data.result)) {
+      if (!error && Array.isArray(data?.result)) {
         setReelIdeas(data.result)
       } else {
         setReelIdeas(generateFallbackReelIdeas())
@@ -158,9 +157,8 @@ export function Crear() {
   const generateScript = async (idea: any) => {
     setIsLoading(true, 'Creando guión...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'script',
           brandProfile,
@@ -173,8 +171,7 @@ export function Crear() {
           },
         }),
       })
-      const data = await res.json()
-      if (data.result && !data.result.raw) {
+      if (!error && data?.result && !data.result.raw) {
         setCurrentScript(data.result)
       } else {
         setCurrentScript(generateFallbackScript(idea))
@@ -199,17 +196,15 @@ export function Crear() {
     if (!storyServicio) return
     setIsLoading(true, 'Generando Stories...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'stories',
           brandProfile,
           context: { servicio: storyServicio, objetivo: storyObjetivo || 'reservas' },
         }),
       })
-      const data = await res.json()
-      if (data.result?.stories) {
+      if (data?.result?.stories) {
         setStoryResult(data.result)
       } else {
         setStoryResult(generateFallbackStories())
@@ -249,17 +244,15 @@ export function Crear() {
     if (!carouselServicio) return
     setIsLoading(true, 'Generando Carrusel...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'carousel',
           brandProfile,
           context: { servicio: carouselServicio, objetivo: carouselObjetivo || 'educación', numSlides: carouselSlides },
         }),
       })
-      const data = await res.json()
-      if (data.result?.slides) {
+      if (data?.result?.slides) {
         setCarouselResult(data.result)
       } else {
         setCarouselResult(generateFallbackCarousel())

@@ -1,0 +1,896 @@
+     1→'use client'
+     2→
+     3→import { useState } from 'react'
+     4→import { useAppStore, ContentItem, generateId } from '@/lib/store'
+     5→import { Button } from '@/components/ui/button'
+     6→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+     7→import { Badge } from '@/components/ui/badge'
+     8→import { Textarea } from '@/components/ui/textarea'
+     9→import { BravyBot } from '@/components/brave/bravy-bot'
+    10→import {
+    11→  PenTool, Film, LayoutGrid, BookOpen, Sparkles,
+    12→  RefreshCw, Save, Copy, FileText, CheckCircle2,
+    13→  ArrowRight, MessageSquare
+    14→} from 'lucide-react'
+    15→
+    16→const OBJETIVOS_REEL = [
+    17→  { value: 'autoridad', label: 'Autoridad' },
+    18→  { value: 'educación', label: 'Educación' },
+    19→  { value: 'venta', label: 'Venta' },
+    20→  { value: 'deseo', label: 'Deseo' },
+    21→  { value: 'objeción', label: 'Objeción' },
+    22→  { value: 'caso de éxito', label: 'Caso de éxito' },
+    23→]
+    24→
+    25→const FORMATOS = [
+    26→  { value: 'hablando a cámara', label: 'Hablando a cámara' },
+    27→  { value: 'voz en off', label: 'Voz en off' },
+    28→  { value: 'antes y después', label: 'Antes y después' },
+    29→]
+    30→
+    31→type CrearSubModule = 'reels' | 'stories' | 'carruseles'
+    32→
+    33→export function Crear() {
+    34→  const { brandProfile, addLibraryItems, setActiveModule, setIsLoading, isLoading, setBrandProfile } = useAppStore()
+    35→  const [subModule, setSubModule] = useState<CrearSubModule>('reels')
+    36→
+    37→  // Reels state
+    38→  const [reelServicio, setReelServicio] = useState('')
+    39→  const [reelObjetivo, setReelObjetivo] = useState('')
+    40→  const [reelFormato, setReelFormato] = useState('')
+    41→  const [reelIdeas, setReelIdeas] = useState<any[]>([])
+    42→  const [selectedIdeas, setSelectedIdeas] = useState<Set<number>>(new Set())
+    43→  const [showReelScript, setShowReelScript] = useState(false)
+    44→  const [currentScript, setCurrentScript] = useState<any>(null)
+    45→
+    46→  // Stories state
+    47→  const [storyServicio, setStoryServicio] = useState('')
+    48→  const [storyObjetivo, setStoryObjetivo] = useState('')
+    49→  const [storyResult, setStoryResult] = useState<any>(null)
+    50→
+    51→  // Carousel state
+    52→  const [carouselServicio, setCarouselServicio] = useState('')
+    53→  const [carouselObjetivo, setCarouselObjetivo] = useState('')
+    54→  const [carouselSlides, setCarouselSlides] = useState(3)
+    55→  const [carouselResult, setCarouselResult] = useState<any>(null)
+    56→
+    57→  const servicios = brandProfile?.serviciosPrioritarios?.length
+    58→    ? brandProfile.serviciosPrioritarios
+    59→    : brandProfile?.servicios?.length
+    60→      ? brandProfile.servicios
+    61→      : ['Balayage', 'Mechas', 'Tinte', 'Corte', 'Peinado', 'Alisado', 'Permanente', 'Tratamientos', 'Keratina', 'Extensiones', 'Canas', 'Decoloración', 'Reflejos', 'Matizadores', 'Cepillado', 'Recogidos']
+    62→
+    63→  if (!brandProfile) {
+    64→    // Show banner encouraging completion, but allow continuing
+    65→    return (
+    66→      <div className="max-w-3xl mx-auto space-y-6">
+    67→        <div className="text-center space-y-3 mb-4">
+    68→          <h2 className="text-3xl font-bold text-[#2A1520]">Crear</h2>
+    69→          <p className="text-muted-foreground text-base">Genera contenidos individuales para tu Instagram</p>
+    70→        </div>
+    71→
+    72→        <Card className="border-l-4 border-l-[#FFF1B5] bg-[#FFFBF0] shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
+    73→          <CardContent className="p-5 flex items-start gap-4">
+    74→            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F5F0EB] shrink-0">
+    75→              <PenTool className="w-6 h-6 text-[#C1DBE8]" />
+    76→            </div>
+    77→            <div className="flex-1">
+    78→              <h3 className="font-bold text-[#2A1520] mb-1">Personaliza tu contenido</h3>
+    79→              <p className="text-sm text-muted-foreground mb-3">
+    80→                Aunque puedes crear contenido sin tu Marca BRÄVE, completarla hará que las ideas sean mucho más personalizadas para tu salón.
+    81→              </p>
+    82→              <div className="flex gap-2 flex-wrap">
+    83→                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl">
+    84→                  Crear Mi Marca BRÄVE
+    85→                  <ArrowRight className="w-3 h-3 ml-1" />
+    86→                </Button>
+    87→                <Button
+    88→                  onClick={() => {
+    89→                    setBrandProfile({
+    90→                      nombre: '', salon: '', ciudad: '', instagram: '',
+    91→                      experiencia: '', servicios: [], serviciosPrioritarios: [],
+    92→                      objetivos: '', clientaIdeal: '', preguntasFrecuentes: '',
+    93→                      erroresFrecuentes: '', nivelCamara: '', facturacion: '',
+    94→                    })
+    95→                  }}
+    96→                  variant="outline"
+    97→                  size="sm"
+    98→                  className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB] rounded-2xl"
+    99→                >
+   100→                  Continuar sin marca
+   101→                </Button>
+   102→              </div>
+   103→            </div>
+   104→          </CardContent>
+   105→        </Card>
+   106→      </div>
+   107→    )
+   108→  }
+   109→
+   110→  // REELS
+   111→  const generateReelIdeas = async () => {
+   112→    if (!reelServicio || !reelObjetivo) return
+   113→    setIsLoading(true, 'Generando ideas de Reel...')
+   114→    try {
+   115→      const res = await fetch('/api/ai', {
+   116→        method: 'POST',
+   117→        headers: { 'Content-Type': 'application/json' },
+   118→        body: JSON.stringify({
+   119→          type: 'reel-ideas',
+   120→          brandProfile,
+   121→          context: { servicio: reelServicio, objetivo: reelObjetivo, formato: reelFormato },
+   122→        }),
+   123→      })
+   124→      const data = await res.json()
+   125→      if (Array.isArray(data.result)) {
+   126→        setReelIdeas(data.result)
+   127→      } else {
+   128→        setReelIdeas(generateFallbackReelIdeas())
+   129→      }
+   130→    } catch {
+   131→      setReelIdeas(generateFallbackReelIdeas())
+   132→    } finally {
+   133→      setIsLoading(false)
+   134→    }
+   135→  }
+   136→
+   137→  const generateFallbackReelIdeas = () => {
+   138→    const ideas = [
+   139→      `3 errores que arruinan tu ${reelServicio.toLowerCase()}`,
+   140→      `Por qué tu ${reelServicio.toLowerCase()} no dura`,
+   141→      `El secreto que nadie te cuenta sobre ${reelServicio.toLowerCase()}`,
+   142→      `Antes y después: transformación completa de ${reelServicio.toLowerCase()}`,
+   143→      `Lo que tu estilista debería decirte sobre ${reelServicio.toLowerCase()}`,
+   144→      `Respondo lo que más me preguntan sobre ${reelServicio.toLowerCase()}`,
+   145→      `Tutorial rápido: cómo mantener tu ${reelServicio.toLowerCase()}`,
+   146→      `Mi clienta no creía el resultado - ${reelServicio.toLowerCase()}`,
+   147→      `5 señales de que necesitas un buen ${reelServicio.toLowerCase()}`,
+   148→      `Esto es lo que pasa cuando haces ${reelServicio.toLowerCase()} con una experta`,
+   149→    ]
+   150→    return ideas.map((titulo, i) => ({
+   151→      titulo,
+   152→      objetivo: reelObjetivo,
+   153→      servicio: reelServicio,
+   154→      formato: reelFormato || 'hablando a cámara',
+   155→    }))
+   156→  }
+   157→
+   158→  const generateScript = async (idea: any) => {
+   159→    setIsLoading(true, 'Creando guión...')
+   160→    try {
+   161→      const res = await fetch('/api/ai', {
+   162→        method: 'POST',
+   163→        headers: { 'Content-Type': 'application/json' },
+   164→        body: JSON.stringify({
+   165→          type: 'script',
+   166→          brandProfile,
+   167→          context: {
+   168→            titulo: idea.titulo,
+   169→            tipo: 'reel',
+   170→            objetivo: idea.objetivo || reelObjetivo,
+   171→            servicio: idea.servicio || reelServicio,
+   172→            formato: idea.formato || reelFormato,
+   173→          },
+   174→        }),
+   175→      })
+   176→      const data = await res.json()
+   177→      if (data.result && !data.result.raw) {
+   178→        setCurrentScript(data.result)
+   179→      } else {
+   180→        setCurrentScript(generateFallbackScript(idea))
+   181→      }
+   182→    } catch {
+   183→      setCurrentScript(generateFallbackScript(idea))
+   184→    } finally {
+   185→      setIsLoading(false)
+   186→      setShowReelScript(true)
+   187→    }
+   188→  }
+   189→
+   190→  const generateFallbackScript = (idea: any) => ({
+   191→    guion: `GANCHO: "${idea.titulo}" — ¿Sabías que esto pasa más de lo que crees?\n\nCONTEXTO: Muchas clientas vienen a mi salón después de haber tenido malas experiencias con ${idea.servicio || reelServicio}. Y no es su culpa, es que nadie les explicó cómo cuidar su pelo correctamente.\n\nSOLUCIÓN: Por eso en ${brandProfile?.salon || 'mi salón'} siempre hacemos una consulta personalizada antes de empezar. Así nos aseguramos de que el resultado sea exactamente lo que buscas.\n\nCTA: Si estás pensando en cambiar tu look, escríbeme por DM y te asesoro sin compromiso.`,
+   192→    copy: `${idea.titulo}\n\n¿Lista para un cambio? Reserva tu cita en ${brandProfile?.salon || 'mi salón'} 💇‍♀️\n\n📍 ${brandProfile?.ciudad || ''}`,
+   193→    hashtags: `#${(brandProfile?.salon || 'salon').replace(/\s/g, '')} #${(idea.servicio || reelServicio).replace(/\s/g, '')} #peluqueria #cabellosano #estilista`,
+   194→    textoPortada: idea.titulo,
+   195→  })
+   196→
+   197→  // STORIES
+   198→  const generateStories = async () => {
+   199→    if (!storyServicio) return
+   200→    setIsLoading(true, 'Generando Stories...')
+   201→    try {
+   202→      const res = await fetch('/api/ai', {
+   203→        method: 'POST',
+   204→        headers: { 'Content-Type': 'application/json' },
+   205→        body: JSON.stringify({
+   206→          type: 'stories',
+   207→          brandProfile,
+   208→          context: { servicio: storyServicio, objetivo: storyObjetivo || 'reservas' },
+   209→        }),
+   210→      })
+   211→      const data = await res.json()
+   212→      if (data.result?.stories) {
+   213→        setStoryResult(data.result)
+   214→      } else {
+   215→        setStoryResult(generateFallbackStories())
+   216→      }
+   217→    } catch {
+   218→      setStoryResult(generateFallbackStories())
+   219→    } finally {
+   220→      setIsLoading(false)
+   221→    }
+   222→  }
+   223→
+   224→  const generateFallbackStories = () => ({
+   225→    stories: [
+   226→      {
+   227→        numero: 1,
+   228→        texto: `¿Alguna vez has tenido un desastre con tu ${storyServicio.toLowerCase()}? 😱`,
+   229→        sticker: 'Encuesta: SÍ / NO',
+   230→        ideaVisual: 'Foto tuya con expresión de sorpresa',
+   231→      },
+   232→      {
+   233→        numero: 2,
+   234→        texto: `El problema número 1 que veo: las clientas no cuidan su ${storyServicio.toLowerCase()} después de hacerlo. Te cuento mi secreto para que dure más...`,
+   235→        sticker: 'Caja de texto con consejo',
+   236→        ideaVisual: 'Video corto mostrando el proceso',
+   237→      },
+   238→      {
+   239→        numero: 3,
+   240→        texto: `¿Quieres un ${storyServicio.toLowerCase()} que realmente te favorezca? Escríbeme y te asesoro 💬`,
+   241→        sticker: 'Sticker "Reservar"',
+   242→        ideaVisual: 'Antes y después con tu logo',
+   243→      },
+   244→    ],
+   245→  })
+   246→
+   247→  // CAROUSEL
+   248→  const generateCarousel = async () => {
+   249→    if (!carouselServicio) return
+   250→    setIsLoading(true, 'Generando Carrusel...')
+   251→    try {
+   252→      const res = await fetch('/api/ai', {
+   253→        method: 'POST',
+   254→        headers: { 'Content-Type': 'application/json' },
+   255→        body: JSON.stringify({
+   256→          type: 'carousel',
+   257→          brandProfile,
+   258→          context: { servicio: carouselServicio, objetivo: carouselObjetivo || 'educación', numSlides: carouselSlides },
+   259→        }),
+   260→      })
+   261→      const data = await res.json()
+   262→      if (data.result?.slides) {
+   263→        setCarouselResult(data.result)
+   264→      } else {
+   265→        setCarouselResult(generateFallbackCarousel())
+   266→      }
+   267→    } catch {
+   268→      setCarouselResult(generateFallbackCarousel())
+   269→    } finally {
+   270→      setIsLoading(false)
+   271→    }
+   272→  }
+   273→
+   274→  const generateFallbackCarousel = () => {
+   275→    const slides = []
+   276→    for (let i = 1; i <= carouselSlides; i++) {
+   277→      if (i === 1) {
+   278→        slides.push({ numero: i, texto: `${carouselSlides} cosas que debes saber sobre ${carouselServicio}` })
+   279→      } else if (i === carouselSlides) {
+   280→        slides.push({ numero: i, texto: `¿Lista para probar? Reserva tu cita en ${brandProfile?.salon || 'mi salón'} 💬` })
+   281→      } else {
+   282→        const tips = [
+   283→          `Consejo #${i - 1}: Siempre consulta con una profesional antes de hacer un ${carouselServicio.toLowerCase()}`,
+   284→          `Consejo #${i - 1}: El mantenimiento es tan importante como el servicio本身`,
+   285→          `Consejo #${i - 1}: Usa productos específicos para ${carouselServicio.toLowerCase()}`,
+   286→        ]
+   287→        slides.push({ numero: i, texto: tips[(i - 2) % tips.length] })
+   288→      }
+   289→    }
+   290→    return {
+   291→      slides,
+   292→      copy: `Todo lo que necesitas saber sobre ${carouselServicio} 💇‍♀️ Desliza para ver los consejos →`,
+   293→      hashtags: `#${(carouselServicio || '').replace(/\s/g, '')} #peluqueria #consejosdecabello #estilista`,
+   294→      cta: '¿Lista para un cambio? Escríbeme por DM',
+   295→    }
+   296→  }
+   297→
+   298→  const copyToClipboard = (text: string) => {
+   299→    navigator.clipboard.writeText(text)
+   300→  }
+   301→
+   302→  const saveToLibrary = (item: ContentItem) => {
+   303→    addLibraryItems([item])
+   304→  }
+   305→
+   306→  return (
+   307→    <div className="max-w-3xl mx-auto space-y-6">
+   308→      {/* Header */}
+   309→      <div className="text-center space-y-3 mb-8">
+   310→        <h2 className="text-3xl font-bold text-[#2A1520]">Crear</h2>
+   311→        <p className="text-muted-foreground text-base">Genera contenidos individuales para tu Instagram</p>
+   312→        <BravyBot />
+   313→      </div>
+   314→
+   315→      {/* Sub-module tabs */}
+   316→      <div className="flex gap-2 justify-center mb-6">
+   317→        {([
+   318→          { key: 'reels' as CrearSubModule, label: 'Reels', icon: <Film className="w-4 h-4" /> },
+   319→          { key: 'stories' as CrearSubModule, label: 'Stories', icon: <MessageSquare className="w-4 h-4" /> },
+   320→          { key: 'carruseles' as CrearSubModule, label: 'Carruseles', icon: <LayoutGrid className="w-4 h-4" /> },
+   321→        ]).map((tab) => (
+   322→          <button
+   323→            key={tab.key}
+   324→            onClick={() => setSubModule(tab.key)}
+   325→            className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-200 ${
+   326→              subModule === tab.key
+   327→                ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+   328→                : 'bg-white/60 border border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8] hover:bg-[#C1DBE8]/30'
+   329→            }`}
+   330→          >
+   331→            {tab.icon}
+   332→            {tab.label}
+   333→          </button>
+   334→        ))}
+   335→      </div>
+   336→
+   337→      {/* REELS SUBMODULE */}
+   338→      {subModule === 'reels' && !showReelScript && (
+   339→        <>
+   340→          <Card className="border-none shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
+   341→            <CardHeader className="pb-4">
+   342→              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+   343→                <Film className="w-5 h-5 text-[#C1DBE8]" />
+   344→                Crear Reel
+   345→              </CardTitle>
+   346→              <CardDescription>Configura tu Reel y genera ideas</CardDescription>
+   347→            </CardHeader>
+   348→            <CardContent className="space-y-4">
+   349→              <div className="space-y-2">
+   350→                <label className="text-sm font-medium text-[#2A1520]">Servicio</label>
+   351→                <div className="flex flex-wrap gap-2">
+   352→                  {servicios.map((s) => (
+   353→                    <button
+   354→                      key={s}
+   355→                      onClick={() => setReelServicio(s)}
+   356→                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+   357→                        reelServicio === s
+   358→                          ? 'bg-[#591427] text-white shadow-md'
+   359→                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   360→                      }`}
+   361→                    >
+   362→                      {s}
+   363→                    </button>
+   364→                  ))}
+   365→                </div>
+   366→              </div>
+   367→
+   368→              <div className="space-y-2">
+   369→                <label className="text-sm font-medium text-[#2A1520]">Objetivo</label>
+   370→                <div className="flex flex-wrap gap-2">
+   371→                  {OBJETIVOS_REEL.map((obj) => (
+   372→                    <button
+   373→                      key={obj.value}
+   374→                      onClick={() => setReelObjetivo(obj.value)}
+   375→                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+   376→                        reelObjetivo === obj.value
+   377→                          ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+   378→                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   379→                      }`}
+   380→                    >
+   381→                      {obj.label}
+   382→                    </button>
+   383→                  ))}
+   384→                </div>
+   385→              </div>
+   386→
+   387→              <div className="space-y-2">
+   388→                <label className="text-sm font-medium text-[#2A1520]">Formato</label>
+   389→                <div className="flex flex-wrap gap-2">
+   390→                  {FORMATOS.map((fmt) => (
+   391→                    <button
+   392→                      key={fmt.value}
+   393→                      onClick={() => setReelFormato(fmt.value)}
+   394→                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+   395→                        reelFormato === fmt.value
+   396→                          ? 'bg-[#FFF1B5] text-[#2A1520] shadow-md'
+   397→                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   398→                      }`}
+   399→                    >
+   400→                      {fmt.label}
+   401→                    </button>
+   402→                  ))}
+   403→                </div>
+   404→              </div>
+   405→            </CardContent>
+   406→          </Card>
+   407→
+   408→          <div className="flex justify-center">
+   409→            <Button
+   410→              onClick={generateReelIdeas}
+   411→              disabled={isLoading || !reelServicio || !reelObjetivo}
+   412→              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg bg-gradient-to-r from-[#591427] to-[#C1DBE8] hover:from-[#7A2A40] hover:to-[#8BB8D0] text-white disabled:opacity-50"
+   413→            >
+   414→              {isLoading ? (
+   415→                <><RefreshCw className="w-5 h-5 mr-2 animate-spin" />Generando ideas...</>
+   416→              ) : (
+   417→                <><Sparkles className="w-5 h-5 mr-2" />GENERAR IDEAS</>
+   418→              )}
+   419→            </Button>
+   420→          </div>
+   421→
+   422→          {/* Ideas list */}
+   423→          {reelIdeas.length > 0 && (
+   424→            <div className="space-y-3 mt-4">
+   425→              <h3 className="text-lg font-bold text-[#2A1520]">10 Ideas de Reel</h3>
+   426→              {reelIdeas.map((idea, idx) => (
+   427→                <Card key={idx} className={`brave-glass brave-card-hover brave-glow border-none shadow-md rounded-3xl ${selectedIdeas.has(idx) ? 'ring-2 ring-[#591427]' : ''}`}>
+   428→                  <CardContent className="p-4">
+   429→                    <div className="flex items-center justify-between">
+   430→                      <div className="flex items-start gap-3">
+   431→                        <button
+   432→                          onClick={() => {
+   433→                            const next = new Set(selectedIdeas)
+   434→                            if (next.has(idx)) next.delete(idx)
+   435→                            else next.add(idx)
+   436→                            setSelectedIdeas(next)
+   437→                          }}
+   438→                          className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+   439→                            selectedIdeas.has(idx) ? 'bg-[#591427] border-[#591427]' : 'border-[#E8DDD5]'
+   440→                          }`}
+   441→                        >
+   442→                          {selectedIdeas.has(idx) && <CheckCircle2 className="w-4 h-4 text-white" />}
+   443→                        </button>
+   444→                        <div>
+   445→                          <p className="font-medium text-[#2A1520]">{idea.titulo}</p>
+   446→                          <div className="flex gap-2 mt-1">
+   447→                            <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520] text-xs">{idea.objetivo}</Badge>
+   448→                            <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520] text-xs">{idea.formato}</Badge>
+   449→                          </div>
+   450→                        </div>
+   451→                      </div>
+   452→                      <div className="flex gap-1">
+   453→                        <Button
+   454→                          size="sm"
+   455→                          variant="ghost"
+   456→                          onClick={() => {
+   457→                            setReelIdeas([])
+   458→                            generateScript(idea)
+   459→                          }}
+   460→                          className="text-[#C1DBE8] hover:text-[#591427] hover:bg-[#F5F0EB]"
+   461→                        >
+   462→                          <FileText className="w-4 h-4" />
+   463→                        </Button>
+   464→                      </div>
+   465→                    </div>
+   466→                  </CardContent>
+   467→                </Card>
+   468→              ))}
+   469→
+   470→              {selectedIdeas.size > 0 && (
+   471→                <div className="flex gap-3 justify-center pt-2">
+   472→                  <Button
+   473→                    onClick={() => {
+   474→                      const items = Array.from(selectedIdeas).map(idx => ({
+   475→                        id: generateId(),
+   476→                        tipo: 'reel' as const,
+   477→                        titulo: reelIdeas[idx].titulo,
+   478→                        objetivo: reelIdeas[idx].objetivo || reelObjetivo,
+   479→                        servicio: reelIdeas[idx].servicio || reelServicio,
+   480→                        guion: '',
+   481→                        copy: '',
+   482→                        hashtags: '',
+   483→                        textoPortada: '',
+   484→                        formato: reelIdeas[idx].formato || reelFormato,
+   485→                        estado: 'borrador' as const,
+   486→                        fecha: '',
+   487→                        slides: [],
+   488→                        storiesData: [],
+   489→                        planId: '',
+   490→                        createdAt: new Date().toISOString(),
+   491→                      }))
+   492→                      addLibraryItems(items)
+   493→                      setSelectedIdeas(new Set())
+   494→                    }}
+   495→                    className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
+   496→                  >
+   497→                    <Save className="w-4 h-4 mr-2" />
+   498→                    Guardar {selectedIdeas.size} ideas
+   499→                  </Button>
+   500→                </div>
+   501→              )}
+   502→            </div>
+   503→          )}
+   504→        </>
+   505→      )}
+   506→
+   507→      {/* REEL SCRIPT */}
+   508→      {subModule === 'reels' && showReelScript && currentScript && (
+   509→        <Card className="border-none shadow-md border-l-4 border-l-[#591427] brave-glass brave-card-hover brave-glow rounded-3xl">
+   510→          <CardHeader>
+   511→            <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+   512→              <FileText className="w-5 h-5 text-[#C1DBE8]" />
+   513→              Guión del Reel
+   514→            </CardTitle>
+   515→          </CardHeader>
+   516→          <CardContent className="space-y-4">
+   517→            <div className="space-y-2">
+   518→              <label className="text-sm font-bold text-[#591427]">GUIÓN</label>
+   519→              <div className="bg-[#FFFBF0] p-4 rounded-xl whitespace-pre-line text-sm text-[#2A1520]">
+   520→                {currentScript.guion}
+   521→              </div>
+   522→            </div>
+   523→
+   524→            <div className="space-y-2">
+   525→              <label className="text-sm font-bold text-[#591427]">COPY (Descripción)</label>
+   526→              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#2A1520]">
+   527→                {currentScript.copy}
+   528→              </div>
+   529→            </div>
+   530→
+   531→            <div className="space-y-2">
+   532→              <label className="text-sm font-bold text-[#591427]">HASHTAGS</label>
+   533→              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#C1DBE8]">
+   534→                {currentScript.hashtags}
+   535→              </div>
+   536→            </div>
+   537→
+   538→            <div className="space-y-2">
+   539→              <label className="text-sm font-bold text-[#591427]">TEXTO PORTADA</label>
+   540→              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#2A1520] font-medium">
+   541→                {currentScript.textoPortada}
+   542→              </div>
+   543→            </div>
+   544→
+   545→            <div className="flex gap-3 pt-4">
+   546→              <Button
+   547→                onClick={() => copyToClipboard(currentScript.guion + '\n\n' + currentScript.copy + '\n\n' + currentScript.hashtags)}
+   548→                className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] rounded-2xl"
+   549→              >
+   550→                <Copy className="w-4 h-4 mr-2" />
+   551→                Copiar todo
+   552→              </Button>
+   553→              <Button
+   554→                onClick={() => {
+   555→                  saveToLibrary({
+   556→                    id: generateId(),
+   557→                    tipo: 'reel',
+   558→                    titulo: currentScript.textoPortada || 'Reel',
+   559→                    objetivo: reelObjetivo,
+   560→                    servicio: reelServicio,
+   561→                    guion: currentScript.guion,
+   562→                    copy: currentScript.copy,
+   563→                    hashtags: currentScript.hashtags,
+   564→                    textoPortada: currentScript.textoPortada,
+   565→                    formato: reelFormato,
+   566→                    estado: 'borrador',
+   567→                    fecha: '',
+   568→                    slides: [],
+   569→                    storiesData: [],
+   570→                    planId: '',
+   571→                    createdAt: new Date().toISOString(),
+   572→                  })
+   573→                }}
+   574→                className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
+   575→              >
+   576→                <Save className="w-4 h-4 mr-2" />
+   577→                Guardar
+   578→              </Button>
+   579→              <Button
+   580→                variant="outline"
+   581→                onClick={() => {
+   582→                  setShowReelScript(false)
+   583→                  setCurrentScript(null)
+   584→                }}
+   585→                className="border-[#E8DDD5] rounded-2xl"
+   586→              >
+   587→                Volver a ideas
+   588→              </Button>
+   589→            </div>
+   590→          </CardContent>
+   591→        </Card>
+   592→      )}
+   593→
+   594→      {/* STORIES SUBMODULE */}
+   595→      {subModule === 'stories' && (
+   596→        <>
+   597→          <Card className="border-none shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
+   598→            <CardHeader className="pb-4">
+   599→              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+   600→                <MessageSquare className="w-5 h-5 text-[#C1DBE8]" />
+   601→                Crear Stories
+   602→              </CardTitle>
+   603→              <CardDescription>Genera una secuencia de 3 stories</CardDescription>
+   604→            </CardHeader>
+   605→            <CardContent className="space-y-4">
+   606→              <div className="space-y-2">
+   607→                <label className="text-sm font-medium text-[#2A1520]">Servicio</label>
+   608→                <div className="flex flex-wrap gap-2">
+   609→                  {servicios.map((s) => (
+   610→                    <button
+   611→                      key={s}
+   612→                      onClick={() => setStoryServicio(s)}
+   613→                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+   614→                        storyServicio === s
+   615→                          ? 'bg-[#591427] text-white shadow-md'
+   616→                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   617→                      }`}
+   618→                    >
+   619→                      {s}
+   620→                    </button>
+   621→                  ))}
+   622→                </div>
+   623→              </div>
+   624→
+   625→              <div className="space-y-2">
+   626→                <label className="text-sm font-medium text-[#2A1520]">Objetivo</label>
+   627→                <div className="flex flex-wrap gap-2">
+   628→                  {['autoridad', 'reservas', 'educación', 'venta'].map((obj) => (
+   629→                    <button
+   630→                      key={obj}
+   631→                      onClick={() => setStoryObjetivo(obj)}
+   632→                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
+   633→                        storyObjetivo === obj
+   634→                          ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+   635→                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   636→                      }`}
+   637→                    >
+   638→                      {obj}
+   639→                    </button>
+   640→                  ))}
+   641→                </div>
+   642→              </div>
+   643→            </CardContent>
+   644→          </Card>
+   645→
+   646→          <div className="flex justify-center">
+   647→            <Button
+   648→              onClick={generateStories}
+   649→              disabled={isLoading || !storyServicio}
+   650→              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg bg-gradient-to-r from-[#591427] to-[#C1DBE8] hover:from-[#7A2A40] hover:to-[#8BB8D0] text-white disabled:opacity-50"
+   651→            >
+   652→              {isLoading ? (
+   653→                <><RefreshCw className="w-5 h-5 mr-2 animate-spin" />Generando...</>
+   654→              ) : (
+   655→                <><Sparkles className="w-5 h-5 mr-2" />GENERAR STORIES</>
+   656→              )}
+   657→            </Button>
+   658→          </div>
+   659→
+   660→          {storyResult && (
+   661→            <div className="space-y-4 mt-4">
+   662→              <h3 className="text-lg font-bold text-[#2A1520]">Tu Secuencia de Stories</h3>
+   663→              {storyResult.stories.map((story: any, idx: number) => (
+   664→                <Card key={idx} className="brave-glass brave-card-hover brave-glow border-none shadow-md rounded-3xl">
+   665→                  <CardContent className="p-5">
+   666→                    <div className="flex items-start gap-4">
+   667→                      <div className="w-10 h-10 rounded-full bg-[#591427] flex items-center justify-center text-white font-bold text-sm shrink-0">
+   668→                        {story.numero}
+   669→                      </div>
+   670→                      <div className="flex-1 space-y-2">
+   671→                        <p className="font-medium text-[#2A1520]">{story.texto}</p>
+   672→                        <div className="flex gap-2 flex-wrap">
+   673→                          <Badge className="bg-[#FFF1B5] text-[#2A1520] text-xs">
+   674→                            Sticker: {story.sticker}
+   675→                          </Badge>
+   676→                        </div>
+   677→                        <p className="text-xs text-muted-foreground italic">Idea visual: {story.ideaVisual}</p>
+   678→                      </div>
+   679→                      <Button
+   680→                        size="sm"
+   681→                        variant="ghost"
+   682→                        onClick={() => copyToClipboard(story.texto)}
+   683→                        className="text-[#C1DBE8] hover:text-[#591427]"
+   684→                      >
+   685→                        <Copy className="w-4 h-4" />
+   686→                      </Button>
+   687→                    </div>
+   688→                  </CardContent>
+   689→                </Card>
+   690→              ))}
+   691→              <div className="flex gap-3 justify-center pt-2">
+   692→                <Button
+   693→                  onClick={() => copyToClipboard(storyResult.stories.map((s: any) => `Story ${s.numero}: ${s.texto}\nSticker: ${s.sticker}`).join('\n\n'))}
+   694→                  className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] rounded-2xl"
+   695→                >
+   696→                  <Copy className="w-4 h-4 mr-2" />Copiar todo
+   697→                </Button>
+   698→                <Button
+   699→                  onClick={() => saveToLibrary({
+   700→                    id: generateId(),
+   701→                    tipo: 'story',
+   702→                    titulo: `Stories: ${storyServicio}`,
+   703→                    objetivo: storyObjetivo,
+   704→                    servicio: storyServicio,
+   705→                    guion: storyResult.stories.map((s: any) => s.texto).join('\n\n'),
+   706→                    copy: '',
+   707→                    hashtags: '',
+   708→                    textoPortada: '',
+   709→                    formato: '',
+   710→                    estado: 'borrador',
+   711→                    fecha: '',
+   712→                    slides: [],
+   713→                    storiesData: storyResult.stories,
+   714→                    planId: '',
+   715→                    createdAt: new Date().toISOString(),
+   716→                  })}
+   717→                  className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
+   718→                >
+   719→                  <Save className="w-4 h-4 mr-2" />Guardar
+   720→                </Button>
+   721→              </div>
+   722→            </div>
+   723→          )}
+   724→        </>
+   725→      )}
+   726→
+   727→      {/* CAROUSEL SUBMODULE */}
+   728→      {subModule === 'carruseles' && (
+   729→        <>
+   730→          <Card className="border-none shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
+   731→            <CardHeader className="pb-4">
+   732→              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+   733→                <LayoutGrid className="w-5 h-5 text-[#C1DBE8]" />
+   734→                Crear Carrusel
+   735→              </CardTitle>
+   736→              <CardDescription>Genera contenido para carruseles de Instagram</CardDescription>
+   737→            </CardHeader>
+   738→            <CardContent className="space-y-4">
+   739→              <div className="space-y-2">
+   740→                <label className="text-sm font-medium text-[#2A1520]">Servicio</label>
+   741→                <div className="flex flex-wrap gap-2">
+   742→                  {servicios.map((s) => (
+   743→                    <button
+   744→                      key={s}
+   745→                      onClick={() => setCarouselServicio(s)}
+   746→                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+   747→                        carouselServicio === s
+   748→                          ? 'bg-[#591427] text-white shadow-md'
+   749→                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   750→                      }`}
+   751→                    >
+   752→                      {s}
+   753→                    </button>
+   754→                  ))}
+   755→                </div>
+   756→              </div>
+   757→
+   758→              <div className="space-y-2">
+   759→                <label className="text-sm font-medium text-[#2A1520]">Objetivo</label>
+   760→                <div className="flex flex-wrap gap-2">
+   761→                  {['autoridad', 'educación', 'venta', 'visibilidad'].map((obj) => (
+   762→                    <button
+   763→                      key={obj}
+   764→                      onClick={() => setCarouselObjetivo(obj)}
+   765→                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
+   766→                        carouselObjetivo === obj
+   767→                          ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+   768→                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   769→                      }`}
+   770→                    >
+   771→                      {obj}
+   772→                    </button>
+   773→                  ))}
+   774→                </div>
+   775→              </div>
+   776→
+   777→              <div className="space-y-2">
+   778→                <label className="text-sm font-medium text-[#2A1520]">Número de slides</label>
+   779→                <div className="grid grid-cols-5 gap-3">
+   780→                  {[1, 2, 3, 4, 5].map((n) => (
+   781→                    <button
+   782→                      key={n}
+   783→                      onClick={() => setCarouselSlides(n)}
+   784→                      className={`p-3 rounded-2xl text-center font-bold transition-all ${
+   785→                        carouselSlides === n
+   786→                          ? 'bg-[#FFF1B5] text-[#2A1520] shadow-md'
+   787→                          : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#FFF1B5]'
+   788→                      }`}
+   789→                    >
+   790→                      {n}
+   791→                    </button>
+   792→                  ))}
+   793→                </div>
+   794→              </div>
+   795→            </CardContent>
+   796→          </Card>
+   797→
+   798→          <div className="flex justify-center">
+   799→            <Button
+   800→              onClick={generateCarousel}
+   801→              disabled={isLoading || !carouselServicio}
+   802→              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg bg-gradient-to-r from-[#591427] to-[#C1DBE8] hover:from-[#7A2A40] hover:to-[#8BB8D0] text-white disabled:opacity-50"
+   803→            >
+   804→              {isLoading ? (
+   805→                <><RefreshCw className="w-5 h-5 mr-2 animate-spin" />Generando...</>
+   806→              ) : (
+   807→                <><Sparkles className="w-5 h-5 mr-2" />GENERAR CARRUSEL</>
+   808→              )}
+   809→            </Button>
+   810→          </div>
+   811→
+   812→          {carouselResult && (
+   813→            <div className="space-y-4 mt-4">
+   814→              <h3 className="text-lg font-bold text-[#2A1520]">Tu Carrusel</h3>
+   815→              {carouselResult.slides.map((slide: any, idx: number) => (
+   816→                <Card key={idx} className="brave-glass brave-card-hover brave-glow border-none shadow-md rounded-3xl">
+   817→                  <CardContent className="p-5">
+   818→                    <div className="flex items-start gap-4">
+   819→                      <div className="w-10 h-10 rounded-xl bg-[#FFF1B5] flex items-center justify-center text-[#2A1520] font-bold text-sm shrink-0">
+   820→                        {slide.numero}
+   821→                      </div>
+   822→                      <p className="font-medium text-[#2A1520] flex-1">{slide.texto}</p>
+   823→                      <Button
+   824→                        size="sm"
+   825→                        variant="ghost"
+   826→                        onClick={() => copyToClipboard(slide.texto)}
+   827→                        className="text-[#C1DBE8] hover:text-[#591427]"
+   828→                      >
+   829→                        <Copy className="w-4 h-4" />
+   830→                      </Button>
+   831→                    </div>
+   832→                  </CardContent>
+   833→                </Card>
+   834→              ))}
+   835→
+   836→              {carouselResult.copy && (
+   837→                <Card className="border-none shadow-md bg-[#FFFBF0] brave-glass brave-card-hover brave-glow rounded-3xl">
+   838→                  <CardContent className="p-4">
+   839→                    <label className="text-sm font-bold text-[#591427]">COPY</label>
+   840→                    <p className="text-sm text-[#2A1520] mt-1">{carouselResult.copy}</p>
+   841→                  </CardContent>
+   842→                </Card>
+   843→              )}
+   844→
+   845→              {carouselResult.hashtags && (
+   846→                <Card className="border-none shadow-md bg-[#FFFBF0] brave-glass brave-card-hover brave-glow rounded-3xl">
+   847→                  <CardContent className="p-4">
+   848→                    <label className="text-sm font-bold text-[#591427]">HASHTAGS</label>
+   849→                    <p className="text-sm text-[#C1DBE8] mt-1">{carouselResult.hashtags}</p>
+   850→                  </CardContent>
+   851→                </Card>
+   852→              )}
+   853→
+   854→              <div className="flex gap-3 justify-center pt-2">
+   855→                <Button
+   856→                  onClick={() => copyToClipboard(
+   857→                    carouselResult.slides.map((s: any) => `Slide ${s.numero}: ${s.texto}`).join('\n\n') +
+   858→                    '\n\nCopy: ' + carouselResult.copy +
+   859→                    '\n\nHashtags: ' + carouselResult.hashtags
+   860→                  )}
+   861→                  className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] rounded-2xl"
+   862→                >
+   863→                  <Copy className="w-4 h-4 mr-2" />Copiar todo
+   864→                </Button>
+   865→                <Button
+   866→                  onClick={() => saveToLibrary({
+   867→                    id: generateId(),
+   868→                    tipo: 'carrusel',
+   869→                    titulo: `Carrusel: ${carouselServicio}`,
+   870→                    objetivo: carouselObjetivo,
+   871→                    servicio: carouselServicio,
+   872→                    guion: '',
+   873→                    copy: carouselResult.copy || '',
+   874→                    hashtags: carouselResult.hashtags || '',
+   875→                    textoPortada: '',
+   876→                    formato: '',
+   877→                    estado: 'borrador',
+   878→                    fecha: '',
+   879→                    slides: carouselResult.slides,
+   880→                    storiesData: [],
+   881→                    planId: '',
+   882→                    createdAt: new Date().toISOString(),
+   883→                  })}
+   884→                  className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
+   885→                >
+   886→                  <Save className="w-4 h-4 mr-2" />Guardar
+   887→                </Button>
+   888→              </div>
+   889→            </div>
+   890→          )}
+   891→        </>
+   892→      )}
+   893→    </div>
+   894→  )
+   895→}
+   896→

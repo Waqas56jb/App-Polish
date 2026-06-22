@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   useAppStore,
   HookCard,
@@ -8,7 +8,6 @@ import {
   SavedHookEstado,
   generateId,
 } from '@/lib/store'
-import { HOOKS_SEED, HOOK_CATEGORIAS } from '@/lib/hooks-data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,57 +17,46 @@ import {
   Bookmark,
   Copy,
   Check,
-  ChevronRight,
   X,
   Sparkles,
   Save,
-  Calendar,
-  Trash2,
-  Video,
   FileText,
-  LayoutGrid,
-  Clock,
-  CheckCircle2,
   RefreshCw,
   Loader2,
-  Plus,
   Lightbulb,
-  Heart,
+  Eye,
+  Zap,
+  ArrowRight,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BravyBot } from './bravy-bot'
+import { BravyBot, getRandomMotivationalTip } from './bravy-bot'
+import { fetchJSON } from '@/lib/fetch-safe'
 
-type Vista = 'banco' | 'mis-ideas' | 'calendario'
+type Vista = 'banco' | 'guardados'
 
-// Categorías principales para chips rápidos (solo las que tienen hooks)
-const CATEGORIAS_PRINCIPALES = [
-  'Balayage', 'Rubios', 'Color', 'Tratamientos', 'Cortes',
-  'Alisados', 'Canas', 'Errores comunes', 'Tendencias', 'Mitos',
+// Categorías con colores vibrantes Pantone
+const CATEGORIAS = [
+  { nombre: 'Balayage', color: 'bg-amber-100 text-amber-800 border-amber-300', active: 'bg-amber-500 text-white border-amber-500' },
+  { nombre: 'Rubios', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', active: 'bg-yellow-500 text-white border-yellow-500' },
+  { nombre: 'Color', color: 'bg-rose-100 text-rose-800 border-rose-300', active: 'bg-rose-500 text-white border-rose-500' },
+  { nombre: 'Tratamientos', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', active: 'bg-emerald-500 text-white border-emerald-500' },
+  { nombre: 'Cortes', color: 'bg-orange-100 text-orange-800 border-orange-300', active: 'bg-orange-500 text-white border-orange-500' },
+  { nombre: 'Alisados', color: 'bg-violet-100 text-violet-800 border-violet-300', active: 'bg-violet-500 text-white border-violet-500' },
+  { nombre: 'Canas', color: 'bg-slate-100 text-slate-800 border-slate-300', active: 'bg-slate-600 text-white border-slate-600' },
+  { nombre: 'Tendencias', color: 'bg-pink-100 text-pink-800 border-pink-300', active: 'bg-pink-500 text-white border-pink-500' },
+  { nombre: 'Mitos', color: 'bg-purple-100 text-purple-800 border-purple-300', active: 'bg-purple-500 text-white border-purple-500' },
+  { nombre: 'Errores comunes', color: 'bg-red-100 text-red-800 border-red-300', active: 'bg-red-500 text-white border-red-500' },
+  { nombre: 'Ventas', color: 'bg-green-100 text-green-800 border-green-300', active: 'bg-green-500 text-white border-green-500' },
+  { nombre: 'Autoridad', color: 'bg-indigo-100 text-indigo-800 border-indigo-300', active: 'bg-indigo-500 text-white border-indigo-500' },
 ]
 
-// Colores suaves por categoría
-const CATEGORIA_COLORS: Record<string, string> = {
-  'Balayage': 'bg-amber-50 text-amber-800 border-amber-200',
-  'Rubios': 'bg-yellow-50 text-yellow-800 border-yellow-200',
-  'Color': 'bg-rose-50 text-rose-800 border-rose-200',
-  'Tratamientos': 'bg-emerald-50 text-emerald-800 border-emerald-200',
-  'Cortes': 'bg-orange-50 text-orange-800 border-orange-200',
-  'Alisados': 'bg-violet-50 text-violet-800 border-violet-200',
-  'Canas': 'bg-gray-50 text-gray-800 border-gray-200',
-  'Cuidado en casa': 'bg-sky-50 text-sky-800 border-sky-200',
-  'Errores comunes': 'bg-red-50 text-red-800 border-red-200',
-  'Tendencias': 'bg-pink-50 text-pink-800 border-pink-200',
-  'Mitos': 'bg-indigo-50 text-indigo-800 border-indigo-200',
-  'Antes y después': 'bg-teal-50 text-teal-800 border-teal-200',
-  'Autoridad': 'bg-purple-50 text-purple-800 border-purple-200',
-  'Ventas': 'bg-green-50 text-green-800 border-green-200',
-}
+const CATEGORIA_MAP = Object.fromEntries(CATEGORIAS.map(c => [c.nombre, c]))
 
-const ESTADO_LABELS: Record<SavedHookEstado, { label: string; color: string; icon: any }> = {
-  idea: { label: 'Idea guardada', color: 'bg-amber-100 text-amber-800 border-amber-200', icon: Bookmark },
-  pendiente: { label: 'Pendiente', color: 'bg-sky-100 text-sky-800 border-sky-200', icon: Clock },
-  grabado: { label: 'Grabado', color: 'bg-violet-100 text-violet-800 border-violet-200', icon: Video },
-  publicado: { label: 'Publicado', color: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: CheckCircle2 },
+const ESTADO_LABELS: Record<SavedHookEstado, { label: string; color: string }> = {
+  idea: { label: 'Idea', color: 'bg-amber-100 text-amber-800' },
+  pendiente: { label: 'Pendiente', color: 'bg-sky-100 text-sky-800' },
+  grabado: { label: 'Grabado', color: 'bg-violet-100 text-violet-800' },
+  publicado: { label: 'Publicado', color: 'bg-emerald-100 text-emerald-800' },
 }
 
 function copyToClipboard(text: string) {
@@ -78,58 +66,118 @@ function copyToClipboard(text: string) {
 }
 
 // ============================================================
-// COMPONENTE PRINCIPAL
+// MAIN COMPONENT
 // ============================================================
 export function BancoGanchos() {
-  const {
-    brandProfile,
-    customHooks,
-    addCustomHook,
-    updateCustomHook,
-    removeCustomHook,
-    savedHooks,
-    saveHook,
-    updateSavedHook,
-    removeSavedHook,
-    addLibraryItem,
-    setIsLoading,
-  } = useAppStore()
+  const { brandProfile, savedHooks, saveHook, updateSavedHook, removeSavedHook, addLibraryItem, setIsLoading } = useAppStore()
 
   const [vista, setVista] = useState<Vista>('banco')
-  const [categoriaActiva, setCategoriaActiva] = useState<string>('')
+  const [categoriaActiva, setCategoriaActiva] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [ganchos, setGanchos] = useState<HookCard[]>([])
+  const [generando, setGenerando] = useState(false)
   const [copiado, setCopiado] = useState<string | null>(null)
 
-  // Hook seleccionado para ver detalle/generar
+  // Modal state
   const [hookSeleccionado, setHookSeleccionado] = useState<HookCard | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-
-  // Generar contenido
-  const [generando, setGenerando] = useState(false)
   const [resultadoGenerado, setResultadoGenerado] = useState<any>(null)
+  const [generandoScript, setGenerandoScript] = useState(false)
+  const [tip, setTip] = useState(getRandomMotivationalTip())
 
-  // Dialogo crear gancho
-  const [dialogoCrear, setDialogoCrear] = useState(false)
+  // Ref to avoid generating on first render
+  const hasInitialized = useRef(false)
 
-  // Todos los ganchos
-  const todosGanchos = useMemo(() => {
-    return [...customHooks, ...HOOKS_SEED]
-  }, [customHooks])
+  // Auto-generate on mount
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true
+      generarGanchos('')
+    }
+  }, [])
 
-  // Ganchos filtrados
-  const ganchosFiltrados = useMemo(() => {
-    return todosGanchos.filter(g => {
-      if (categoriaActiva && g.categoria !== categoriaActiva) return false
-      if (searchTerm) {
-        const t = searchTerm.toLowerCase()
-        return g.titulo.toLowerCase().includes(t) || g.categoria.toLowerCase().includes(t) || g.servicio.toLowerCase().includes(t)
+  // Generate hooks via AI
+  const generarGanchos = useCallback(async (categoria: string, search?: string) => {
+    setGenerando(true)
+    setTip(getRandomMotivationalTip())
+    try {
+      const { data, error } = await fetchJSON('/api/ai', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'ganchos-extra',
+          brandProfile,
+          context: {
+            categoria: categoria || undefined,
+            tipo: undefined,
+            numGanchos: 12,
+          },
+        }),
+      })
+      if (data?.result?.ganchos && Array.isArray(data.result.ganchos)) {
+        const parsed = data.result.ganchos.map((g: any, i: number) => ({
+          id: `hook-gen-${Date.now()}-${i}`,
+          titulo: g.titulo || '',
+          categoria: g.categoria || categoria || 'General',
+          tipo: g.tipo || 'Viral',
+          objetivo: g.objetivo || 'visibilidad',
+          servicio: g.servicio || '',
+          impacto: g.impacto || 'Medio',
+          explicacion: g.explicacion || '',
+          dolor: g.dolor || '',
+          deseo: g.deseo || '',
+          ideaVisual: g.ideaVisual || '',
+        }))
+        // If search term, filter locally
+        if (search) {
+          const q = search.toLowerCase()
+          const filtered = parsed.filter((g: HookCard) =>
+            g.titulo.toLowerCase().includes(q) ||
+            g.categoria.toLowerCase().includes(q) ||
+            g.servicio.toLowerCase().includes(q) ||
+            g.explicacion.toLowerCase().includes(q)
+          )
+          setGanchos(filtered.length > 0 ? filtered : parsed)
+        } else {
+          setGanchos(parsed)
+        }
+      } else {
+        // Fallback: generate basic hooks
+        setGanchos(generateFallbackHooks(categoria))
       }
-      return true
-    })
-  }, [todosGanchos, categoriaActiva, searchTerm])
+    } catch {
+      setGanchos(generateFallbackHooks(categoria))
+    } finally {
+      setGenerando(false)
+    }
+  }, [brandProfile])
+
+  // Handle category click
+  const handleCategoria = (cat: string) => {
+    const nueva = cat === categoriaActiva ? '' : cat
+    setCategoriaActiva(nueva)
+    generarGanchos(nueva, searchTerm || undefined)
+  }
+
+  // Handle search
+  const handleSearch = (term: string) => {
+    setSearchTerm(term)
+    // Debounce search
+    if (term.length >= 2) {
+      const timer = setTimeout(() => generarGanchos(categoriaActiva, term), 600)
+      return () => clearTimeout(timer)
+    } else if (term.length === 0) {
+      generarGanchos(categoriaActiva)
+    }
+  }
+
+  // Regenerate
+  const handleRegenerar = () => {
+    generarGanchos(categoriaActiva, searchTerm || undefined)
+  }
 
   const yaGuardado = (hookId: string) => savedHooks.some(h => h.hookId === hookId)
 
+  // Save hook to library
   const handleGuardar = (gancho: HookCard) => {
     if (yaGuardado(gancho.id)) return
     const nueva: SavedHook = {
@@ -149,28 +197,21 @@ export function BancoGanchos() {
     setTimeout(() => setCopiado(null), 1800)
   }
 
-  const handleCopiarTitulo = (id: string, texto: string) => {
-    copyToClipboard(texto)
-    setCopiado(id)
-    setTimeout(() => setCopiado(null), 1500)
-  }
-
-  // Abrir hook para ver guion completo
+  // Open hook to read full script
   const abrirHook = (gancho: HookCard) => {
     setHookSeleccionado(gancho)
     setResultadoGenerado(null)
     setModalOpen(true)
   }
 
-  // Generar contenido desde hook
+  // Generate content from hook
   const handleGenerar = async () => {
     if (!hookSeleccionado) return
-    setGenerando(true)
-    setIsLoading(true, 'Generando contenido...')
+    setGenerandoScript(true)
+    setIsLoading(true, 'Generando guion completo...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'generar-desde-gancho',
           brandProfile,
@@ -183,25 +224,24 @@ export function BancoGanchos() {
           },
         }),
       })
-      if (!res.ok) throw new Error('Network error')
-      const data = await res.json()
-      setResultadoGenerado(data.result)
-    } catch (e: any) {
+      if (!error) {
+        setResultadoGenerado(data?.result)
+      }
+    } catch (e) {
       console.error('Generate error:', e)
     } finally {
-      setGenerando(false)
+      setGenerandoScript(false)
       setIsLoading(false)
     }
   }
 
-  // Guardar generado en biblioteca
+  // Save generated content to library
   const handleGuardarGenerado = () => {
     if (!hookSeleccionado || !resultadoGenerado) return
     const titulo = resultadoGenerado.titulo || hookSeleccionado.titulo
     const guionTexto = resultadoGenerado.guion || ''
 
-    // Guardar como SavedHook
-    const saved: SavedHook = {
+    saveHook({
       id: generateId(),
       hookId: hookSeleccionado.id,
       titulo,
@@ -212,10 +252,8 @@ export function BancoGanchos() {
       fechaProgramada: null,
       fechaGrabacion: null,
       createdAt: new Date().toISOString(),
-    }
-    saveHook(saved)
+    })
 
-    // También en biblioteca general
     addLibraryItem({
       id: generateId(),
       tipo: 'reel',
@@ -243,20 +281,31 @@ export function BancoGanchos() {
 
   return (
     <div className="space-y-5">
-      {/* Cabecera compacta */}
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Banco de Ganchos</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Ideas listas para usar. Elige, guarda y crea.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Ganchos que se regeneran según lo que buscas</p>
         </div>
+        <Button
+          onClick={handleRegenerar}
+          disabled={generando}
+          className="shrink-0 h-10 px-4 rounded-xl brave-gradient hover:opacity-90 text-white font-medium text-sm gap-2 shadow-md shadow-brave-chocolate/15"
+        >
+          {generando ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
+          Regenerar
+        </Button>
       </div>
 
-      {/* Selector de vista simple */}
-      <div className="flex gap-1.5 bg-card rounded-2xl p-1 shadow-sm border border-border w-fit">
+      {/* View toggle */}
+      <div className="flex gap-1 bg-card rounded-2xl p-1 shadow-sm border border-border w-fit">
         {[
-          { key: 'banco' as Vista, label: 'Ganchos', icon: Lightbulb },
-          { key: 'mis-ideas' as Vista, label: 'Guardados', icon: Bookmark },
-          { key: 'calendario' as Vista, label: 'Calendario', icon: Calendar },
+          { key: 'banco' as Vista, label: 'Explorar', icon: Lightbulb },
+          { key: 'guardados' as Vista, label: 'Guardados', icon: Bookmark },
         ].map(v => (
           <button
             key={v.key}
@@ -269,159 +318,241 @@ export function BancoGanchos() {
           >
             <v.icon className="w-4 h-4" />
             {v.label}
+            {v.key === 'guardados' && savedHooks.length > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                vista === v.key ? 'bg-white/25' : 'bg-muted'
+              }`}>
+                {savedHooks.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      {/* VISTA: BANCO */}
+      {/* VISTA: EXPLORAR */}
       {vista === 'banco' && (
         <div className="space-y-4">
-          {/* Búsqueda + categorías en una sola barra compacta */}
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por título o tema..."
-                className="pl-10 bg-card border-border rounded-xl h-10"
-              />
+          {/* Mascot motivational tip */}
+          <motion.div
+            key={tip}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mascot-banner rounded-2xl px-4 py-3 flex items-center gap-3"
+          >
+            <div className="brave-bounce">
+              <BravyBot size={38} expression="wink" animate />
             </div>
+            <p className="text-xs font-medium text-foreground leading-snug flex-1">{tip}</p>
+          </motion.div>
 
-            {/* Chips de categorías horizontales - scrollable */}
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Buscar tema, servicio o palabra clave..."
+              className="pl-10 bg-card border-border rounded-xl h-11 text-sm"
+            />
+            {searchTerm && (
               <button
-                onClick={() => setCategoriaActiva('')}
-                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                  !categoriaActiva
-                    ? 'bg-foreground text-background border-foreground'
-                    : 'bg-card text-muted-foreground border-border hover:bg-muted'
-                }`}
+                onClick={() => { setSearchTerm(''); generarGanchos(categoriaActiva) }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                Todos
+                <X className="w-4 h-4" />
               </button>
-              {CATEGORIAS_PRINCIPALES.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoriaActiva(cat === categoriaActiva ? '' : cat)}
-                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                    cat === categoriaActiva
-                      ? 'bg-foreground text-background border-foreground'
-                      : `${CATEGORIA_COLORS[cat] || 'bg-card text-muted-foreground border-border'} hover:opacity-80`
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            )}
           </div>
 
-          {/* Grid de tarjetas simplificado */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {ganchosFiltrados.map((gancho, idx) => {
-              const guardado = yaGuardado(gancho.id)
+          {/* Category chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
+            <button
+              onClick={() => handleCategoria('')}
+              className={`brave-chip shrink-0 border ${
+                !categoriaActiva
+                  ? 'bg-foreground text-background border-foreground'
+                  : 'bg-card text-muted-foreground border-border'
+              }`}
+            >
+              Todos
+            </button>
+            {CATEGORIAS.map(cat => {
+              const isActive = categoriaActiva === cat.nombre
               return (
-                <motion.div
-                  key={gancho.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, delay: Math.min(idx * 0.03, 0.3) }}
+                <button
+                  key={cat.nombre}
+                  onClick={() => handleCategoria(cat.nombre)}
+                  className={`brave-chip shrink-0 border ${isActive ? cat.active : cat.color}`}
                 >
-                  <Card className="bg-card border-border shadow-sm hover:shadow-md transition-all duration-200 group rounded-2xl overflow-hidden">
-                    <CardContent className="p-4 space-y-3">
-                      {/* Categoría badge */}
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${CATEGORIA_COLORS[gancho.categoria] || 'bg-muted text-muted-foreground border-border'}`}>
-                          {gancho.categoria}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground font-medium">
-                          {gancho.impacto} impacto
-                        </span>
-                      </div>
-
-                      {/* Gancho - texto principal */}
-                      <p className="text-sm font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
-                        &ldquo;{gancho.titulo}&rdquo;
-                      </p>
-
-                      {/* Explicación breve */}
-                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                        {gancho.explicacion}
-                      </p>
-
-                      {/* Dos botones principales */}
-                      <div className="flex gap-2 pt-1">
-                        <Button
-                          size="sm"
-                          onClick={() => handleGuardar(gancho)}
-                          disabled={guardado}
-                          variant={guardado ? 'secondary' : 'default'}
-                          className={`flex-1 h-9 text-xs font-medium rounded-xl transition-all ${
-                            guardado
-                              ? 'bg-muted text-muted-foreground cursor-default'
-                              : 'bg-card hover:bg-muted border border-border text-foreground'
-                          }`}
-                        >
-                          {copiado === 'saved-' + gancho.id ? (
-                            <><Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> Guardado</>
-                          ) : guardado ? (
-                            <><Bookmark className="w-3.5 h-3.5 mr-1.5" /> En biblioteca</>
-                          ) : (
-                            <><Bookmark className="w-3.5 h-3.5 mr-1.5" /> Guardar</>
-                          )}
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          onClick={() => abrirHook(gancho)}
-                          className="flex-1 h-9 text-xs font-medium rounded-xl brave-gradient hover:opacity-90 text-white"
-                        >
-                          <FileText className="w-3.5 h-3.5 mr-1.5" />
-                          Ver guion
-                          <ChevronRight className="w-3 h-3 ml-0.5" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  {cat.nombre}
+                </button>
               )
             })}
           </div>
 
-          {ganchosFiltrados.length === 0 && (
-            <div className="text-center py-16">
-              <BravyBot size={56} expression="thinking" animate />
-              <p className="text-foreground font-medium mt-3 text-sm">No se encontraron ganchos</p>
-              <p className="text-xs text-muted-foreground mt-1">Prueba con otra categoría o búsqueda</p>
+          {/* Generating state */}
+          {generando ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="brave-float">
+                <BravyBot size={72} expression="excited" animate speechBubble="Creando ganchos..." />
+              </div>
+              <div className="mt-5 w-48 h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full brave-shimmer rounded-full" />
+              </div>
+              <p className="text-sm text-muted-foreground mt-3 font-medium">
+                {categoriaActiva ? `Buscando los mejores ganchos de ${categoriaActiva}...` : 'Generando ganchos para ti...'}
+              </p>
             </div>
+          ) : (
+            <>
+              {/* Results count */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground font-medium">
+                  {ganchos.length} ganchos {categoriaActiva && `en ${categoriaActiva}`}
+                </p>
+                <button
+                  onClick={handleRegenerar}
+                  className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 transition-colors"
+                >
+                  <Zap className="w-3 h-3" /> Más opciones
+                </button>
+              </div>
+
+              {/* Hook cards grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                <AnimatePresence mode="popLayout">
+                  {ganchos.map((gancho, idx) => {
+                    const guardado = yaGuardado(gancho.id)
+                    const catInfo = CATEGORIA_MAP[gancho.categoria]
+                    return (
+                      <motion.div
+                        key={gancho.id}
+                        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                        transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.4) }}
+                      >
+                        <Card className="bg-card border-border/70 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden group">
+                          {/* Colored top bar */}
+                          <div className={`h-1 ${catInfo?.active?.replace('text-white', '').replace('border-', 'bg-').split(' ')[0] || 'bg-brave-pastel-blue'}`} />
+
+                          <CardContent className="p-4 space-y-3">
+                            {/* Category + Impact */}
+                            <div className="flex items-center justify-between">
+                              <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${catInfo?.color || 'bg-muted text-muted-foreground border-border'}`}>
+                                {gancho.categoria}
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                gancho.impacto === 'Alto'
+                                  ? 'bg-red-50 text-red-600'
+                                  : gancho.impacto === 'Medio'
+                                  ? 'bg-amber-50 text-amber-600'
+                                  : 'bg-slate-50 text-slate-500'
+                              }`}>
+                                {gancho.impacto}
+                              </span>
+                            </div>
+
+                            {/* Hook text - the star of the card */}
+                            <p className="text-[15px] font-bold text-foreground leading-snug group-hover:text-primary transition-colors">
+                              &ldquo;{gancho.titulo}&rdquo;
+                            </p>
+
+                            {/* Brief explanation */}
+                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                              {gancho.explicacion}
+                            </p>
+
+                            {/* 3 ACTION BUTTONS */}
+                            <div className="flex gap-2 pt-1">
+                              {/* 1. Guardar en biblioteca */}
+                              <button
+                                onClick={() => handleGuardar(gancho)}
+                                disabled={guardado}
+                                className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-semibold transition-all ${
+                                  guardado
+                                    ? 'bg-muted/70 text-muted-foreground cursor-default'
+                                    : 'bg-card border border-border text-foreground hover:bg-brave-pastel-blue/30 hover:border-brave-pastel-blue'
+                                }`}
+                              >
+                                {copiado === 'saved-' + gancho.id ? (
+                                  <><Check className="w-3.5 h-3.5 text-emerald-500" /> Guardado</>
+                                ) : guardado ? (
+                                  <><Bookmark className="w-3.5 h-3.5" /> En biblioteca</>
+                                ) : (
+                                  <><Bookmark className="w-3.5 h-3.5" /> Guardar</>
+                                )}
+                              </button>
+
+                              {/* 2. Abrir y leer guion entero */}
+                              <button
+                                onClick={() => abrirHook(gancho)}
+                                className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-semibold brave-gradient text-white hover:opacity-90 transition-all shadow-sm shadow-brave-chocolate/10"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                Guion
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+
+                              {/* 3. Copy de la publicación */}
+                              <button
+                                onClick={() => {
+                                  copyToClipboard(gancho.titulo)
+                                  setCopiado('copy-' + gancho.id)
+                                  setTimeout(() => setCopiado(null), 1500)
+                                }}
+                                className="w-9 h-9 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+                              >
+                                {copiado === 'copy-' + gancho.id ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    )
+                  })}
+                </AnimatePresence>
+              </div>
+
+              {/* Empty state */}
+              {ganchos.length === 0 && !generando && (
+                <div className="flex flex-col items-center py-16">
+                  <BravyBot size={56} expression="thinking" animate />
+                  <p className="text-foreground font-medium mt-3 text-sm">No se encontraron ganchos</p>
+                  <Button
+                    onClick={handleRegenerar}
+                    variant="outline"
+                    className="mt-3 rounded-xl border-border text-foreground"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-1.5" /> Regenerar ganchos
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
 
-      {/* VISTA: MIS IDEAS GUARDADAS */}
-      {vista === 'mis-ideas' && (
-        <MisIdeasGuardadas
+      {/* VISTA: GUARDADOS */}
+      {vista === 'guardados' && (
+        <Guardados
           savedHooks={savedHooks}
           onUpdate={updateSavedHook}
           onRemove={removeSavedHook}
         />
       )}
 
-      {/* VISTA: CALENDARIO */}
-      {vista === 'calendario' && (
-        <CalendarioSimple
-          savedHooks={savedHooks}
-          onUpdate={updateSavedHook}
-        />
-      )}
-
-      {/* MODAL: Ver guion completo del hook */}
+      {/* MODAL: Full script + generated content */}
       <AnimatePresence>
         {modalOpen && hookSeleccionado && (
           <ModalGuion
             gancho={hookSeleccionado}
             resultadoGenerado={resultadoGenerado}
-            generando={generando}
+            generandoScript={generandoScript}
             copiado={copiado}
             guardado={yaGuardado(hookSeleccionado.id)}
             onClose={() => {
@@ -445,12 +576,12 @@ export function BancoGanchos() {
 }
 
 // ============================================================
-// MODAL: Ver guion completo + copy de publicación
+// MODAL: Full script viewer
 // ============================================================
 function ModalGuion({
   gancho,
   resultadoGenerado,
-  generando,
+  generandoScript,
   copiado,
   guardado,
   onClose,
@@ -461,7 +592,7 @@ function ModalGuion({
 }: {
   gancho: HookCard
   resultadoGenerado: any
-  generando: boolean
+  generandoScript: boolean
   copiado: string | null
   guardado: boolean
   onClose: () => void
@@ -470,7 +601,7 @@ function ModalGuion({
   onGuardarGenerado: () => void
   onCopiar: (field: string, text: string) => void
 }) {
-  const [showDetalle, setShowDetalle] = useState(false)
+  const catInfo = CATEGORIA_MAP[gancho.categoria]
 
   return (
     <motion.div
@@ -489,66 +620,88 @@ function ModalGuion({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="brave-gradient p-5 text-white relative">
+        <div className="brave-gradient p-5 text-white relative overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
+          <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full bg-white/5" />
+
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors z-10"
           >
             <X className="w-4 h-4" />
           </button>
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/20`}>
+          <div className="flex items-center gap-2 mb-2 relative z-10">
+            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/20">
               {gancho.categoria}
             </span>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20">
-              {gancho.tipo} · {gancho.objetivo}
+              {gancho.tipo} · {gancho.impacto}
             </span>
           </div>
-          <h2 className="text-xl font-bold leading-snug pr-8">
+          <h2 className="text-xl font-bold leading-snug pr-8 relative z-10">
             &ldquo;{gancho.titulo}&rdquo;
           </h2>
         </div>
 
         {/* Body */}
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
-          {/* Info rápida */}
+          {/* Quick info */}
           <div className="grid grid-cols-2 gap-2.5">
-            <div className="bg-muted/50 rounded-xl p-3">
+            <div className="bg-muted/40 rounded-xl p-3">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Servicio</p>
               <p className="text-sm font-medium text-foreground">{gancho.servicio}</p>
             </div>
-            <div className="bg-muted/50 rounded-xl p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Impacto</p>
-              <p className="text-sm font-medium text-foreground">{gancho.impacto}</p>
+            <div className="bg-muted/40 rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Objetivo</p>
+              <p className="text-sm font-medium text-foreground capitalize">{gancho.objetivo}</p>
             </div>
           </div>
 
-          {/* Botón generar contenido */}
+          {/* Analysis */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="bg-brave-sky/40 rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+                <Lightbulb className="w-3 h-3" /> Por qué funciona
+              </p>
+              <p className="text-xs text-foreground leading-relaxed">{gancho.explicacion}</p>
+            </div>
+            <div className="bg-brave-rose/30 rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Dolor que toca</p>
+              <p className="text-xs text-foreground leading-relaxed">{gancho.dolor}</p>
+            </div>
+            <div className="bg-brave-mint/40 rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Deseo que activa</p>
+              <p className="text-xs text-foreground leading-relaxed">{gancho.deseo}</p>
+            </div>
+          </div>
+
+          {/* Generate button */}
           {!resultadoGenerado && (
             <Button
               onClick={onGenerar}
-              disabled={generando}
-              className="w-full h-11 rounded-xl brave-gradient hover:opacity-90 text-white font-medium text-sm"
+              disabled={generandoScript}
+              className="w-full h-12 rounded-xl brave-gradient hover:opacity-90 text-white font-semibold text-sm gap-2 shadow-md shadow-brave-chocolate/10"
             >
-              {generando ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generando contenido...</>
+              {generandoScript ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Generando contenido...</>
               ) : (
-                <><Sparkles className="w-4 h-4 mr-2" /> Generar guion completo</>
+                <><Sparkles className="w-4 h-4" /> Generar guion completo</>
               )}
             </Button>
           )}
 
-          {/* Resultado generado */}
+          {/* Generated content */}
           {resultadoGenerado && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contenido generado</p>
-                <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-800">
+                <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 font-semibold">
                   Listo para usar
                 </Badge>
               </div>
 
-              {/* Guion */}
+              {/* Script */}
               {resultadoGenerado.guion && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -559,17 +712,17 @@ function ModalGuion({
                       onClick={() => onCopiar('guion', resultadoGenerado.guion)}
                       className="h-7 text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {copiado === 'guion' ? <Check className="w-3 h-3 mr-1 text-emerald-600" /> : <Copy className="w-3 h-3 mr-1" />}
+                      {copiado === 'guion' ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
                       {copiado === 'guion' ? 'Copiado' : 'Copiar'}
                     </Button>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 text-sm text-foreground whitespace-pre-line max-h-[200px] overflow-y-auto leading-relaxed">
+                  <div className="bg-muted/40 rounded-xl p-4 text-sm text-foreground whitespace-pre-line max-h-[200px] overflow-y-auto leading-relaxed">
                     {resultadoGenerado.guion}
                   </div>
                 </div>
               )}
 
-              {/* Copy de publicación */}
+              {/* Copy */}
               {resultadoGenerado.copy && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -580,11 +733,11 @@ function ModalGuion({
                       onClick={() => onCopiar('copy', resultadoGenerado.copy)}
                       className="h-7 text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {copiado === 'copy' ? <Check className="w-3 h-3 mr-1 text-emerald-600" /> : <Copy className="w-3 h-3 mr-1" />}
+                      {copiado === 'copy' ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
                       {copiado === 'copy' ? 'Copiado' : 'Copiar'}
                     </Button>
                   </div>
-                  <div className="bg-muted/50 rounded-xl p-4 text-sm text-foreground leading-relaxed">
+                  <div className="bg-muted/40 rounded-xl p-4 text-sm text-foreground leading-relaxed">
                     {resultadoGenerado.copy}
                   </div>
                 </div>
@@ -601,7 +754,7 @@ function ModalGuion({
                       onClick={() => onCopiar('hashtags', resultadoGenerado.hashtags)}
                       className="h-7 text-xs text-muted-foreground hover:text-foreground"
                     >
-                      {copiado === 'hashtags' ? <Check className="w-3 h-3 mr-1 text-emerald-600" /> : <Copy className="w-3 h-3 mr-1" />}
+                      {copiado === 'hashtags' ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
                       {copiado === 'hashtags' ? 'Copiado' : 'Copiar'}
                     </Button>
                   </div>
@@ -611,14 +764,14 @@ function ModalGuion({
                 </div>
               )}
 
-              {/* Slides (carrusel) */}
+              {/* Slides */}
               {resultadoGenerado.slides && resultadoGenerado.slides.length > 0 && (
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-foreground">Slides del carrusel</label>
                   <div className="space-y-1.5">
                     {resultadoGenerado.slides.map((s: any, i: number) => (
-                      <div key={i} className="bg-muted/50 rounded-xl p-3 flex gap-3">
-                        <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs shrink-0">
+                      <div key={i} className="bg-muted/40 rounded-xl p-3 flex gap-3">
+                        <div className="w-7 h-7 rounded-full brave-gradient flex items-center justify-center text-white font-bold text-xs shrink-0">
                           {s.numero}
                         </div>
                         <p className="text-sm text-foreground flex-1">{s.texto}</p>
@@ -628,15 +781,15 @@ function ModalGuion({
                 </div>
               )}
 
-              {/* Acciones post-generación */}
+              {/* Post-generation actions */}
               <div className="flex gap-2 pt-2">
                 <Button
                   onClick={onGenerar}
-                  disabled={generando}
+                  disabled={generandoScript}
                   variant="outline"
                   className="flex-1 h-10 rounded-xl border-border text-foreground"
                 >
-                  {generando ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+                  {generandoScript ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
                   Regenerar
                 </Button>
                 <Button
@@ -652,7 +805,7 @@ function ModalGuion({
                 </Button>
               </div>
 
-              {/* Copiar todo */}
+              {/* Copy all */}
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -673,60 +826,10 @@ function ModalGuion({
               </Button>
             </div>
           )}
-
-          {/* Detalle del hook (colapsable) */}
-          {!resultadoGenerado && (
-            <div>
-              <button
-                onClick={() => setShowDetalle(!showDetalle)}
-                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronRight className={`w-3 h-3 transition-transform ${showDetalle ? 'rotate-90' : ''}`} />
-                Ver análisis del gancho
-              </button>
-              <AnimatePresence>
-                {showDetalle && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-2 pt-3">
-                      <div className="bg-muted/50 rounded-xl p-3">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
-                          <Lightbulb className="w-3 h-3" /> Por qué funciona
-                        </p>
-                        <p className="text-sm text-foreground">{gancho.explicacion}</p>
-                      </div>
-                      <div className="bg-muted/50 rounded-xl p-3">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
-                          <Heart className="w-3 h-3" /> Dolor que toca
-                        </p>
-                        <p className="text-sm text-foreground">{gancho.dolor}</p>
-                      </div>
-                      <div className="bg-muted/50 rounded-xl p-3">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> Deseo que activa
-                        </p>
-                        <p className="text-sm text-foreground">{gancho.deseo}</p>
-                      </div>
-                      <div className="bg-muted/50 rounded-xl p-3">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
-                          <Video className="w-3 h-3" /> Idea visual
-                        </p>
-                        <p className="text-sm text-foreground">{gancho.ideaVisual}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border bg-muted/30 flex gap-2">
+        <div className="p-4 border-t border-border bg-muted/20 flex gap-2">
           <Button
             onClick={onGuardar}
             disabled={guardado}
@@ -738,7 +841,7 @@ function ModalGuion({
             }`}
           >
             {copiado === 'saved-hook' || guardado ? (
-              <><Check className="w-4 h-4 mr-1.5 text-emerald-600" /> En biblioteca</>
+              <><Check className="w-4 h-4 mr-1.5 text-emerald-500" /> En biblioteca</>
             ) : (
               <><Bookmark className="w-4 h-4 mr-1.5" /> Guardar idea</>
             )}
@@ -747,7 +850,7 @@ function ModalGuion({
             onClick={onCopiar.bind(null, 'titulo', gancho.titulo)}
             className="h-10 px-5 rounded-xl bg-card border border-border text-foreground hover:bg-muted"
           >
-            {copiado === 'titulo' ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+            {copiado === 'titulo' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
           </Button>
         </div>
       </motion.div>
@@ -756,9 +859,9 @@ function ModalGuion({
 }
 
 // ============================================================
-// SUBCOMPONENTE: Mis ideas guardadas (simplificado)
+// GUARDADOS
 // ============================================================
-function MisIdeasGuardadas({
+function Guardados({
   savedHooks,
   onUpdate,
   onRemove,
@@ -776,15 +879,15 @@ function MisIdeasGuardadas({
     return (
       <div className="text-center py-16">
         <BravyBot size={56} expression="happy" animate />
-        <p className="text-foreground font-medium mt-3 text-sm">Aún no tienes ideas guardadas</p>
-        <p className="text-xs text-muted-foreground mt-1">Guarda ganchos desde el banco para verlos aquí</p>
+        <p className="text-foreground font-medium mt-3 text-sm">Aún no tienes ganchos guardados</p>
+        <p className="text-xs text-muted-foreground mt-1">Explora el banco y guarda los que te gusten</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-4">
-      {/* Filtro por estado */}
+      {/* Filter chips */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
         {(['todos', 'idea', 'pendiente', 'grabado', 'publicado'] as const).map(estado => {
           const count = estado === 'todos' ? savedHooks.length : savedHooks.filter(h => h.estado === estado).length
@@ -793,15 +896,15 @@ function MisIdeasGuardadas({
             <button
               key={estado}
               onClick={() => setFiltroEstado(estado)}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+              className={`brave-chip shrink-0 border text-[11px] ${
                 filtroEstado === estado
                   ? 'bg-foreground text-background border-foreground'
-                  : 'bg-card text-muted-foreground border-border hover:bg-muted'
+                  : 'bg-card text-muted-foreground border-border'
               }`}
             >
               {label}
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                filtroEstado === estado ? 'bg-white/20' : 'bg-muted'
+                filtroEstado === estado ? 'bg-white/25' : 'bg-muted'
               }`}>
                 {count}
               </span>
@@ -810,21 +913,17 @@ function MisIdeasGuardadas({
         })}
       </div>
 
-      {/* Lista */}
+      {/* List */}
       <div className="space-y-2.5">
         {filtrados.map(hook => {
-          const EstadoInfo = ESTADO_LABELS[hook.estado]
-          const EstadoIcon = EstadoInfo.icon
+          const estadoInfo = ESTADO_LABELS[hook.estado]
           return (
-            <Card key={hook.id} className="bg-card border-border shadow-sm rounded-2xl">
+            <Card key={hook.id} className="bg-card border-border shadow-sm rounded-2xl hover:shadow-md transition-all duration-200">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  {/* Indicador de estado */}
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${EstadoInfo.color}`}>
-                    <EstadoIcon className="w-3.5 h-3.5" />
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${estadoInfo.color}`}>
+                    <Bookmark className="w-3.5 h-3.5" />
                   </div>
-
-                  {/* Contenido */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold text-foreground leading-snug">{hook.titulo}</h3>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
@@ -840,7 +939,7 @@ function MisIdeasGuardadas({
                       <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{hook.guionGenerado.substring(0, 120)}...</p>
                     )}
 
-                    {/* Acciones */}
+                    {/* Actions */}
                     <div className="flex items-center gap-1.5 mt-2.5">
                       <select
                         value={hook.estado}
@@ -863,7 +962,7 @@ function MisIdeasGuardadas({
                           }}
                           className="h-7 text-xs text-muted-foreground hover:text-foreground"
                         >
-                          {copiado === hook.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          {copiado === hook.id ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                         </Button>
                       )}
                       <Button
@@ -872,7 +971,7 @@ function MisIdeasGuardadas({
                         onClick={() => onRemove(hook.id)}
                         className="h-7 text-xs text-destructive/60 hover:text-destructive hover:bg-destructive/5 ml-auto"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <X className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
@@ -885,7 +984,7 @@ function MisIdeasGuardadas({
 
       {filtrados.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-sm text-muted-foreground">No hay ideas con ese estado</p>
+          <p className="text-sm text-muted-foreground">No hay ganchos con ese estado</p>
         </div>
       )}
     </div>
@@ -893,152 +992,29 @@ function MisIdeasGuardadas({
 }
 
 // ============================================================
-// SUBCOMPONENTE: Calendario simple
+// FALLBACK HOOKS (when API fails)
 // ============================================================
-function CalendarioSimple({
-  savedHooks,
-  onUpdate,
-}: {
-  savedHooks: SavedHook[]
-  onUpdate: (id: string, updates: Partial<SavedHook>) => void
-}) {
-  const [mes, setMes] = useState(() => {
-    const d = new Date()
-    return new Date(d.getFullYear(), d.getMonth(), 1)
-  })
-
-  const programados = savedHooks.filter(h => h.fechaProgramada)
-  const porFecha = new Map<string, SavedHook[]>()
-  programados.forEach(h => {
-    if (!h.fechaProgramada) return
-    const arr = porFecha.get(h.fechaProgramada) || []
-    arr.push(h)
-    porFecha.set(h.fechaProgramada, arr)
-  })
-
-  const inicioMes = new Date(mes.getFullYear(), mes.getMonth(), 1)
-  const finMes = new Date(mes.getFullYear(), mes.getMonth() + 1, 0)
-  const inicioGrid = new Date(inicioMes)
-  inicioGrid.setDate(inicioGrid.getDate() - inicioGrid.getDay())
-  const dias: Date[] = []
-  const cursor = new Date(inicioGrid)
-  while (cursor <= finMes || dias.length % 7 !== 0) {
-    dias.push(new Date(cursor))
-    cursor.setDate(cursor.getDate() + 1)
-    if (dias.length > 42) break
+function generateFallbackHooks(categoria: string): HookCard[] {
+  const fallbackData: Record<string, HookCard[]> = {
+    'Balayage': [
+      { id: `fb-${Date.now()}-1`, titulo: 'Si tu balayage se ve naranja, puede que estés haciendo esto', categoria: 'Balayage', tipo: 'Objeción', objetivo: 'autoridad', servicio: 'Balayage', impacto: 'Alto', explicacion: 'Nombre un problema específico muy común en balayage. La clienta se siente identificada al instante.', dolor: 'Tener un balayage que se ve naranja o cobrizo y no saber por qué.', deseo: 'Un balayage limpio, frío y luminoso como en Pinterest.', ideaVisual: 'Foto de un balayage cobrizo vs. un balayaje correcto, comparativa lado a lado.' },
+      { id: `fb-${Date.now()}-2`, titulo: 'No necesitas cambiar todo tu cabello para verte diferente', categoria: 'Balayage', tipo: 'Deseo', objetivo: 'reservas', servicio: 'Balayage', impacto: 'Alto', explicacion: 'Quita el miedo al cambio drástico. Baja la barrera de entrada para clientas indecisas.', dolor: 'Miedo a un cambio radical que no pueda deshacer.', deseo: 'Un cambio visible pero sutil que la haga sentir renovada.', ideaVisual: 'Antes/después de un iluminados sutil o un babylights discreto.' },
+      { id: `fb-${Date.now()}-3`, titulo: '3 cosas que revisamos antes de hacer un balayage', categoria: 'Balayage', tipo: 'Autoridad', objetivo: 'autoridad', servicio: 'Balayage', impacto: 'Medio', explicacion: 'Muestra el proceso profesional detrás del servicio. Genera confianza y justifica el precio.', dolor: 'Dudas sobre si la estilista sabe lo que hace o solo aplica sin más.', deseo: 'Sentirse en manos de una profesional que analiza antes de actuar.', ideaVisual: 'Plano de tus manos revisando el cabello de la clienta, evaluando grosor, color base, etc.' },
+    ],
+    'Rubios': [
+      { id: `fb-${Date.now()}-4`, titulo: 'No todos los rubios favorecen igual', categoria: 'Rubios', tipo: 'Educativo', objetivo: 'autoridad', servicio: 'Rubios', impacto: 'Alto', explicacion: 'Revela una verdad que muchas clientas ignoran. Genera curiosidad sobre cuál es SU rubio.', dolor: 'Haberse teñido de rubio y sentir que no le favorece.', deseo: 'Encontrar el rubio que sí le sienta bien a su tono de piel.', ideaVisual: 'Mosaico de 4 rubios diferentes sobre pieles distintas.' },
+      { id: `fb-${Date.now()}-5`, titulo: 'La diferencia entre un rubio bonito y un rubio bien hecho', categoria: 'Rubios', tipo: 'Autoridad', objetivo: 'autoridad', servicio: 'Rubios', impacto: 'Alto', explicacion: 'Diferencia sutil que solo una experta puede explicar. Refuerza autoridad técnica.', dolor: 'Haber pagado un rubio que se ve "bonito" pero no profesional.', deseo: 'Lucir un rubio que se note bien hecho, que dure y no se rompa.', ideaVisual: 'Comparativa de dos rubios: uno con bandas, otro con degradado limpio.' },
+    ],
+    'Color': [
+      { id: `fb-${Date.now()}-6`, titulo: 'Por qué tu color no se ve como el de la foto', categoria: 'Color', tipo: 'Objeción', objetivo: 'autoridad', servicio: 'Color', impacto: 'Alto', explicacion: 'Aborda la objeción más común del sector. Educa y previene frustraciones futuras.', dolor: 'Llevar una foto de Pinterest y que el resultado no se parezca en nada.', deseo: 'Entender qué se puede y qué no se puede lograr con su cabello.', ideaVisual: 'Pantalla dividida: la foto de referencia vs. el resultado real explicando las diferencias.' },
+      { id: `fb-${Date.now()}-7`, titulo: 'El error que hace que tu color pierda brillo antes de tiempo', categoria: 'Color', tipo: 'Dolor', objetivo: 'autoridad', servicio: 'Color', impacto: 'Alto', explicacion: 'Toca un dolor universal (color que se apaga) y promete revelar la causa.', dolor: 'Ver cómo el color que tanto costó se apaga en dos semanas.', deseo: 'Mantener el color vibrante más tiempo sin esfuerzo extra.', ideaVisual: 'Primer plano de un cabello apagado vs. cabello brillante, split screen.' },
+    ],
+    'General': [
+      { id: `fb-${Date.now()}-8`, titulo: '5 cortes de pelo que van a ser tendencia este año', categoria: 'Tendencias', tipo: 'Tendencia', objetivo: 'visibilidad', servicio: 'Cortes', impacto: 'Alto', explicacion: 'Apela al FOMO y posiciona la estilista como referente de tendencias.', dolor: 'Miedo a quedarse desactualizada o parecer anticuada.', deseo: 'Pertenecer al grupo de mujeres que llevan lo último.', ideaVisual: 'Collage rápido de 5 cortes en tendencia con transiciones al ritmo de la música.' },
+      { id: `fb-${Date.now()}-9`, titulo: 'El error que cometes antes de hacerte un cambio de look', categoria: 'Errores comunes', tipo: 'Dolor', objetivo: 'autoridad', servicio: 'Cortes', impacto: 'Alto', explicacion: 'Curiosidad pura. Promete evitar un arrepentimiento.', dolor: 'Haberse arrepentido de un cambio de look en el pasado.', deseo: 'Hacer el cambio correcto sin equivocarse.', ideaVisual: 'Selfie tuya mirando a cámara con texto encima, transición a un antes/después.' },
+      { id: `fb-${Date.now()}-10`, titulo: 'Si tienes canas, esto te interesa', categoria: 'Canas', tipo: 'Engagement', objetivo: 'visibilidad', servicio: 'Color', impacto: 'Alto', explicacion: 'Filtro directo a un nicho. Aumenta el tiempo de visualización.', dolor: 'Sentir que las canas envejecen y no saber qué hacer.', deseo: 'Cubrir, integrar o lucir las canas con elegancia.', ideaVisual: 'Antes/después de un coverage de canas o un gray blending sutil.' },
+    ],
   }
 
-  const monthName = mes.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
-
-  if (programados.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <BravyBot size={56} expression="wave" animate />
-        <p className="text-foreground font-medium mt-3 text-sm">Sin contenidos programados</p>
-        <p className="text-xs text-muted-foreground mt-1">Asigna fechas a tus ideas guardadas para verlas aquí</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() - 1, 1))}
-          className="border-border text-foreground h-8 rounded-lg"
-        >
-          ←
-        </Button>
-        <span className="text-sm font-semibold capitalize text-foreground min-w-[140px] text-center">{monthName}</span>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}
-          className="border-border text-foreground h-8 rounded-lg"
-        >
-          →
-        </Button>
-      </div>
-
-      <Card className="bg-card border-border shadow-sm rounded-2xl">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map(d => (
-              <div key={d} className="text-center text-[10px] font-semibold uppercase text-muted-foreground py-1">{d}</div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {dias.map((dia, i) => {
-              const fechaStr = dia.toISOString().split('T')[0]
-              const enMes = dia.getMonth() === mes.getMonth()
-              const hooksHoy = porFecha.get(fechaStr) || []
-              const esHoy = new Date().toDateString() === dia.toDateString()
-              return (
-                <div
-                  key={i}
-                  className={`min-h-[60px] p-1.5 rounded-xl border ${
-                    enMes
-                      ? 'bg-card border-border'
-                      : 'bg-muted/30 border-transparent text-muted-foreground/40'
-                  } ${esHoy ? 'ring-2 ring-primary/20 bg-primary/5' : ''}`}
-                >
-                  <p className="text-[10px] font-medium text-foreground mb-0.5">{dia.getDate()}</p>
-                  <div className="space-y-0.5">
-                    {hooksHoy.slice(0, 2).map(h => (
-                      <div
-                        key={h.id}
-                        className={`text-[8px] px-1 py-0.5 rounded-md truncate ${
-                          h.estado === 'publicado'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : h.estado === 'grabado'
-                            ? 'bg-violet-100 text-violet-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                        title={h.titulo}
-                      >
-                        {h.titulo}
-                      </div>
-                    ))}
-                    {hooksHoy.length > 2 && (
-                      <p className="text-[8px] text-muted-foreground">+{hooksHoy.length - 2}</p>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Lista de programados */}
-      <div className="space-y-2">
-        {programados.sort((a, b) => (a.fechaProgramada || '').localeCompare(b.fechaProgramada || '')).map(h => (
-          <Card key={h.id} className="bg-card border-border shadow-sm rounded-xl">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{h.titulo}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {h.fechaProgramada && new Date(h.fechaProgramada).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                  </p>
-                </div>
-                <select
-                  value={h.estado}
-                  onChange={(e) => onUpdate(h.id, { estado: e.target.value as SavedHookEstado })}
-                  className="text-xs px-2 py-1 rounded-lg border border-border bg-card text-foreground"
-                >
-                  <option value="idea">Idea</option>
-                  <option value="pendiente">Pendiente</option>
-                  <option value="grabado">Grabado</option>
-                  <option value="publicado">Publicado</option>
-                </select>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  )
+  return fallbackData[categoria] || fallbackData['General'] || fallbackData['Balayage']
 }

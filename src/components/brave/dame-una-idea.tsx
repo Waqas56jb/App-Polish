@@ -13,6 +13,7 @@ import {
 import { Lightbulb, RefreshCw, Save, FileText, Sparkles, X } from 'lucide-react'
 import { BravyBot } from './bravy-bot'
 import { motion } from 'framer-motion'
+import { fetchJSON } from '@/lib/fetch-safe'
 
 export function DameUnaIdea() {
   const { brandProfile, addLibraryItems, setIsLoading, isLoading } = useAppStore()
@@ -28,16 +29,14 @@ export function DameUnaIdea() {
   const generateIdea = async () => {
     setIsLoading(true, 'Pensando una idea para ti...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'quick-idea',
           brandProfile,
         }),
       })
-      const data = await res.json()
-      if (data.result && !data.result.raw) {
+      if (!error && data?.result && !data.result.raw) {
         setIdea(data.result)
       } else {
         setIdea(generateFallbackIdea())

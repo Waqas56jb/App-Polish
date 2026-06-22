@@ -1,0 +1,1022 @@
+     1→'use client'
+     2→
+     3→import { useState, useEffect, useCallback, useRef } from 'react'
+     4→import {
+     5→  useAppStore,
+     6→  HookCard,
+     7→  SavedHook,
+     8→  SavedHookEstado,
+     9→  generateId,
+    10→} from '@/lib/store'
+    11→import { Button } from '@/components/ui/button'
+    12→import { Card, CardContent } from '@/components/ui/card'
+    13→import { Input } from '@/components/ui/input'
+    14→import { Badge } from '@/components/ui/badge'
+    15→import {
+    16→  Search,
+    17→  Bookmark,
+    18→  Copy,
+    19→  Check,
+    20→  X,
+    21→  Sparkles,
+    22→  Save,
+    23→  FileText,
+    24→  RefreshCw,
+    25→  Loader2,
+    26→  Lightbulb,
+    27→  Eye,
+    28→  Zap,
+    29→  ArrowRight,
+    30→} from 'lucide-react'
+    31→import { motion, AnimatePresence } from 'framer-motion'
+    32→import { BravyBot, getRandomMotivationalTip } from './bravy-bot'
+    33→
+    34→type Vista = 'banco' | 'guardados'
+    35→
+    36→// Categorías con colores vibrantes Pantone
+    37→const CATEGORIAS = [
+    38→  { nombre: 'Balayage', color: 'bg-amber-100 text-amber-800 border-amber-300', active: 'bg-amber-500 text-white border-amber-500' },
+    39→  { nombre: 'Rubios', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', active: 'bg-yellow-500 text-white border-yellow-500' },
+    40→  { nombre: 'Color', color: 'bg-rose-100 text-rose-800 border-rose-300', active: 'bg-rose-500 text-white border-rose-500' },
+    41→  { nombre: 'Tratamientos', color: 'bg-emerald-100 text-emerald-800 border-emerald-300', active: 'bg-emerald-500 text-white border-emerald-500' },
+    42→  { nombre: 'Cortes', color: 'bg-orange-100 text-orange-800 border-orange-300', active: 'bg-orange-500 text-white border-orange-500' },
+    43→  { nombre: 'Alisados', color: 'bg-violet-100 text-violet-800 border-violet-300', active: 'bg-violet-500 text-white border-violet-500' },
+    44→  { nombre: 'Canas', color: 'bg-slate-100 text-slate-800 border-slate-300', active: 'bg-slate-600 text-white border-slate-600' },
+    45→  { nombre: 'Tendencias', color: 'bg-pink-100 text-pink-800 border-pink-300', active: 'bg-pink-500 text-white border-pink-500' },
+    46→  { nombre: 'Mitos', color: 'bg-purple-100 text-purple-800 border-purple-300', active: 'bg-purple-500 text-white border-purple-500' },
+    47→  { nombre: 'Errores comunes', color: 'bg-red-100 text-red-800 border-red-300', active: 'bg-red-500 text-white border-red-500' },
+    48→  { nombre: 'Ventas', color: 'bg-green-100 text-green-800 border-green-300', active: 'bg-green-500 text-white border-green-500' },
+    49→  { nombre: 'Autoridad', color: 'bg-indigo-100 text-indigo-800 border-indigo-300', active: 'bg-indigo-500 text-white border-indigo-500' },
+    50→]
+    51→
+    52→const CATEGORIA_MAP = Object.fromEntries(CATEGORIAS.map(c => [c.nombre, c]))
+    53→
+    54→const ESTADO_LABELS: Record<SavedHookEstado, { label: string; color: string }> = {
+    55→  idea: { label: 'Idea', color: 'bg-amber-100 text-amber-800' },
+    56→  pendiente: { label: 'Pendiente', color: 'bg-sky-100 text-sky-800' },
+    57→  grabado: { label: 'Grabado', color: 'bg-violet-100 text-violet-800' },
+    58→  publicado: { label: 'Publicado', color: 'bg-emerald-100 text-emerald-800' },
+    59→}
+    60→
+    61→function copyToClipboard(text: string) {
+    62→  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    63→    navigator.clipboard.writeText(text)
+    64→  }
+    65→}
+    66→
+    67→// ============================================================
+    68→// MAIN COMPONENT
+    69→// ============================================================
+    70→export function BancoGanchos() {
+    71→  const { brandProfile, savedHooks, saveHook, updateSavedHook, removeSavedHook, addLibraryItem, setIsLoading } = useAppStore()
+    72→
+    73→  const [vista, setVista] = useState<Vista>('banco')
+    74→  const [categoriaActiva, setCategoriaActiva] = useState('')
+    75→  const [searchTerm, setSearchTerm] = useState('')
+    76→  const [ganchos, setGanchos] = useState<HookCard[]>([])
+    77→  const [generando, setGenerando] = useState(false)
+    78→  const [copiado, setCopiado] = useState<string | null>(null)
+    79→
+    80→  // Modal state
+    81→  const [hookSeleccionado, setHookSeleccionado] = useState<HookCard | null>(null)
+    82→  const [modalOpen, setModalOpen] = useState(false)
+    83→  const [resultadoGenerado, setResultadoGenerado] = useState<any>(null)
+    84→  const [generandoScript, setGenerandoScript] = useState(false)
+    85→  const [tip, setTip] = useState(getRandomMotivationalTip())
+    86→
+    87→  // Ref to avoid generating on first render
+    88→  const hasInitialized = useRef(false)
+    89→
+    90→  // Auto-generate on mount
+    91→  useEffect(() => {
+    92→    if (!hasInitialized.current) {
+    93→      hasInitialized.current = true
+    94→      generarGanchos('')
+    95→    }
+    96→  }, [])
+    97→
+    98→  // Generate hooks via AI
+    99→  const generarGanchos = useCallback(async (categoria: string, search?: string) => {
+   100→    setGenerando(true)
+   101→    setTip(getRandomMotivationalTip())
+   102→    try {
+   103→      const res = await fetch('/api/ai', {
+   104→        method: 'POST',
+   105→        headers: { 'Content-Type': 'application/json' },
+   106→        body: JSON.stringify({
+   107→          type: 'ganchos-extra',
+   108→          brandProfile,
+   109→          context: {
+   110→            categoria: categoria || undefined,
+   111→            tipo: undefined,
+   112→            numGanchos: 12,
+   113→          },
+   114→        }),
+   115→      })
+   116→      const data = await res.json()
+   117→      if (data.result?.ganchos && Array.isArray(data.result.ganchos)) {
+   118→        const parsed = data.result.ganchos.map((g: any, i: number) => ({
+   119→          id: `hook-gen-${Date.now()}-${i}`,
+   120→          titulo: g.titulo || '',
+   121→          categoria: g.categoria || categoria || 'General',
+   122→          tipo: g.tipo || 'Viral',
+   123→          objetivo: g.objetivo || 'visibilidad',
+   124→          servicio: g.servicio || '',
+   125→          impacto: g.impacto || 'Medio',
+   126→          explicacion: g.explicacion || '',
+   127→          dolor: g.dolor || '',
+   128→          deseo: g.deseo || '',
+   129→          ideaVisual: g.ideaVisual || '',
+   130→        }))
+   131→        // If search term, filter locally
+   132→        if (search) {
+   133→          const q = search.toLowerCase()
+   134→          const filtered = parsed.filter((g: HookCard) =>
+   135→            g.titulo.toLowerCase().includes(q) ||
+   136→            g.categoria.toLowerCase().includes(q) ||
+   137→            g.servicio.toLowerCase().includes(q) ||
+   138→            g.explicacion.toLowerCase().includes(q)
+   139→          )
+   140→          setGanchos(filtered.length > 0 ? filtered : parsed)
+   141→        } else {
+   142→          setGanchos(parsed)
+   143→        }
+   144→      } else {
+   145→        // Fallback: generate basic hooks
+   146→        setGanchos(generateFallbackHooks(categoria))
+   147→      }
+   148→    } catch {
+   149→      setGanchos(generateFallbackHooks(categoria))
+   150→    } finally {
+   151→      setGenerando(false)
+   152→    }
+   153→  }, [brandProfile])
+   154→
+   155→  // Handle category click
+   156→  const handleCategoria = (cat: string) => {
+   157→    const nueva = cat === categoriaActiva ? '' : cat
+   158→    setCategoriaActiva(nueva)
+   159→    generarGanchos(nueva, searchTerm || undefined)
+   160→  }
+   161→
+   162→  // Handle search
+   163→  const handleSearch = (term: string) => {
+   164→    setSearchTerm(term)
+   165→    // Debounce search
+   166→    if (term.length >= 2) {
+   167→      const timer = setTimeout(() => generarGanchos(categoriaActiva, term), 600)
+   168→      return () => clearTimeout(timer)
+   169→    } else if (term.length === 0) {
+   170→      generarGanchos(categoriaActiva)
+   171→    }
+   172→  }
+   173→
+   174→  // Regenerate
+   175→  const handleRegenerar = () => {
+   176→    generarGanchos(categoriaActiva, searchTerm || undefined)
+   177→  }
+   178→
+   179→  const yaGuardado = (hookId: string) => savedHooks.some(h => h.hookId === hookId)
+   180→
+   181→  // Save hook to library
+   182→  const handleGuardar = (gancho: HookCard) => {
+   183→    if (yaGuardado(gancho.id)) return
+   184→    const nueva: SavedHook = {
+   185→      id: generateId(),
+   186→      hookId: gancho.id,
+   187→      titulo: gancho.titulo,
+   188→      tipoContenido: '',
+   189→      servicio: gancho.servicio,
+   190→      guionGenerado: '',
+   191→      estado: 'idea',
+   192→      fechaProgramada: null,
+   193→      fechaGrabacion: null,
+   194→      createdAt: new Date().toISOString(),
+   195→    }
+   196→    saveHook(nueva)
+   197→    setCopiado('saved-' + gancho.id)
+   198→    setTimeout(() => setCopiado(null), 1800)
+   199→  }
+   200→
+   201→  // Open hook to read full script
+   202→  const abrirHook = (gancho: HookCard) => {
+   203→    setHookSeleccionado(gancho)
+   204→    setResultadoGenerado(null)
+   205→    setModalOpen(true)
+   206→  }
+   207→
+   208→  // Generate content from hook
+   209→  const handleGenerar = async () => {
+   210→    if (!hookSeleccionado) return
+   211→    setGenerandoScript(true)
+   212→    setIsLoading(true, 'Generando guion completo...')
+   213→    try {
+   214→      const res = await fetch('/api/ai', {
+   215→        method: 'POST',
+   216→        headers: { 'Content-Type': 'application/json' },
+   217→        body: JSON.stringify({
+   218→          type: 'generar-desde-gancho',
+   219→          brandProfile,
+   220→          context: {
+   221→            gancho: hookSeleccionado.titulo,
+   222→            tipoContenido: 'reel',
+   223→            tono: 'cercano',
+   224→            modo: 'camara',
+   225→            servicio: hookSeleccionado.servicio,
+   226→          },
+   227→        }),
+   228→      })
+   229→      if (!res.ok) throw new Error('Network error')
+   230→      const data = await res.json()
+   231→      setResultadoGenerado(data.result)
+   232→    } catch (e) {
+   233→      console.error('Generate error:', e)
+   234→    } finally {
+   235→      setGenerandoScript(false)
+   236→      setIsLoading(false)
+   237→    }
+   238→  }
+   239→
+   240→  // Save generated content to library
+   241→  const handleGuardarGenerado = () => {
+   242→    if (!hookSeleccionado || !resultadoGenerado) return
+   243→    const titulo = resultadoGenerado.titulo || hookSeleccionado.titulo
+   244→    const guionTexto = resultadoGenerado.guion || ''
+   245→
+   246→    saveHook({
+   247→      id: generateId(),
+   248→      hookId: hookSeleccionado.id,
+   249→      titulo,
+   250→      tipoContenido: 'reel',
+   251→      servicio: hookSeleccionado.servicio,
+   252→      guionGenerado: guionTexto + (resultadoGenerado.copy ? '\n\nCOPY:\n' + resultadoGenerado.copy : '') + (resultadoGenerado.hashtags ? '\n\n' + resultadoGenerado.hashtags : ''),
+   253→      estado: 'pendiente',
+   254→      fechaProgramada: null,
+   255→      fechaGrabacion: null,
+   256→      createdAt: new Date().toISOString(),
+   257→    })
+   258→
+   259→    addLibraryItem({
+   260→      id: generateId(),
+   261→      tipo: 'reel',
+   262→      titulo,
+   263→      objetivo: hookSeleccionado.objetivo,
+   264→      servicio: hookSeleccionado.servicio,
+   265→      guion: guionTexto,
+   266→      copy: resultadoGenerado.copy || '',
+   267→      hashtags: resultadoGenerado.hashtags || '',
+   268→      textoPortada: resultadoGenerado.textoPortada || '',
+   269→      formato: 'hablando a cámara',
+   270→      estado: 'borrador',
+   271→      fecha: '',
+   272→      diaSemana: '',
+   273→      slides: resultadoGenerado.slides || [],
+   274→      storiesData: resultadoGenerado.stories || [],
+   275→      descripcion: hookSeleccionado.titulo,
+   276→      planId: '',
+   277→      createdAt: new Date().toISOString(),
+   278→    })
+   279→
+   280→    setCopiado('generado')
+   281→    setTimeout(() => setCopiado(null), 1800)
+   282→  }
+   283→
+   284→  return (
+   285→    <div className="space-y-5">
+   286→      {/* Header */}
+   287→      <div className="flex items-start justify-between gap-4">
+   288→        <div>
+   289→          <h1 className="text-2xl font-bold text-foreground tracking-tight">Banco de Ganchos</h1>
+   290→          <p className="text-sm text-muted-foreground mt-0.5">Ganchos que se regeneran según lo que buscas</p>
+   291→        </div>
+   292→        <Button
+   293→          onClick={handleRegenerar}
+   294→          disabled={generando}
+   295→          className="shrink-0 h-10 px-4 rounded-xl brave-gradient hover:opacity-90 text-white font-medium text-sm gap-2 shadow-md shadow-brave-chocolate/15"
+   296→        >
+   297→          {generando ? (
+   298→            <Loader2 className="w-4 h-4 animate-spin" />
+   299→          ) : (
+   300→            <RefreshCw className="w-4 h-4" />
+   301→          )}
+   302→          Regenerar
+   303→        </Button>
+   304→      </div>
+   305→
+   306→      {/* View toggle */}
+   307→      <div className="flex gap-1 bg-card rounded-2xl p-1 shadow-sm border border-border w-fit">
+   308→        {[
+   309→          { key: 'banco' as Vista, label: 'Explorar', icon: Lightbulb },
+   310→          { key: 'guardados' as Vista, label: 'Guardados', icon: Bookmark },
+   311→        ].map(v => (
+   312→          <button
+   313→            key={v.key}
+   314→            onClick={() => setVista(v.key)}
+   315→            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+   316→              vista === v.key
+   317→                ? 'brave-gradient text-white shadow-md'
+   318→                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+   319→            }`}
+   320→          >
+   321→            <v.icon className="w-4 h-4" />
+   322→            {v.label}
+   323→            {v.key === 'guardados' && savedHooks.length > 0 && (
+   324→              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+   325→                vista === v.key ? 'bg-white/25' : 'bg-muted'
+   326→              }`}>
+   327→                {savedHooks.length}
+   328→              </span>
+   329→            )}
+   330→          </button>
+   331→        ))}
+   332→      </div>
+   333→
+   334→      {/* VISTA: EXPLORAR */}
+   335→      {vista === 'banco' && (
+   336→        <div className="space-y-4">
+   337→          {/* Mascot motivational tip */}
+   338→          <motion.div
+   339→            key={tip}
+   340→            initial={{ opacity: 0, y: 4 }}
+   341→            animate={{ opacity: 1, y: 0 }}
+   342→            className="mascot-banner rounded-2xl px-4 py-3 flex items-center gap-3"
+   343→          >
+   344→            <div className="brave-bounce">
+   345→              <BravyBot size={38} expression="wink" animate />
+   346→            </div>
+   347→            <p className="text-xs font-medium text-foreground leading-snug flex-1">{tip}</p>
+   348→          </motion.div>
+   349→
+   350→          {/* Search */}
+   351→          <div className="relative">
+   352→            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+   353→            <Input
+   354→              value={searchTerm}
+   355→              onChange={(e) => handleSearch(e.target.value)}
+   356→              placeholder="Buscar tema, servicio o palabra clave..."
+   357→              className="pl-10 bg-card border-border rounded-xl h-11 text-sm"
+   358→            />
+   359→            {searchTerm && (
+   360→              <button
+   361→                onClick={() => { setSearchTerm(''); generarGanchos(categoriaActiva) }}
+   362→                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+   363→              >
+   364→                <X className="w-4 h-4" />
+   365→              </button>
+   366→            )}
+   367→          </div>
+   368→
+   369→          {/* Category chips */}
+   370→          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 no-scrollbar">
+   371→            <button
+   372→              onClick={() => handleCategoria('')}
+   373→              className={`brave-chip shrink-0 border ${
+   374→                !categoriaActiva
+   375→                  ? 'bg-foreground text-background border-foreground'
+   376→                  : 'bg-card text-muted-foreground border-border'
+   377→              }`}
+   378→            >
+   379→              Todos
+   380→            </button>
+   381→            {CATEGORIAS.map(cat => {
+   382→              const isActive = categoriaActiva === cat.nombre
+   383→              return (
+   384→                <button
+   385→                  key={cat.nombre}
+   386→                  onClick={() => handleCategoria(cat.nombre)}
+   387→                  className={`brave-chip shrink-0 border ${isActive ? cat.active : cat.color}`}
+   388→                >
+   389→                  {cat.nombre}
+   390→                </button>
+   391→              )
+   392→            })}
+   393→          </div>
+   394→
+   395→          {/* Generating state */}
+   396→          {generando ? (
+   397→            <div className="flex flex-col items-center justify-center py-16">
+   398→              <div className="brave-float">
+   399→                <BravyBot size={72} expression="excited" animate speechBubble="Creando ganchos..." />
+   400→              </div>
+   401→              <div className="mt-5 w-48 h-2 bg-muted rounded-full overflow-hidden">
+   402→                <div className="h-full brave-shimmer rounded-full" />
+   403→              </div>
+   404→              <p className="text-sm text-muted-foreground mt-3 font-medium">
+   405→                {categoriaActiva ? `Buscando los mejores ganchos de ${categoriaActiva}...` : 'Generando ganchos para ti...'}
+   406→              </p>
+   407→            </div>
+   408→          ) : (
+   409→            <>
+   410→              {/* Results count */}
+   411→              <div className="flex items-center justify-between">
+   412→                <p className="text-xs text-muted-foreground font-medium">
+   413→                  {ganchos.length} ganchos {categoriaActiva && `en ${categoriaActiva}`}
+   414→                </p>
+   415→                <button
+   416→                  onClick={handleRegenerar}
+   417→                  className="text-xs text-muted-foreground hover:text-foreground font-medium flex items-center gap-1 transition-colors"
+   418→                >
+   419→                  <Zap className="w-3 h-3" /> Más opciones
+   420→                </button>
+   421→              </div>
+   422→
+   423→              {/* Hook cards grid */}
+   424→              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+   425→                <AnimatePresence mode="popLayout">
+   426→                  {ganchos.map((gancho, idx) => {
+   427→                    const guardado = yaGuardado(gancho.id)
+   428→                    const catInfo = CATEGORIA_MAP[gancho.categoria]
+   429→                    return (
+   430→                      <motion.div
+   431→                        key={gancho.id}
+   432→                        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+   433→                        animate={{ opacity: 1, y: 0, scale: 1 }}
+   434→                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+   435→                        transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 0.4) }}
+   436→                      >
+   437→                        <Card className="bg-card border-border/70 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden group">
+   438→                          {/* Colored top bar */}
+   439→                          <div className={`h-1 ${catInfo?.active?.replace('text-white', '').replace('border-', 'bg-').split(' ')[0] || 'bg-brave-pastel-blue'}`} />
+   440→
+   441→                          <CardContent className="p-4 space-y-3">
+   442→                            {/* Category + Impact */}
+   443→                            <div className="flex items-center justify-between">
+   444→                              <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${catInfo?.color || 'bg-muted text-muted-foreground border-border'}`}>
+   445→                                {gancho.categoria}
+   446→                              </span>
+   447→                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+   448→                                gancho.impacto === 'Alto'
+   449→                                  ? 'bg-red-50 text-red-600'
+   450→                                  : gancho.impacto === 'Medio'
+   451→                                  ? 'bg-amber-50 text-amber-600'
+   452→                                  : 'bg-slate-50 text-slate-500'
+   453→                              }`}>
+   454→                                {gancho.impacto}
+   455→                              </span>
+   456→                            </div>
+   457→
+   458→                            {/* Hook text - the star of the card */}
+   459→                            <p className="text-[15px] font-bold text-foreground leading-snug group-hover:text-primary transition-colors">
+   460→                              &ldquo;{gancho.titulo}&rdquo;
+   461→                            </p>
+   462→
+   463→                            {/* Brief explanation */}
+   464→                            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+   465→                              {gancho.explicacion}
+   466→                            </p>
+   467→
+   468→                            {/* 3 ACTION BUTTONS */}
+   469→                            <div className="flex gap-2 pt-1">
+   470→                              {/* 1. Guardar en biblioteca */}
+   471→                              <button
+   472→                                onClick={() => handleGuardar(gancho)}
+   473→                                disabled={guardado}
+   474→                                className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-semibold transition-all ${
+   475→                                  guardado
+   476→                                    ? 'bg-muted/70 text-muted-foreground cursor-default'
+   477→                                    : 'bg-card border border-border text-foreground hover:bg-brave-pastel-blue/30 hover:border-brave-pastel-blue'
+   478→                                }`}
+   479→                              >
+   480→                                {copiado === 'saved-' + gancho.id ? (
+   481→                                  <><Check className="w-3.5 h-3.5 text-emerald-500" /> Guardado</>
+   482→                                ) : guardado ? (
+   483→                                  <><Bookmark className="w-3.5 h-3.5" /> En biblioteca</>
+   484→                                ) : (
+   485→                                  <><Bookmark className="w-3.5 h-3.5" /> Guardar</>
+   486→                                )}
+   487→                              </button>
+   488→
+   489→                              {/* 2. Abrir y leer guion entero */}
+   490→                              <button
+   491→                                onClick={() => abrirHook(gancho)}
+   492→                                className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-xl text-xs font-semibold brave-gradient text-white hover:opacity-90 transition-all shadow-sm shadow-brave-chocolate/10"
+   493→                              >
+   494→                                <FileText className="w-3.5 h-3.5" />
+   495→                                Guion
+   496→                                <ArrowRight className="w-3 h-3" />
+   497→                              </button>
+   498→
+   499→                              {/* 3. Copy de la publicación */}
+   500→                              <button
+   501→                                onClick={() => {
+   502→                                  copyToClipboard(gancho.titulo)
+   503→                                  setCopiado('copy-' + gancho.id)
+   504→                                  setTimeout(() => setCopiado(null), 1500)
+   505→                                }}
+   506→                                className="w-9 h-9 flex items-center justify-center rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+   507→                              >
+   508→                                {copiado === 'copy-' + gancho.id ? (
+   509→                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+   510→                                ) : (
+   511→                                  <Copy className="w-3.5 h-3.5" />
+   512→                                )}
+   513→                              </button>
+   514→                            </div>
+   515→                          </CardContent>
+   516→                        </Card>
+   517→                      </motion.div>
+   518→                    )
+   519→                  })}
+   520→                </AnimatePresence>
+   521→              </div>
+   522→
+   523→              {/* Empty state */}
+   524→              {ganchos.length === 0 && !generando && (
+   525→                <div className="flex flex-col items-center py-16">
+   526→                  <BravyBot size={56} expression="thinking" animate />
+   527→                  <p className="text-foreground font-medium mt-3 text-sm">No se encontraron ganchos</p>
+   528→                  <Button
+   529→                    onClick={handleRegenerar}
+   530→                    variant="outline"
+   531→                    className="mt-3 rounded-xl border-border text-foreground"
+   532→                  >
+   533→                    <RefreshCw className="w-4 h-4 mr-1.5" /> Regenerar ganchos
+   534→                  </Button>
+   535→                </div>
+   536→              )}
+   537→            </>
+   538→          )}
+   539→        </div>
+   540→      )}
+   541→
+   542→      {/* VISTA: GUARDADOS */}
+   543→      {vista === 'guardados' && (
+   544→        <Guardados
+   545→          savedHooks={savedHooks}
+   546→          onUpdate={updateSavedHook}
+   547→          onRemove={removeSavedHook}
+   548→        />
+   549→      )}
+   550→
+   551→      {/* MODAL: Full script + generated content */}
+   552→      <AnimatePresence>
+   553→        {modalOpen && hookSeleccionado && (
+   554→          <ModalGuion
+   555→            gancho={hookSeleccionado}
+   556→            resultadoGenerado={resultadoGenerado}
+   557→            generandoScript={generandoScript}
+   558→            copiado={copiado}
+   559→            guardado={yaGuardado(hookSeleccionado.id)}
+   560→            onClose={() => {
+   561→              setModalOpen(false)
+   562→              setHookSeleccionado(null)
+   563→              setResultadoGenerado(null)
+   564→            }}
+   565→            onGuardar={() => handleGuardar(hookSeleccionado!)}
+   566→            onGenerar={handleGenerar}
+   567→            onGuardarGenerado={handleGuardarGenerado}
+   568→            onCopiar={(field, text) => {
+   569→              copyToClipboard(text)
+   570→              setCopiado(field)
+   571→              setTimeout(() => setCopiado(null), 1500)
+   572→            }}
+   573→          />
+   574→        )}
+   575→      </AnimatePresence>
+   576→    </div>
+   577→  )
+   578→}
+   579→
+   580→// ============================================================
+   581→// MODAL: Full script viewer
+   582→// ============================================================
+   583→function ModalGuion({
+   584→  gancho,
+   585→  resultadoGenerado,
+   586→  generandoScript,
+   587→  copiado,
+   588→  guardado,
+   589→  onClose,
+   590→  onGuardar,
+   591→  onGenerar,
+   592→  onGuardarGenerado,
+   593→  onCopiar,
+   594→}: {
+   595→  gancho: HookCard
+   596→  resultadoGenerado: any
+   597→  generandoScript: boolean
+   598→  copiado: string | null
+   599→  guardado: boolean
+   600→  onClose: () => void
+   601→  onGuardar: () => void
+   602→  onGenerar: () => void
+   603→  onGuardarGenerado: () => void
+   604→  onCopiar: (field: string, text: string) => void
+   605→}) {
+   606→  const catInfo = CATEGORIA_MAP[gancho.categoria]
+   607→
+   608→  return (
+   609→    <motion.div
+   610→      initial={{ opacity: 0 }}
+   611→      animate={{ opacity: 1 }}
+   612→      exit={{ opacity: 0 }}
+   613→      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
+   614→      onClick={onClose}
+   615→    >
+   616→      <motion.div
+   617→        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+   618→        animate={{ scale: 1, opacity: 1, y: 0 }}
+   619→        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+   620→        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+   621→        className="bg-card w-full max-w-2xl rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col border border-border"
+   622→        onClick={(e) => e.stopPropagation()}
+   623→      >
+   624→        {/* Header */}
+   625→        <div className="brave-gradient p-5 text-white relative overflow-hidden">
+   626→          {/* Decorative circles */}
+   627→          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
+   628→          <div className="absolute -bottom-10 -left-10 w-24 h-24 rounded-full bg-white/5" />
+   629→
+   630→          <button
+   631→            onClick={onClose}
+   632→            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors z-10"
+   633→          >
+   634→            <X className="w-4 h-4" />
+   635→          </button>
+   636→          <div className="flex items-center gap-2 mb-2 relative z-10">
+   637→            <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-white/20">
+   638→              {gancho.categoria}
+   639→            </span>
+   640→            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/20">
+   641→              {gancho.tipo} · {gancho.impacto}
+   642→            </span>
+   643→          </div>
+   644→          <h2 className="text-xl font-bold leading-snug pr-8 relative z-10">
+   645→            &ldquo;{gancho.titulo}&rdquo;
+   646→          </h2>
+   647→        </div>
+   648→
+   649→        {/* Body */}
+   650→        <div className="p-5 overflow-y-auto flex-1 space-y-4">
+   651→          {/* Quick info */}
+   652→          <div className="grid grid-cols-2 gap-2.5">
+   653→            <div className="bg-muted/40 rounded-xl p-3">
+   654→              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Servicio</p>
+   655→              <p className="text-sm font-medium text-foreground">{gancho.servicio}</p>
+   656→            </div>
+   657→            <div className="bg-muted/40 rounded-xl p-3">
+   658→              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Objetivo</p>
+   659→              <p className="text-sm font-medium text-foreground capitalize">{gancho.objetivo}</p>
+   660→            </div>
+   661→          </div>
+   662→
+   663→          {/* Analysis */}
+   664→          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+   665→            <div className="bg-brave-sky/40 rounded-xl p-3">
+   666→              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-1">
+   667→                <Lightbulb className="w-3 h-3" /> Por qué funciona
+   668→              </p>
+   669→              <p className="text-xs text-foreground leading-relaxed">{gancho.explicacion}</p>
+   670→            </div>
+   671→            <div className="bg-brave-rose/30 rounded-xl p-3">
+   672→              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Dolor que toca</p>
+   673→              <p className="text-xs text-foreground leading-relaxed">{gancho.dolor}</p>
+   674→            </div>
+   675→            <div className="bg-brave-mint/40 rounded-xl p-3">
+   676→              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Deseo que activa</p>
+   677→              <p className="text-xs text-foreground leading-relaxed">{gancho.deseo}</p>
+   678→            </div>
+   679→          </div>
+   680→
+   681→          {/* Generate button */}
+   682→          {!resultadoGenerado && (
+   683→            <Button
+   684→              onClick={onGenerar}
+   685→              disabled={generandoScript}
+   686→              className="w-full h-12 rounded-xl brave-gradient hover:opacity-90 text-white font-semibold text-sm gap-2 shadow-md shadow-brave-chocolate/10"
+   687→            >
+   688→              {generandoScript ? (
+   689→                <><Loader2 className="w-4 h-4 animate-spin" /> Generando contenido...</>
+   690→              ) : (
+   691→                <><Sparkles className="w-4 h-4" /> Generar guion completo</>
+   692→              )}
+   693→            </Button>
+   694→          )}
+   695→
+   696→          {/* Generated content */}
+   697→          {resultadoGenerado && (
+   698→            <div className="space-y-3">
+   699→              <div className="flex items-center justify-between">
+   700→                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contenido generado</p>
+   701→                <Badge variant="secondary" className="text-[10px] bg-emerald-100 text-emerald-700 font-semibold">
+   702→                  Listo para usar
+   703→                </Badge>
+   704→              </div>
+   705→
+   706→              {/* Script */}
+   707→              {resultadoGenerado.guion && (
+   708→                <div className="space-y-1.5">
+   709→                  <div className="flex items-center justify-between">
+   710→                    <label className="text-sm font-semibold text-foreground">Guion completo</label>
+   711→                    <Button
+   712→                      size="sm"
+   713→                      variant="ghost"
+   714→                      onClick={() => onCopiar('guion', resultadoGenerado.guion)}
+   715→                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+   716→                    >
+   717→                      {copiado === 'guion' ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
+   718→                      {copiado === 'guion' ? 'Copiado' : 'Copiar'}
+   719→                    </Button>
+   720→                  </div>
+   721→                  <div className="bg-muted/40 rounded-xl p-4 text-sm text-foreground whitespace-pre-line max-h-[200px] overflow-y-auto leading-relaxed">
+   722→                    {resultadoGenerado.guion}
+   723→                  </div>
+   724→                </div>
+   725→              )}
+   726→
+   727→              {/* Copy */}
+   728→              {resultadoGenerado.copy && (
+   729→                <div className="space-y-1.5">
+   730→                  <div className="flex items-center justify-between">
+   731→                    <label className="text-sm font-semibold text-foreground">Copy de publicación</label>
+   732→                    <Button
+   733→                      size="sm"
+   734→                      variant="ghost"
+   735→                      onClick={() => onCopiar('copy', resultadoGenerado.copy)}
+   736→                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+   737→                    >
+   738→                      {copiado === 'copy' ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
+   739→                      {copiado === 'copy' ? 'Copiado' : 'Copiar'}
+   740→                    </Button>
+   741→                  </div>
+   742→                  <div className="bg-muted/40 rounded-xl p-4 text-sm text-foreground leading-relaxed">
+   743→                    {resultadoGenerado.copy}
+   744→                  </div>
+   745→                </div>
+   746→              )}
+   747→
+   748→              {/* Hashtags */}
+   749→              {resultadoGenerado.hashtags && (
+   750→                <div className="space-y-1.5">
+   751→                  <div className="flex items-center justify-between">
+   752→                    <label className="text-sm font-semibold text-foreground">Hashtags</label>
+   753→                    <Button
+   754→                      size="sm"
+   755→                      variant="ghost"
+   756→                      onClick={() => onCopiar('hashtags', resultadoGenerado.hashtags)}
+   757→                      className="h-7 text-xs text-muted-foreground hover:text-foreground"
+   758→                    >
+   759→                      {copiado === 'hashtags' ? <Check className="w-3 h-3 mr-1 text-emerald-500" /> : <Copy className="w-3 h-3 mr-1" />}
+   760→                      {copiado === 'hashtags' ? 'Copiado' : 'Copiar'}
+   761→                    </Button>
+   762→                  </div>
+   763→                  <div className="bg-primary/5 rounded-xl p-3 text-sm text-primary font-medium">
+   764→                    {resultadoGenerado.hashtags}
+   765→                  </div>
+   766→                </div>
+   767→              )}
+   768→
+   769→              {/* Slides */}
+   770→              {resultadoGenerado.slides && resultadoGenerado.slides.length > 0 && (
+   771→                <div className="space-y-1.5">
+   772→                  <label className="text-sm font-semibold text-foreground">Slides del carrusel</label>
+   773→                  <div className="space-y-1.5">
+   774→                    {resultadoGenerado.slides.map((s: any, i: number) => (
+   775→                      <div key={i} className="bg-muted/40 rounded-xl p-3 flex gap-3">
+   776→                        <div className="w-7 h-7 rounded-full brave-gradient flex items-center justify-center text-white font-bold text-xs shrink-0">
+   777→                          {s.numero}
+   778→                        </div>
+   779→                        <p className="text-sm text-foreground flex-1">{s.texto}</p>
+   780→                      </div>
+   781→                    ))}
+   782→                  </div>
+   783→                </div>
+   784→              )}
+   785→
+   786→              {/* Post-generation actions */}
+   787→              <div className="flex gap-2 pt-2">
+   788→                <Button
+   789→                  onClick={onGenerar}
+   790→                  disabled={generandoScript}
+   791→                  variant="outline"
+   792→                  className="flex-1 h-10 rounded-xl border-border text-foreground"
+   793→                >
+   794→                  {generandoScript ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+   795→                  Regenerar
+   796→                </Button>
+   797→                <Button
+   798→                  onClick={onGuardarGenerado}
+   799→                  disabled={copiado === 'generado'}
+   800→                  className="flex-1 h-10 rounded-xl brave-gradient hover:opacity-90 text-white"
+   801→                >
+   802→                  {copiado === 'generado' ? (
+   803→                    <><Check className="w-4 h-4 mr-1.5" /> Guardado</>
+   804→                  ) : (
+   805→                    <><Save className="w-4 h-4 mr-1.5" /> Guardar en biblioteca</>
+   806→                  )}
+   807→                </Button>
+   808→              </div>
+   809→
+   810→              {/* Copy all */}
+   811→              <Button
+   812→                variant="ghost"
+   813→                onClick={() => {
+   814→                  const all = [
+   815→                    resultadoGenerado.guion,
+   816→                    '',
+   817→                    '--- COPY ---',
+   818→                    resultadoGenerado.copy,
+   819→                    '',
+   820→                    resultadoGenerado.hashtags,
+   821→                  ].filter(Boolean).join('\n')
+   822→                  onCopiar('all', all)
+   823→                }}
+   824→                className="w-full text-xs text-muted-foreground hover:text-foreground h-8"
+   825→              >
+   826→                {copiado === 'all' ? <Check className="w-3 h-3 mr-1.5" /> : <Copy className="w-3 h-3 mr-1.5" />}
+   827→                {copiado === 'all' ? 'Todo copiado' : 'Copiar todo el contenido'}
+   828→              </Button>
+   829→            </div>
+   830→          )}
+   831→        </div>
+   832→
+   833→        {/* Footer */}
+   834→        <div className="p-4 border-t border-border bg-muted/20 flex gap-2">
+   835→          <Button
+   836→            onClick={onGuardar}
+   837→            disabled={guardado}
+   838→            variant="outline"
+   839→            className={`flex-1 h-10 rounded-xl transition-all ${
+   840→              guardado
+   841→                ? 'border-border text-muted-foreground cursor-default'
+   842→                : 'border-border text-foreground hover:bg-muted'
+   843→            }`}
+   844→          >
+   845→            {copiado === 'saved-hook' || guardado ? (
+   846→              <><Check className="w-4 h-4 mr-1.5 text-emerald-500" /> En biblioteca</>
+   847→            ) : (
+   848→              <><Bookmark className="w-4 h-4 mr-1.5" /> Guardar idea</>
+   849→            )}
+   850→          </Button>
+   851→          <Button
+   852→            onClick={onCopiar.bind(null, 'titulo', gancho.titulo)}
+   853→            className="h-10 px-5 rounded-xl bg-card border border-border text-foreground hover:bg-muted"
+   854→          >
+   855→            {copiado === 'titulo' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+   856→          </Button>
+   857→        </div>
+   858→      </motion.div>
+   859→    </motion.div>
+   860→  )
+   861→}
+   862→
+   863→// ============================================================
+   864→// GUARDADOS
+   865→// ============================================================
+   866→function Guardados({
+   867→  savedHooks,
+   868→  onUpdate,
+   869→  onRemove,
+   870→}: {
+   871→  savedHooks: SavedHook[]
+   872→  onUpdate: (id: string, updates: Partial<SavedHook>) => void
+   873→  onRemove: (id: string) => void
+   874→}) {
+   875→  const [filtroEstado, setFiltroEstado] = useState<SavedHookEstado | 'todos'>('todos')
+   876→  const [copiado, setCopiado] = useState<string | null>(null)
+   877→
+   878→  const filtrados = savedHooks.filter(h => filtroEstado === 'todos' || h.estado === filtroEstado)
+   879→
+   880→  if (savedHooks.length === 0) {
+   881→    return (
+   882→      <div className="text-center py-16">
+   883→        <BravyBot size={56} expression="happy" animate />
+   884→        <p className="text-foreground font-medium mt-3 text-sm">Aún no tienes ganchos guardados</p>
+   885→        <p className="text-xs text-muted-foreground mt-1">Explora el banco y guarda los que te gusten</p>
+   886→      </div>
+   887→    )
+   888→  }
+   889→
+   890→  return (
+   891→    <div className="space-y-4">
+   892→      {/* Filter chips */}
+   893→      <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+   894→        {(['todos', 'idea', 'pendiente', 'grabado', 'publicado'] as const).map(estado => {
+   895→          const count = estado === 'todos' ? savedHooks.length : savedHooks.filter(h => h.estado === estado).length
+   896→          const label = estado === 'todos' ? 'Todos' : ESTADO_LABELS[estado].label
+   897→          return (
+   898→            <button
+   899→              key={estado}
+   900→              onClick={() => setFiltroEstado(estado)}
+   901→              className={`brave-chip shrink-0 border text-[11px] ${
+   902→                filtroEstado === estado
+   903→                  ? 'bg-foreground text-background border-foreground'
+   904→                  : 'bg-card text-muted-foreground border-border'
+   905→              }`}
+   906→            >
+   907→              {label}
+   908→              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+   909→                filtroEstado === estado ? 'bg-white/25' : 'bg-muted'
+   910→              }`}>
+   911→                {count}
+   912→              </span>
+   913→            </button>
+   914→          )
+   915→        })}
+   916→      </div>
+   917→
+   918→      {/* List */}
+   919→      <div className="space-y-2.5">
+   920→        {filtrados.map(hook => {
+   921→          const estadoInfo = ESTADO_LABELS[hook.estado]
+   922→          return (
+   923→            <Card key={hook.id} className="bg-card border-border shadow-sm rounded-2xl hover:shadow-md transition-all duration-200">
+   924→              <CardContent className="p-4">
+   925→                <div className="flex items-start gap-3">
+   926→                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${estadoInfo.color}`}>
+   927→                    <Bookmark className="w-3.5 h-3.5" />
+   928→                  </div>
+   929→                  <div className="flex-1 min-w-0">
+   930→                    <h3 className="text-sm font-semibold text-foreground leading-snug">{hook.titulo}</h3>
+   931→                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+   932→                      {hook.tipoContenido && (
+   933→                        <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">{hook.tipoContenido}</Badge>
+   934→                      )}
+   935→                      {hook.servicio && (
+   936→                        <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">{hook.servicio}</Badge>
+   937→                      )}
+   938→                    </div>
+   939→
+   940→                    {hook.guionGenerado && (
+   941→                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{hook.guionGenerado.substring(0, 120)}...</p>
+   942→                    )}
+   943→
+   944→                    {/* Actions */}
+   945→                    <div className="flex items-center gap-1.5 mt-2.5">
+   946→                      <select
+   947→                        value={hook.estado}
+   948→                        onChange={(e) => onUpdate(hook.id, { estado: e.target.value as SavedHookEstado })}
+   949→                        className="text-xs px-2 py-1 rounded-lg border border-border bg-card text-foreground"
+   950→                      >
+   951→                        <option value="idea">Idea</option>
+   952→                        <option value="pendiente">Pendiente</option>
+   953→                        <option value="grabado">Grabado</option>
+   954→                        <option value="publicado">Publicado</option>
+   955→                      </select>
+   956→                      {hook.guionGenerado && (
+   957→                        <Button
+   958→                          size="sm"
+   959→                          variant="ghost"
+   960→                          onClick={() => {
+   961→                            copyToClipboard(hook.guionGenerado)
+   962→                            setCopiado(hook.id)
+   963→                            setTimeout(() => setCopiado(null), 1500)
+   964→                          }}
+   965→                          className="h-7 text-xs text-muted-foreground hover:text-foreground"
+   966→                        >
+   967→                          {copiado === hook.id ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+   968→                        </Button>
+   969→                      )}
+   970→                      <Button
+   971→                        size="sm"
+   972→                        variant="ghost"
+   973→                        onClick={() => onRemove(hook.id)}
+   974→                        className="h-7 text-xs text-destructive/60 hover:text-destructive hover:bg-destructive/5 ml-auto"
+   975→                      >
+   976→                        <X className="w-3 h-3" />
+   977→                      </Button>
+   978→                    </div>
+   979→                  </div>
+   980→                </div>
+   981→              </CardContent>
+   982→            </Card>
+   983→          )
+   984→        })}
+   985→      </div>
+   986→
+   987→      {filtrados.length === 0 && (
+   988→        <div className="text-center py-12">
+   989→          <p className="text-sm text-muted-foreground">No hay ganchos con ese estado</p>
+   990→        </div>
+   991→      )}
+   992→    </div>
+   993→  )
+   994→}
+   995→
+   996→// ============================================================
+   997→// FALLBACK HOOKS (when API fails)
+   998→// ============================================================
+   999→function generateFallbackHooks(categoria: string): HookCard[] {
+  1000→  const fallbackData: Record<string, HookCard[]> = {
+  1001→    'Balayage': [
+  1002→      { id: `fb-${Date.now()}-1`, titulo: 'Si tu balayage se ve naranja, puede que estés haciendo esto', categoria: 'Balayage', tipo: 'Objeción', objetivo: 'autoridad', servicio: 'Balayage', impacto: 'Alto', explicacion: 'Nombre un problema específico muy común en balayage. La clienta se siente identificada al instante.', dolor: 'Tener un balayage que se ve naranja o cobrizo y no saber por qué.', deseo: 'Un balayage limpio, frío y luminoso como en Pinterest.', ideaVisual: 'Foto de un balayage cobrizo vs. un balayaje correcto, comparativa lado a lado.' },
+  1003→      { id: `fb-${Date.now()}-2`, titulo: 'No necesitas cambiar todo tu cabello para verte diferente', categoria: 'Balayage', tipo: 'Deseo', objetivo: 'reservas', servicio: 'Balayage', impacto: 'Alto', explicacion: 'Quita el miedo al cambio drástico. Baja la barrera de entrada para clientas indecisas.', dolor: 'Miedo a un cambio radical que no pueda deshacer.', deseo: 'Un cambio visible pero sutil que la haga sentir renovada.', ideaVisual: 'Antes/después de un iluminados sutil o un babylights discreto.' },
+  1004→      { id: `fb-${Date.now()}-3`, titulo: '3 cosas que revisamos antes de hacer un balayage', categoria: 'Balayage', tipo: 'Autoridad', objetivo: 'autoridad', servicio: 'Balayage', impacto: 'Medio', explicacion: 'Muestra el proceso profesional detrás del servicio. Genera confianza y justifica el precio.', dolor: 'Dudas sobre si la estilista sabe lo que hace o solo aplica sin más.', deseo: 'Sentirse en manos de una profesional que analiza antes de actuar.', ideaVisual: 'Plano de tus manos revisando el cabello de la clienta, evaluando grosor, color base, etc.' },
+  1005→    ],
+  1006→    'Rubios': [
+  1007→      { id: `fb-${Date.now()}-4`, titulo: 'No todos los rubios favorecen igual', categoria: 'Rubios', tipo: 'Educativo', objetivo: 'autoridad', servicio: 'Rubios', impacto: 'Alto', explicacion: 'Revela una verdad que muchas clientas ignoran. Genera curiosidad sobre cuál es SU rubio.', dolor: 'Haberse teñido de rubio y sentir que no le favorece.', deseo: 'Encontrar el rubio que sí le sienta bien a su tono de piel.', ideaVisual: 'Mosaico de 4 rubios diferentes sobre pieles distintas.' },
+  1008→      { id: `fb-${Date.now()}-5`, titulo: 'La diferencia entre un rubio bonito y un rubio bien hecho', categoria: 'Rubios', tipo: 'Autoridad', objetivo: 'autoridad', servicio: 'Rubios', impacto: 'Alto', explicacion: 'Diferencia sutil que solo una experta puede explicar. Refuerza autoridad técnica.', dolor: 'Haber pagado un rubio que se ve "bonito" pero no profesional.', deseo: 'Lucir un rubio que se note bien hecho, que dure y no se rompa.', ideaVisual: 'Comparativa de dos rubios: uno con bandas, otro con degradado limpio.' },
+  1009→    ],
+  1010→    'Color': [
+  1011→      { id: `fb-${Date.now()}-6`, titulo: 'Por qué tu color no se ve como el de la foto', categoria: 'Color', tipo: 'Objeción', objetivo: 'autoridad', servicio: 'Color', impacto: 'Alto', explicacion: 'Aborda la objeción más común del sector. Educa y previene frustraciones futuras.', dolor: 'Llevar una foto de Pinterest y que el resultado no se parezca en nada.', deseo: 'Entender qué se puede y qué no se puede lograr con su cabello.', ideaVisual: 'Pantalla dividida: la foto de referencia vs. el resultado real explicando las diferencias.' },
+  1012→      { id: `fb-${Date.now()}-7`, titulo: 'El error que hace que tu color pierda brillo antes de tiempo', categoria: 'Color', tipo: 'Dolor', objetivo: 'autoridad', servicio: 'Color', impacto: 'Alto', explicacion: 'Toca un dolor universal (color que se apaga) y promete revelar la causa.', dolor: 'Ver cómo el color que tanto costó se apaga en dos semanas.', deseo: 'Mantener el color vibrante más tiempo sin esfuerzo extra.', ideaVisual: 'Primer plano de un cabello apagado vs. cabello brillante, split screen.' },
+  1013→    ],
+  1014→    'General': [
+  1015→      { id: `fb-${Date.now()}-8`, titulo: '5 cortes de pelo que van a ser tendencia este año', categoria: 'Tendencias', tipo: 'Tendencia', objetivo: 'visibilidad', servicio: 'Cortes', impacto: 'Alto', explicacion: 'Apela al FOMO y posiciona la estilista como referente de tendencias.', dolor: 'Miedo a quedarse desactualizada o parecer anticuada.', deseo: 'Pertenecer al grupo de mujeres que llevan lo último.', ideaVisual: 'Collage rápido de 5 cortes en tendencia con transiciones al ritmo de la música.' },
+  1016→      { id: `fb-${Date.now()}-9`, titulo: 'El error que cometes antes de hacerte un cambio de look', categoria: 'Errores comunes', tipo: 'Dolor', objetivo: 'autoridad', servicio: 'Cortes', impacto: 'Alto', explicacion: 'Curiosidad pura. Promete evitar un arrepentimiento.', dolor: 'Haberse arrepentido de un cambio de look en el pasado.', deseo: 'Hacer el cambio correcto sin equivocarse.', ideaVisual: 'Selfie tuya mirando a cámara con texto encima, transición a un antes/después.' },
+  1017→      { id: `fb-${Date.now()}-10`, titulo: 'Si tienes canas, esto te interesa', categoria: 'Canas', tipo: 'Engagement', objetivo: 'visibilidad', servicio: 'Color', impacto: 'Alto', explicacion: 'Filtro directo a un nicho. Aumenta el tiempo de visualización.', dolor: 'Sentir que las canas envejecen y no saber qué hacer.', deseo: 'Cubrir, integrar o lucir las canas con elegancia.', ideaVisual: 'Antes/después de un coverage de canas o un gray blending sutil.' },
+  1018→    ],
+  1019→  }
+  1020→
+  1021→  return fallbackData[categoria] || fallbackData['General'] || fallbackData['Balayage']
+  1022→}

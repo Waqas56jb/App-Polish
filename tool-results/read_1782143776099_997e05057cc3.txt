@@ -1,0 +1,809 @@
+     1→     1→'use client'
+     2→     2→
+     3→     3→import { useState } from 'react'
+     4→     4→import {
+     5→     5→  DndContext,
+     6→     6→  closestCenter,
+     7→     7→  KeyboardSensor,
+     8→     8→  PointerSensor,
+     9→     9→  useSensor,
+    10→    10→  useSensors,
+    11→    11→  DragEndEvent,
+    12→    12→} from '@dnd-kit/core'
+    13→    13→import {
+    14→    14→  arrayMove,
+    15→    15→  SortableContext,
+    16→    16→  sortableKeyboardCoordinates,
+    17→    17→  verticalListSortingStrategy,
+    18→    18→} from '@dnd-kit/sortable'
+    19→    19→import { useAppStore, ContentItem, ContentPlan, generateId } from '@/lib/store'
+    20→    20→import { Button } from '@/components/ui/button'
+    21→    21→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+    22→    22→import {
+    23→    23→  Calendar, RefreshCw, Save, FileText, Sparkles,
+    24→    24→  ArrowRight, Download, CalendarPlus, Layers
+    25→    25→} from 'lucide-react'
+    26→    26→import { DraggableCard } from './draggable-card'
+    27→    27→import { ContentCardModal } from './content-modal'
+    28→    28→import { BravyBot } from './bravy-bot'
+    29→    29→
+    30→    30→const OBJETIVOS = [
+    31→    31→  {
+    32→    32→    value: 'autoridad',
+    33→    33→    label: 'Autoridad',
+    34→    34→    desc: 'Posiciónate como experta',
+    35→    35→    longDesc: 'El contenido demostrará tu conocimiento técnico, educará a tu audiencia y desmentirá mitos del sector.'
+    36→    36→  },
+    37→    37→  {
+    38→    38→    value: 'reservas',
+    39→    39→    label: 'Reservas',
+    40→    40→    desc: 'Genera conversaciones y citas',
+    41→    41→    longDesc: 'El contenido se enfocará en transformaciones, casos de éxito y llamados claros a reservar.'
+    42→    42→  },
+    43→    43→  {
+    44→    44→    value: 'visibilidad',
+    45→    45→    label: 'Visibilidad',
+    46→    46→    desc: 'Llega a más personas y consigue más alcance',
+    47→    47→    longDesc: 'El contenido será viral, usando tendencias, retos y temas que generen debate y compartición.'
+    48→    48→  },
+    49→    49→]
+    50→    50→
+    51→    51→const FRECUENCIAS = [2, 3, 4, 5]
+    52→    52→
+    53→    53→type TipoContenido = 'reels' | 'carruseles' | 'mezcla'
+    54→    54→
+    55→    55→export function Planificar() {
+    56→    56→  const {
+    57→    57→    brandProfile, addContentPlan, addLibraryItems, setActiveModule,
+    58→    58→    setIsLoading, isLoading, setBrandProfile, replaceLibraryItem,
+    59→    59→    scheduleContentItem, removeLibraryItem,
+    60→    60→    currentPlanItems, currentPlanConfig,
+    61→    61→    setCurrentPlanItems, updateCurrentPlanItem, removeCurrentPlanItem,
+    62→    62→    setCurrentPlanConfig, clearCurrentPlan,
+    63→    63→  } = useAppStore()
+    64→    64→  const [tipo, setTipo] = useState<'semanal' | 'mensual'>(currentPlanConfig?.tipo || 'semanal')
+    65→    65→  const [tipoContenido, setTipoContenido] = useState<TipoContenido>(currentPlanConfig?.tipoContenido || 'mezcla')
+    66→    66→  const [serviciosSeleccionados, setServiciosSeleccionados] = useState<string[]>(currentPlanConfig?.servicios || [])
+    67→    67→  const [frecuencia, setFrecuencia] = useState(currentPlanConfig?.frecuencia || 3)
+    68→    68→  const [objetivo, setObjetivo] = useState(currentPlanConfig?.objetivo || '')
+    69→    69→  const [openItemId, setOpenItemId] = useState<string | null>(null)
+    70→    70→  const [modalOpen, setModalOpen] = useState(false)
+    71→    71→
+    72→    72→  // Use store-backed plan items
+    73→    73→  const generatedContent = currentPlanItems
+    74→    74→  const setGeneratedContent = setCurrentPlanItems
+    75→    75→  const showResults = generatedContent.length > 0
+    76→    76→
+    77→    77→  const openItem = openItemId ? generatedContent.find(c => c.id === openItemId) || null : null
+    78→    78→
+    79→    79→  const servicios = brandProfile?.serviciosPrioritarios?.length
+    80→    80→    ? brandProfile.serviciosPrioritarios
+    81→    81→    : brandProfile?.servicios?.length
+    82→    82→      ? brandProfile.servicios
+    83→    83→      : ['Balayage', 'Mechas', 'Tinte', 'Corte', 'Peinado', 'Alisado', 'Permanente', 'Tratamientos', 'Keratina', 'Extensiones', 'Canas', 'Decoloración', 'Reflejos', 'Matizadores', 'Cepillado', 'Recogidos']
+    84→    84→
+    85→    85→  const sensors = useSensors(
+    86→    86→    useSensor(PointerSensor, {
+    87→    87→      activationConstraint: { distance: 5 },
+    88→    88→    }),
+    89→    89→    useSensor(KeyboardSensor, {
+    90→    90→      coordinateGetter: sortableKeyboardCoordinates,
+    91→    91→    })
+    92→    92→  )
+    93→    93→
+    94→    94→  const toggleServicio = (s: string) => {
+    95→    95→    if (serviciosSeleccionados.includes(s)) {
+    96→    96→      setServiciosSeleccionados(prev => prev.filter(x => x !== s))
+    97→    97→    } else if (serviciosSeleccionados.length < 3) {
+    98→    98→      setServiciosSeleccionados(prev => [...prev, s])
+    99→    99→    }
+   100→   100→  }
+   101→   101→
+   102→   102→  const handleGenerate = async () => {
+   103→   103→    if (!objetivo || serviciosSeleccionados.length === 0) return
+   104→   104→
+   105→   105→    setIsLoading(true, 'Generando tu planificación...')
+   106→   106→    try {
+   107→   107→      const res = await fetch('/api/ai', {
+   108→   108→        method: 'POST',
+   109→   109→        headers: { 'Content-Type': 'application/json' },
+   110→   110→        body: JSON.stringify({
+   111→   111→          type: 'plan',
+   112→   112→          brandProfile,
+   113→   113→          context: {
+   114→   114→            tipo,
+   115→   115→            servicios: serviciosSeleccionados,
+   116→   116→            frecuencia,
+   117→   117→            objetivo,
+   118→   118→            tipoContenido,
+   119→   119→          },
+   120→   120→        }),
+   121→   121→      })
+   122→   122→
+   123→   123→      const data = await res.json()
+   124→   124→      const items: ContentItem[] = []
+   125→   125→
+   126→   126→      const getTipoForItem = (idx: number, fromAI?: string): 'reel' | 'carrusel' => {
+   127→   127→        if (tipoContenido === 'reels') return 'reel'
+   128→   128→        if (tipoContenido === 'carruseles') return 'carrusel'
+   129→   129→        if (fromAI === 'reel' || fromAI === 'carrusel') return fromAI
+   130→   130→        return idx % 2 === 0 ? 'reel' : 'carrusel'
+   131→   131→      }
+   132→   132→
+   133→   133→      if (Array.isArray(data.result)) {
+   134→   134→        data.result.forEach((item: any, idx: number) => {
+   135→   135→          const contentItem: ContentItem = {
+   136→   136→            id: generateId(),
+   137→   137→            tipo: getTipoForItem(idx, item.tipo),
+   138→   138→            titulo: item.titulo || 'Sin título',
+   139→   139→            objetivo: item.objetivo || objetivo,
+   140→   140→            servicio: item.servicio || serviciosSeleccionados[idx % serviciosSeleccionados.length] || '',
+   141→   141→            guion: '',
+   142→   142→            copy: '',
+   143→   143→            hashtags: '',
+   144→   144→            textoPortada: '',
+   145→   145→            formato: '',
+   146→   146→            estado: 'aprobado',
+   147→   147→            fecha: '',
+   148→   148→            diaSemana: item.dia || '',
+   149→   149→            slides: [],
+   150→   150→            storiesData: [],
+   151→   151→            descripcion: item.descripcion || '',
+   152→   152→            planId: '',
+   153→   153→            createdAt: new Date().toISOString(),
+   154→   154→          }
+   155→   155→          items.push(contentItem)
+   156→   156→        })
+   157→   157→      } else {
+   158→   158→        // Fallback
+   159→   159→        const dias = ['Martes', 'Jueves', 'Domingo']
+   160→   160→        const ideasByObjetivo: Record<string, string[]> = {
+   161→   161→          autoridad: [
+   162→   162→            '3 mitos sobre {servicio} que debes dejar de creer',
+   163→   163→            'El error que estilistas novatas cometen con {servicio}',
+   164→   164→            'Cómo identifico si un cliente necesita {servicio}: mi método',
+   165→   165→            'Tutorial: técnica correcta de {servicio} paso a paso',
+   166→   166→          ],
+   167→   167→          reservas: [
+   168→   168→            'Antes y después: transformación con {servicio}',
+   169→   169→            'Solo 3 citas disponibles esta semana para {servicio}',
+   170→   170→            'Mi clienta no creía el resultado del {servicio}',
+   171→   171→            'Si llevas tiempo pensando en un {servicio}, esto es para ti',
+   172→   172→          ],
+   173→   173→          visibilidad: [
+   174→   174→            'El reto del {servicio} que se hizo viral',
+   175→   175→            'Lo que nadie te dice sobre el {servicio} (polémica)',
+   176→   176→            'Tag a tu amiga que necesita un {servicio}',
+   177→   177→            'Esto pasó cuando hice {servicio} en mi salón',
+   178→   178→          ],
+   179→   179→        }
+   180→   180→        const ideas = ideasByObjetivo[objetivo] || ideasByObjetivo.autoridad
+   181→   181→
+   182→   182→        for (let i = 0; i < frecuencia; i++) {
+   183→   183→          const servicio = serviciosSeleccionados[i % serviciosSeleccionados.length]
+   184→   184→          items.push({
+   185→   185→            id: generateId(),
+   186→   186→            tipo: getTipoForItem(i),
+   187→   187→            titulo: ideas[i % ideas.length].replace('{servicio}', servicio.toLowerCase()),
+   188→   188→            objetivo,
+   189→   189→            servicio,
+   190→   190→            guion: '',
+   191→   191→            copy: '',
+   192→   192→            hashtags: '',
+   193→   193→            textoPortada: '',
+   194→   194→            formato: '',
+   195→   195→            estado: 'aprobado',
+   196→   196→            fecha: '',
+   197→   197→            diaSemana: tipo === 'semanal' ? dias[i % 3] : `Semana ${Math.floor(i / frecuencia) + 1}`,
+   198→   198→            slides: [],
+   199→   199→            storiesData: [],
+   200→   200→            descripcion: `Idea alineada al objetivo "${objetivo}"`,
+   201→   201→            planId: '',
+   202→   202→            createdAt: new Date().toISOString(),
+   203→   203→          })
+   204→   204→        }
+   205→   205→      }
+   206→   206→
+   207→   207→      setGeneratedContent(items)
+   208→   208→      setCurrentPlanConfig({ tipo, tipoContenido, servicios: serviciosSeleccionados, frecuencia, objetivo })
+   209→   209→
+   210→   210→      // Auto-generate guion/copy/hashtags for each item in the background
+   211→   211→      autoGenerateScripts(items)
+   212→   212→    } finally {
+   213→   213→      setIsLoading(false)
+   214→   214→    }
+   215→   215→  }
+   216→   216→
+   217→   217→  const autoGenerateScripts = async (items: ContentItem[]) => {
+   218→   218→    // Generate scripts in parallel (max 3 concurrent)
+   219→   219→    const batchSize = 3
+   220→   220→    for (let i = 0; i < items.length; i += batchSize) {
+   221→   221→      const batch = items.slice(i, i + batchSize)
+   222→   222→      await Promise.all(batch.map(async (item) => {
+   223→   223→        try {
+   224→   224→          const res = await fetch('/api/ai', {
+   225→   225→            method: 'POST',
+   226→   226→            headers: { 'Content-Type': 'application/json' },
+   227→   227→            body: JSON.stringify({
+   228→   228→              type: 'script',
+   229→   229→              brandProfile,
+   230→   230→              context: {
+   231→   231→                titulo: item.titulo,
+   232→   232→                tipo: item.tipo,
+   233→   233→                objetivo: item.objetivo,
+   234→   234→                servicio: item.servicio,
+   235→   235→                formato: item.formato || 'hablando a cámara',
+   236→   236→              },
+   237→   237→            }),
+   238→   238→          })
+   239→   239→          const data = await res.json()
+   240→   240→          if (data.result && !data.result.raw) {
+   241→   241→            updateCurrentPlanItem(item.id, {
+   242→   242→              guion: data.result.guion || '',
+   243→   243→              copy: data.result.copy || '',
+   244→   244→              hashtags: data.result.hashtags || '',
+   245→   245→              textoPortada: data.result.textoPortada || '',
+   246→   246→            })
+   247→   247→          }
+   248→   248→        } catch (error) {
+   249→   249→          console.error('Error generating script for', item.titulo, error)
+   250→   250→        }
+   251→   251→      }))
+   252→   252→    }
+   253→   253→  }
+   254→   254→
+   255→   255→  const handleDragEnd = (event: DragEndEvent) => {
+   256→   256→    const { active, over } = event
+   257→   257→    if (over && active.id !== over.id) {
+   258→   258→      const oldIndex = generatedContent.findIndex(i => i.id === active.id)
+   259→   259→      const newIndex = generatedContent.findIndex(i => i.id === over.id)
+   260→   260→      if (oldIndex === -1 || newIndex === -1) return
+   261→   261→      const reordered = arrayMove(generatedContent, oldIndex, newIndex)
+   262→   262→      setGeneratedContent(reordered)
+   263→   263→    }
+   264→   264→  }
+   265→   265→
+   266→   266→  const handleRegenerate = async (item: ContentItem) => {
+   267→   267→    setIsLoading(true, 'Regenerando idea...')
+   268→   268→    try {
+   269→   269→      const res = await fetch('/api/ai', {
+   270→   270→        method: 'POST',
+   271→   271→        headers: { 'Content-Type': 'application/json' },
+   272→   272→        body: JSON.stringify({
+   273→   273→          type: 'reel-ideas',
+   274→   274→          brandProfile,
+   275→   275→          context: {
+   276→   276→            servicio: item.servicio,
+   277→   277→            objetivo: item.objetivo,
+   278→   278→            formato: item.formato || 'hablando a cámara',
+   279→   279→          },
+   280→   280→        }),
+   281→   281→      })
+   282→   282→      const data = await res.json()
+   283→   283→      let newTitulo = ''
+   284→   284→      if (Array.isArray(data.result) && data.result.length > 0) {
+   285→   285→        newTitulo = data.result[0].titulo
+   286→   286→      } else {
+   287→   287→        newTitulo = `Nueva idea sobre ${item.servicio}`
+   288→   288→      }
+   289→   289→      updateCurrentPlanItem(item.id, {
+   290→   290→        titulo: newTitulo,
+   291→   291→        descripcion: data.result?.[0]?.descripcion || item.descripcion,
+   292→   292→      })
+   293→   293→    } catch {
+   294→   294→      // ignore
+   295→   295→    } finally {
+   296→   296→      setIsLoading(false)
+   297→   297→    }
+   298→   298→  }
+   299→   299→
+   300→   300→  const handleDelete = (id: string) => {
+   301→   301→    removeCurrentPlanItem(id)
+   302→   302→  }
+   303→   303→
+   304→   304→  const handleSaveToLibrary = (item: ContentItem) => {
+   305→   305→    addLibraryItems([{ ...item, id: generateId() }])
+   306→   306→  }
+   307→   307→
+   308→   308→  const handleConvert = async (item: ContentItem) => {
+   309→   309→    const fromTipo = item.tipo
+   310→   310→    const toTipo = item.tipo === 'reel' ? 'carrusel' : 'reel'
+   311→   311→    setIsLoading(true, `Convirtiendo a ${toTipo}...`)
+   312→   312→    try {
+   313→   313→      const res = await fetch('/api/ai', {
+   314→   314→        method: 'POST',
+   315→   315→        headers: { 'Content-Type': 'application/json' },
+   316→   316→        body: JSON.stringify({
+   317→   317→          type: 'convert-content',
+   318→   318→          brandProfile,
+   319→   319→          context: {
+   320→   320→            titulo: item.titulo,
+   321→   321→            objetivo: item.objetivo,
+   322→   322→            servicio: item.servicio,
+   323→   323→            formato: item.formato,
+   324→   324→            fromTipo,
+   325→   325→            toTipo,
+   326→   326→            guion: item.guion,
+   327→   327→            copy: item.copy,
+   328→   328→            hashtags: item.hashtags,
+   329→   329→          },
+   330→   330→        }),
+   331→   331→      })
+   332→   332→      const data = await res.json()
+   333→   333→      if (data.result && !data.result.raw) {
+   334→   334→        const converted: ContentItem = {
+   335→   335→          ...item,
+   336→   336→          tipo: toTipo,
+   337→   337→          titulo: data.result.titulo || item.titulo,
+   338→   338→          guion: toTipo === 'reel' ? (data.result.guion || item.guion) : '',
+   339→   339→          copy: data.result.copy || item.copy,
+   340→   340→          hashtags: data.result.hashtags || item.hashtags,
+   341→   341→          textoPortada: data.result.textoPortada || item.textoPortada,
+   342→   342→          slides: toTipo === 'carrusel' && data.result.slides ? data.result.slides : [],
+   343→   343→        }
+   344→   344→        // Replace the item in store
+   345→   345→        setCurrentPlanItems(generatedContent.map(c => c.id === item.id ? converted : c))
+   346→   346→      }
+   347→   347→    } catch (error) {
+   348→   348→      console.error('Convert error:', error)
+   349→   349→    } finally {
+   350→   350→      setIsLoading(false)
+   351→   351→    }
+   352→   352→  }
+   353→   353→
+   354→   354→  const handleAssignDay = (id: string, diaSemana: string) => {
+   355→   355→    updateCurrentPlanItem(id, { diaSemana })
+   356→   356→  }
+   357→   357→
+   358→   358→  const handleAssignDate = (id: string, fecha: string) => {
+   359→   359→    updateCurrentPlanItem(id, { fecha, estado: 'programado' })
+   360→   360→  }
+   361→   361→
+   362→   362→  const handleOpen = (item: ContentItem) => {
+   363→   363→    setOpenItemId(item.id)
+   364→   364→    setModalOpen(true)
+   365→   365→  }
+   366→   366→
+   367→   367→  const handleModalClose = () => {
+   368→   368→    setModalOpen(false)
+   369→   369→    // Sync any updates from the modal back to local state
+   370→   370→    if (openItem) {
+   371→   371→      // Check store for updated version
+   372→   372→    }
+   373→   373→  }
+   374→   374→
+   375→   375→  const getNextWeekdayDate = (diaSemana: string): string => {
+   376→   376→    if (!diaSemana) return ''
+   377→   377→    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+   378→   378→    const targetDay = dias.indexOf(diaSemana)
+   379→   379→    if (targetDay === -1) return ''
+   380→   380→    const today = new Date()
+   381→   381→    const todayDay = today.getDay()
+   382→   382→    let diff = (targetDay - todayDay + 7) % 7
+   383→   383→    // If today is the same day, schedule for today
+   384→   384→    const result = new Date(today)
+   385→   385→    result.setDate(today.getDate() + diff)
+   386→   386→    return result.toISOString().split('T')[0]
+   387→   387→  }
+   388→   388→
+   389→   389→  const handleSavePlanToCalendar = () => {
+   390→   390→    const planId = generateId()
+   391→   391→    const itemsWithPlan = generatedContent.map(item => {
+   392→   392→      // If item has diaSemana but no fecha, derive fecha from diaSemana
+   393→   393→      let fecha = item.fecha
+   394→   394→      let estado = item.estado
+   395→   395→      if (!fecha && item.diaSemana) {
+   396→   396→        fecha = getNextWeekdayDate(item.diaSemana)
+   397→   397→        estado = 'programado' as const
+   398→   398→      }
+   399→   399→      return {
+   400→   400→        ...item,
+   401→   401→        planId,
+   402→   402→        fecha,
+   403→   403→        estado: fecha ? 'programado' as const : estado,
+   404→   404→      }
+   405→   405→    })
+   406→   406→
+   407→   407→    const plan: ContentPlan = {
+   408→   408→      id: planId,
+   409→   409→      tipo,
+   410→   410→      servicios: serviciosSeleccionados,
+   411→   411→      frecuencia,
+   412→   412→      objetivo,
+   413→   413→      contenido: itemsWithPlan,
+   414→   414→      createdAt: new Date().toISOString(),
+   415→   415→    }
+   416→   416→
+   417→   417→    addContentPlan(plan)
+   418→   418→    addLibraryItems(itemsWithPlan)
+   419→   419→    alert('✓ Planificación guardada en calendario y biblioteca')
+   420→   420→  }
+   421→   421→
+   422→   422→  const handleDownloadPDF = () => {
+   423→   423→    // Generate a simple printable view
+   424→   424→    const printWindow = window.open('', '_blank')
+   425→   425→    if (!printWindow) return
+   426→   426→
+   427→   427→    const html = `
+   428→   428→      <html>
+   429→   429→      <head>
+   430→   430→        <title>Planificación ${tipo} - BRÄVE STUDIO</title>
+   431→   431→        <style>
+   432→   432→          body { font-family: -apple-system, sans-serif; padding: 40px; color: #2A1520; }
+   433→   433→          h1 { color: #591427; }
+   434→   434→          .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 30px; }
+   435→   435→          .day { border: 1px solid #E8DDD5; padding: 10px; min-height: 80px; }
+   436→   436→          .day-name { font-weight: bold; color: #591427; margin-bottom: 5px; }
+   437→   437→          .item { background: #F5F0EB; padding: 5px; margin: 3px 0; font-size: 12px; border-radius: 4px; }
+   438→   438→          .reel { border-left: 3px solid #C1DBE8; }
+   439→   439→          .carrusel { border-left: 3px solid #FFF1B5; }
+   440→   440→          .content-block { page-break-inside: avoid; margin-bottom: 20px; padding: 15px; border: 1px solid #E8DDD5; border-radius: 8px; }
+   441→   441→          .tipo-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; color: white; }
+   442→   442→          .reel-badge { background: #C1DBE8; }
+   443→   443→          .carrusel-badge { background: #FFF1B5; }
+   444→   444→          h2 { color: #591427; margin-bottom: 5px; }
+   445→   445→          .meta { color: #666; font-size: 12px; margin-bottom: 10px; }
+   446→   446→          .section { margin: 8px 0; }
+   447→   447→          .section-label { font-weight: bold; color: #591427; font-size: 12px; }
+   448→   448→        </style>
+   449→   449→      </head>
+   450→   450→      <body>
+   451→   451→        <h1>Planificación ${tipo} — BRÄVE STUDIO</h1>
+   452→   452→        <p><strong>Objetivo:</strong> ${objetivo} · <strong>Frecuencia:</strong> ${frecuencia}/semana · <strong>Tipo:</strong> ${tipoContenido}</p>
+   453→   453→        <p><strong>Servicios:</strong> ${serviciosSeleccionados.join(', ')}</p>
+   454→   454→
+   455→   455→        <h2>Vista Calendario</h2>
+   456→   456→        <div class="calendar">
+   457→   457→          ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dia => `
+   458→   458→            <div class="day">
+   459→   459→              <div class="day-name">${dia}</div>
+   460→   460→              ${generatedContent.filter(c => c.diaSemana === dia).map(c => `
+   461→   461→                <div class="item ${c.tipo}">
+   462→   462→                  <span class="tipo-badge ${c.tipo}-badge">${c.tipo.toUpperCase()}</span><br>
+   463→   463→                  ${c.titulo}
+   464→   464→                </div>
+   465→   465→              `).join('')}
+   466→   466→            </div>
+   467→   467→          `).join('')}
+   468→   468→        </div>
+   469→   469→
+   470→   470→        <h2>Contenido por orden cronológico</h2>
+   471→   471→        ${generatedContent.map((c, i) => `
+   472→   472→          <div class="content-block">
+   473→   473→            <h2>${i + 1}. ${c.titulo}</h2>
+   474→   474→            <div class="meta">
+   475→   475→              <span class="tipo-badge ${c.tipo}-badge">${c.tipo.toUpperCase()}</span>
+   476→   476→              · ${c.diaSemana || 'Sin día'} · ${c.servicio} · ${c.objetivo}
+   477→   477→            </div>
+   478→   478→            ${c.descripcion ? `<div class="section"><div class="section-label">Descripción:</div>${c.descripcion}</div>` : ''}
+   479→   479→            ${c.guion ? `<div class="section"><div class="section-label">Guión:</div><pre style="white-space:pre-wrap;font-family:inherit;">${c.guion}</pre></div>` : ''}
+   480→   480→            ${c.copy ? `<div class="section"><div class="section-label">Copy:</div>${c.copy}</div>` : ''}
+   481→   481→            ${c.hashtags ? `<div class="section"><div class="section-label">Hashtags:</div>${c.hashtags}</div>` : ''}
+   482→   482→          </div>
+   483→   483→        `).join('')}
+   484→   484→      </body>
+   485→   485→      </html>
+   486→   486→    `
+   487→   487→    printWindow.document.write(html)
+   488→   488→    printWindow.document.close()
+   489→   489→    setTimeout(() => {
+   490→   490→      printWindow.print()
+   491→   491→    }, 500)
+   492→   492→  }
+   493→   493→
+   494→   494→  if (!brandProfile) {
+   495→   495→    return (
+   496→   496→      <div className="max-w-3xl mx-auto space-y-6">
+   497→   497→        <div className="text-center space-y-3 mb-4">
+   498→   498→          <h2 className="text-3xl font-bold text-[#2A1520]">Planificar</h2>
+   499→   499→          <p className="text-muted-foreground text-base">Crea tu planificación de contenido en minutos</p>
+   500→   500→        </div>
+   501→   501→
+   502→   502→        <Card className="border-l-4 border-l-[#FFF1B5] bg-[#FFFBF0] shadow-md">
+   503→   503→          <CardContent className="p-5 flex items-start gap-4">
+   504→   504→            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F5F0EB] shrink-0">
+   505→   505→              <Sparkles className="w-6 h-6 text-[#C1DBE8]" />
+   506→   506→            </div>
+   507→   507→            <div className="flex-1">
+   508→   508→              <h3 className="font-bold text-[#2A1520] mb-1">Personaliza tu planificación</h3>
+   509→   509→              <p className="text-sm text-muted-foreground mb-3">
+   510→   510→                Aunque puedes planificar sin tu Marca BRÄVE, completarla hará que las ideas sean mucho más personalizadas para tu salón.
+   511→   511→              </p>
+   512→   512→              <div className="flex gap-2 flex-wrap">
+   513→   513→                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#591427] hover:bg-[#7A2A40] text-white">
+   514→   514→                  Crear Mi Marca BRÄVE
+   515→   515→                  <ArrowRight className="w-3 h-3 ml-1" />
+   516→   516→                </Button>
+   517→   517→                <Button
+   518→   518→                  onClick={() => {
+   519→   519→                    setBrandProfile({
+   520→   520→                      nombre: '', salon: '', ciudad: '', instagram: '',
+   521→   521→                      experiencia: '', servicios: [], serviciosPrioritarios: [],
+   522→   522→                      objetivos: '', clientaIdeal: '', preguntasFrecuentes: '',
+   523→   523→                      erroresFrecuentes: '', nivelCamara: '', facturacion: '',
+   524→   524→                    })
+   525→   525→                  }}
+   526→   526→                  variant="outline"
+   527→   527→                  size="sm"
+   528→   528→                  className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
+   529→   529→                >
+   530→   530→                  Continuar sin marca
+   531→   531→                </Button>
+   532→   532→              </div>
+   533→   533→            </div>
+   534→   534→          </CardContent>
+   535→   535→        </Card>
+   536→   536→      </div>
+   537→   537→    )
+   538→   538→  }
+   539→   539→
+   540→   540→  return (
+   541→   541→    <div className="max-w-3xl mx-auto space-y-6">
+   542→   542→      {/* Header */}
+   543→   543→      <div className="text-center space-y-3 mb-4">
+   544→   544→        <div className="flex items-center justify-center gap-3">
+   545→   545→          <BravyBot size={40} expression="motivate" animate={false} />
+   546→   546→          <h2 className="text-3xl font-bold text-[#2A1520]">Planificar</h2>
+   547→   547→        </div>
+   548→   548→        <p className="text-muted-foreground text-base">Crea tu planificación de contenido en minutos</p>
+   549→   549→      </div>
+   550→   550→
+   551→   551→      {!showResults ? (
+   552→   552→        <>
+   553→   553→          {/* Plan Type */}
+   554→   554→          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
+   555→   555→            <CardHeader className="pb-4">
+   556→   556→              <CardTitle className="text-lg text-[#2A1520]">Tipo de Planificación</CardTitle>
+   557→   557→            </CardHeader>
+   558→   558→            <CardContent>
+   559→   559→              <div className="grid grid-cols-2 gap-4">
+   560→   560→                {(['semanal', 'mensual'] as const).map((t) => (
+   561→   561→                  <button
+   562→   562→                    key={t}
+   563→   563→                    onClick={() => setTipo(t)}
+   564→   564→                    className={`p-4 rounded-xl text-center font-medium transition-all duration-200 ${
+   565→   565→                      tipo === t
+   566→   566→                        ? 'bg-[#591427] text-white shadow-md'
+   567→   567→                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
+   568→   568→                    }`}
+   569→   569→                  >
+   570→   570→                    <Calendar className="w-6 h-6 mx-auto mb-2" />
+   571→   571→                    {t === 'semanal' ? 'Semanal' : 'Mensual'}
+   572→   572→                  </button>
+   573→   573→                ))}
+   574→   574→              </div>
+   575→   575→            </CardContent>
+   576→   576→          </Card>
+   577→   577→
+   578→   578→          {/* Content Type Selector */}
+   579→   579→          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
+   580→   580→            <CardHeader className="pb-4">
+   581→   581→              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+   582→   582→                <Layers className="w-5 h-5 text-[#C1DBE8]" />
+   583→   583→                Tipo de Contenido
+   584→   584→              </CardTitle>
+   585→   585→              <CardDescription>¿Qué formatos quieres incluir en tu planificación?</CardDescription>
+   586→   586→            </CardHeader>
+   587→   587→            <CardContent>
+   588→   588→              <div className="grid grid-cols-3 gap-3">
+   589→   589→                {([
+   590→   590→                  { value: 'reels' as TipoContenido, label: 'Solo Reels', icon: '🎬' },
+   591→   591→                  { value: 'carruseles' as TipoContenido, label: 'Solo Carruseles', icon: '🖼️' },
+   592→   592→                  { value: 'mezcla' as TipoContenido, label: 'Mezcla', icon: '✨' },
+   593→   593→                ]).map((tc) => (
+   594→   594→                  <button
+   595→   595→                    key={tc.value}
+   596→   596→                    onClick={() => setTipoContenido(tc.value)}
+   597→   597→                    className={`p-4 rounded-xl text-center transition-all duration-200 ${
+   598→   598→                      tipoContenido === tc.value
+   599→   599→                        ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+   600→   600→                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
+   601→   601→                    }`}
+   602→   602→                  >
+   603→   603→                    <span className="text-2xl block mb-1">{tc.icon}</span>
+   604→   604→                    <span className="text-xs font-medium block">{tc.label}</span>
+   605→   605→                  </button>
+   606→   606→                ))}
+   607→   607→              </div>
+   608→   608→            </CardContent>
+   609→   609→          </Card>
+   610→   610→
+   611→   611→          {/* Services */}
+   612→   612→          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
+   613→   613→            <CardHeader className="pb-4">
+   614→   614→              <CardTitle className="text-lg text-[#2A1520]">Servicios a Potenciar</CardTitle>
+   615→   615→              <CardDescription>Selecciona máximo 3 servicios</CardDescription>
+   616→   616→            </CardHeader>
+   617→   617→            <CardContent>
+   618→   618→              <div className="flex flex-wrap gap-2">
+   619→   619→                {servicios.map((s) => (
+   620→   620→                  <button
+   621→   621→                    key={s}
+   622→   622→                    onClick={() => toggleServicio(s)}
+   623→   623→                    disabled={!serviciosSeleccionados.includes(s) && serviciosSeleccionados.length >= 3}
+   624→   624→                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+   625→   625→                      serviciosSeleccionados.includes(s)
+   626→   626→                        ? 'bg-[#591427] text-white shadow-md'
+   627→   627→                        : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
+   628→   628→                    } ${!serviciosSeleccionados.includes(s) && serviciosSeleccionados.length >= 3 ? 'opacity-40 cursor-not-allowed' : ''}`}
+   629→   629→                  >
+   630→   630→                    {s}
+   631→   631→                  </button>
+   632→   632→                ))}
+   633→   633→              </div>
+   634→   634→            </CardContent>
+   635→   635→          </Card>
+   636→   636→
+   637→   637→          {/* Frequency */}
+   638→   638→          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
+   639→   639→            <CardHeader className="pb-4">
+   640→   640→              <CardTitle className="text-lg text-[#2A1520]">Frecuencia Semanal</CardTitle>
+   641→   641→              <CardDescription>¿Cuántas publicaciones por semana?</CardDescription>
+   642→   642→            </CardHeader>
+   643→   643→            <CardContent>
+   644→   644→              <div className="grid grid-cols-4 gap-3">
+   645→   645→                {FRECUENCIAS.map((f) => (
+   646→   646→                  <button
+   647→   647→                    key={f}
+   648→   648→                    onClick={() => setFrecuencia(f)}
+   649→   649→                    className={`p-4 rounded-xl text-center font-bold transition-all duration-200 ${
+   650→   650→                      frecuencia === f
+   651→   651→                        ? 'bg-[#591427] text-white shadow-md'
+   652→   652→                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
+   653→   653→                    }`}
+   654→   654→                  >
+   655→   655→                    <span className="text-2xl block">{f}</span>
+   656→   656→                    <span className="text-xs font-normal mt-1 block">por semana</span>
+   657→   657→                  </button>
+   658→   658→                ))}
+   659→   659→              </div>
+   660→   660→            </CardContent>
+   661→   661→          </Card>
+   662→   662→
+   663→   663→          {/* Objective */}
+   664→   664→          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
+   665→   665→            <CardHeader className="pb-4">
+   666→   666→              <CardTitle className="text-lg text-[#2A1520]">Objetivo Principal</CardTitle>
+   667→   667→              <CardDescription>El objetivo modificará el tipo de ideas generadas por la IA</CardDescription>
+   668→   668→            </CardHeader>
+   669→   669→            <CardContent>
+   670→   670→              <div className="space-y-3">
+   671→   671→                {OBJETIVOS.map((obj) => (
+   672→   672→                  <button
+   673→   673→                    key={obj.value}
+   674→   674→                    onClick={() => setObjetivo(obj.value)}
+   675→   675→                    className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
+   676→   676→                      objetivo === obj.value
+   677→   677→                        ? 'bg-[#591427] text-white shadow-md'
+   678→   678→                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
+   679→   679→                    }`}
+   680→   680→                  >
+   681→   681→                    <div className="flex items-baseline justify-between mb-1">
+   682→   682→                      <span className="font-bold">{obj.label}</span>
+   683→   683→                    </div>
+   684→   684→                    <p className={`text-sm ${objetivo === obj.value ? 'text-white/80' : 'text-muted-foreground'}`}>
+   685→   685→                      {obj.desc}
+   686→   686→                    </p>
+   687→   687→                    {objetivo === obj.value && (
+   688→   688→                      <p className="text-xs mt-2 text-white/70 italic">{obj.longDesc}</p>
+   689→   689→                    )}
+   690→   690→                  </button>
+   691→   691→                ))}
+   692→   692→              </div>
+   693→   693→            </CardContent>
+   694→   694→          </Card>
+   695→   695→
+   696→   696→          {/* Generate Button */}
+   697→   697→          <div className="flex justify-center pt-2 pb-8">
+   698→   698→            <Button
+   699→   699→              onClick={handleGenerate}
+   700→   700→              disabled={isLoading || serviciosSeleccionados.length === 0 || !objetivo}
+   701→   701→              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg brave-gradient hover:opacity-90 text-white disabled:opacity-50"
+   702→   702→            >
+   703→   703→              {isLoading ? (
+   704→   704→                <>
+   705→   705→                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+   706→   706→                  Generando planificación...
+   707→   707→                </>
+   708→   708→              ) : (
+   709→   709→                <>
+   710→   710→                  <Sparkles className="w-5 h-5 mr-2" />
+   711→   711→                  GENERAR PLANIFICACIÓN
+   712→   712→                </>
+   713→   713→              )}
+   714→   714→            </Button>
+   715→   715→          </div>
+   716→   716→        </>
+   717→   717→      ) : (
+   718→   718→        <>
+   719→   719→          {/* Top toolbar */}
+   720→   720→          <div className="flex items-center justify-between gap-3 flex-wrap">
+   721→   721→            <h3 className="text-xl font-bold text-[#2A1520]">Tu Planificación</h3>
+   722→   722→            <div className="flex gap-2">
+   723→   723→              <Button
+   724→   724→                variant="outline"
+   725→   725→                size="sm"
+   726→   726→                onClick={handleSavePlanToCalendar}
+   727→   727→                className="border-[#591427] text-[#591427] hover:bg-[#F5F0EB]"
+   728→   728→              >
+   729→   729→                <CalendarPlus className="w-4 h-4 mr-2" />
+   730→   730→                Guardar en calendario
+   731→   731→              </Button>
+   732→   732→              <Button
+   733→   733→                variant="outline"
+   734→   734→                size="sm"
+   735→   735→                onClick={handleDownloadPDF}
+   736→   736→                className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
+   737→   737→              >
+   738→   738→                <Download className="w-4 h-4 mr-2" />
+   739→   739→                Descargar PDF
+   740→   740→              </Button>
+   741→   741→              <Button
+   742→   742→                variant="outline"
+   743→   743→                size="sm"
+   744→   744→                onClick={handleGenerate}
+   745→   745→                className="border-[#E8DDD5] text-[#2A1520] hover:bg-[#F5F0EB]"
+   746→   746→              >
+   747→   747→                <RefreshCw className="w-4 h-4 mr-2" />
+   748→   748→                Regenerar plan
+   749→   749→              </Button>
+   750→   750→            </div>
+   751→   751→          </div>
+   752→   752→
+   753→   753→          <div className="text-xs text-muted-foreground flex items-center gap-1">
+   754→   754→            <span className="text-[#591427]">💡</span>
+   755→   755→            Arrastra las tarjetas para reorganizar el orden. Usa el botón 📅 para asignar día o fecha.
+   756→   756→          </div>
+   757→   757→
+   758→   758→          {/* Draggable cards */}
+   759→   759→          <DndContext
+   760→   760→            sensors={sensors}
+   761→   761→            collisionDetection={closestCenter}
+   762→   762→            onDragEnd={handleDragEnd}
+   763→   763→          >
+   764→   764→            <SortableContext
+   765→   765→              items={generatedContent.map(c => c.id)}
+   766→   766→              strategy={verticalListSortingStrategy}
+   767→   767→            >
+   768→   768→              <div className="space-y-3">
+   769→   769→                {generatedContent.map((item) => (
+   770→   770→                  <DraggableCard
+   771→   771→                    key={item.id}
+   772→   772→                    item={item}
+   773→   773→                    onOpen={handleOpen}
+   774→   774→                    onRegenerate={handleRegenerate}
+   775→   775→                    onDelete={handleDelete}
+   776→   776→                    onSave={handleSaveToLibrary}
+   777→   777→                    onConvert={handleConvert}
+   778→   778→                    onAssignDay={handleAssignDay}
+   779→   779→                    onAssignDate={handleAssignDate}
+   780→   780→                  />
+   781→   781→                ))}
+   782→   782→              </div>
+   783→   783→            </SortableContext>
+   784→   784→          </DndContext>
+   785→   785→
+   786→   786→          {/* Bottom actions */}
+   787→   787→          <div className="flex justify-center pt-4 pb-8 gap-3">
+   788→   788→            <Button
+   789→   789→              onClick={handleSavePlanToCalendar}
+   790→   790→              className="px-8 py-5 text-base font-bold rounded-xl shadow-lg bg-[#591427] hover:bg-[#7A2A40] text-white"
+   791→   791→            >
+   792→   792→              <Save className="w-5 h-5 mr-2" />
+   793→   793→              Guardar Planificación
+   794→   794→            </Button>
+   795→   795→          </div>
+   796→   796→        </>
+   797→   797→      )}
+   798→   798→
+   799→   799→      {/* Content Modal */}
+   800→   800→      <ContentCardModal
+   801→   801→        item={openItem}
+   802→   802→        isOpen={modalOpen}
+   803→   803→        onClose={handleModalClose}
+   804→   804→        onDelete={handleDelete}
+   805→   805→      />
+   806→   806→    </div>
+   807→   807→  )
+   808→   808→}
+   809→   809→

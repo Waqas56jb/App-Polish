@@ -65,6 +65,7 @@ export interface ContentPlan {
 }
 
 export type ModuleType =
+  | 'inicio'
   | 'marca'
   | 'planificar'
   | 'crear'
@@ -215,7 +216,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      activeModule: 'marca',
+      activeModule: 'inicio',
       brandProfile: null,
       contentPlans: [],
       libraryItems: [],

@@ -13,6 +13,7 @@ import {
   Crown, Mic, Save, Sparkles, CheckCircle2, Upload, FileText,
   MessageSquareText, ListChecks, Wand2, Loader2, FileUp, X
 } from 'lucide-react'
+import { fetchJSON } from '@/lib/fetch-safe'
 
 const SERVICIOS_OPTIONS = [
   'Balayage', 'Mechas', 'Tinte', 'Corte', 'Peinado',
@@ -192,18 +193,15 @@ export function MiMarca() {
     if (!documentText.trim()) return
     setIsExtracting(true)
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'extract-brand',
           context: { documentText },
         }),
       })
 
-      const data = await res.json()
-
-      if (data.result && !data.result.raw) {
+      if (data?.result && !data.result.raw) {
         const extracted = data.result
         const newForm: BrandProfile = {
           ...form,

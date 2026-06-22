@@ -10,6 +10,8 @@ interface BravyBotProps {
   speechBubble?: string
 }
 
+// ─── Main BravyBot ───────────────────────────────────────────
+// Style: white minimalist 3D robot, black visor face, blue glowing eyes, antenna, floating
 export function BravyBot({
   size = 64,
   expression = 'happy',
@@ -18,50 +20,85 @@ export function BravyBot({
   speechBubble,
 }: BravyBotProps) {
   const s = size
-  const half = s / 2
+  const cx = s / 2
+  const cy = s / 2
 
-  const getEyeTransform = () => {
+  // ── Eye config per expression ──
+  const getEyeStyle = () => {
     switch (expression) {
-      case 'excited': return { scaleY: 1.3, ry: 4 }
-      case 'thinking': return { ry: 6 }
-      case 'love': return { rx: 3, ry: 3 }
-      case 'wink': return { ry: 5 }
-      case 'celebrate': return { scaleY: 1.1, ry: 5 }
-      default: return { ry: 5 }
+      case 'excited':   return { left: 'star', right: 'star', leftScale: 1.15, rightScale: 1.15 }
+      case 'love':      return { left: 'heart', right: 'heart', leftScale: 1, rightScale: 1 }
+      case 'wink':      return { left: 'normal', right: 'closed', leftScale: 1, rightScale: 1 }
+      case 'thinking':  return { left: 'normal', right: 'normal', leftScale: 1, rightScale: 1, lookLeft: true }
+      case 'celebrate': return { left: 'star', right: 'star', leftScale: 1.2, rightScale: 1.2 }
+      case 'motivate':  return { left: 'normal', right: 'normal', leftScale: 1.15, rightScale: 1.15 }
+      default:          return { left: 'normal', right: 'normal', leftScale: 1, rightScale: 1 }
     }
   }
 
-  const getMouthPath = () => {
-    const cx = half
-    const cy = half + 4
+  // ── Mouth path per expression ──
+  const getMouth = () => {
+    const my = cy + s * 0.14
+    const w = s * 0.08
     switch (expression) {
-      case 'excited':
-        return `M ${cx - 7} ${cy - 3} Q ${cx} ${cy + 9} ${cx + 7} ${cy - 3}`
-      case 'thinking':
-        return `M ${cx - 4} ${cy + 1} L ${cx + 4} ${cy + 1}`
-      case 'love':
-        return `M ${cx - 6} ${cy - 1} Q ${cx} ${cy + 7} ${cx + 6} ${cy - 1}`
-      case 'motivate':
-        return `M ${cx - 8} ${cy - 4} Q ${cx} ${cy + 8} ${cx + 8} ${cy - 4}`
-      case 'wink':
-        return `M ${cx - 5} ${cy} Q ${cx + 2} ${cy + 6} ${cx + 5} ${cy}`
-      case 'celebrate':
-        return `M ${cx - 7} ${cy - 2} Q ${cx} ${cy + 10} ${cx + 7} ${cy - 2}`
-      default:
-        return `M ${cx - 5} ${cy} Q ${cx} ${cy + 6} ${cx + 5} ${cy}`
+      case 'excited':   return `M ${cx - w * 1.1} ${my - 2} Q ${cx} ${my + w * 1.4} ${cx + w * 1.1} ${my - 2}`
+      case 'thinking':  return `M ${cx - w * 0.6} ${my + 1} L ${cx + w * 0.6} ${my + 1}`
+      case 'love':      return `M ${cx - w} ${my - 1} Q ${cx} ${my + w * 1.2} ${cx + w} ${my - 1}`
+      case 'motivate':  return `M ${cx - w * 1.2} ${my - 3} Q ${cx} ${my + w * 1.6} ${cx + w * 1.2} ${my - 3}`
+      case 'celebrate': return `M ${cx - w * 1.1} ${my - 2} Q ${cx} ${my + w * 1.5} ${cx + w * 1.1} ${my - 2}`
+      case 'wink':      return `M ${cx - w * 0.7} ${my} Q ${cx + w * 0.3} ${my + w} ${cx + w * 0.7} ${my}`
+      default:          return `M ${cx - w * 0.8} ${my - 0.5} Q ${cx} ${my + w} ${cx + w * 0.8} ${my - 0.5}`
     }
   }
 
-  const armAnimation = expression === 'wave'
-    ? { rotate: [0, 20, -20, 20, 0], transition: { duration: 0.8, repeat: Infinity, repeatDelay: 0.8 } }
+  // ── Arm animations ──
+  const leftArmAnim = expression === 'wave'
+    ? { rotate: [0, 25, -15, 25, 0], transition: { duration: 0.9, repeat: Infinity, repeatDelay: 0.7 } }
     : expression === 'celebrate'
-    ? { rotate: [0, -15, 0, 15, 0], transition: { duration: 0.6, repeat: Infinity, repeatDelay: 0.3 } }
+    ? { rotate: [0, -20, 0, 20, 0], transition: { duration: 0.7, repeat: Infinity, repeatDelay: 0.3 } }
+    : expression === 'love'
+    ? { rotate: [0, 8, 0], transition: { duration: 1.5, repeat: Infinity, repeatDelay: 1 } }
     : {}
 
+  const rightArmAnim = expression === 'celebrate'
+    ? { rotate: [0, 20, 0, -20, 0], transition: { duration: 0.7, repeat: Infinity, repeatDelay: 0.3 } }
+    : expression === 'love'
+    ? { rotate: [0, -8, 0], transition: { duration: 1.5, repeat: Infinity, repeatDelay: 1 } }
+    : {}
+
+  const eyeStyle = getEyeStyle()
   const showHearts = expression === 'love'
   const showSparkles = expression === 'excited' || expression === 'motivate' || expression === 'celebrate'
-  const showStarBurst = expression === 'celebrate'
-  const isWink = expression === 'wink'
+
+  // ── Dimensions ──
+  const bodyW = s * 0.52
+  const bodyH = s * 0.48
+  const bodyX = cx - bodyW / 2
+  const bodyY = cy - bodyH / 2 + s * 0.06
+  const bodyR = s * 0.14
+
+  const visorW = bodyW * 0.82
+  const visorH = bodyH * 0.48
+  const visorX = cx - visorW / 2
+  const visorY = bodyY + bodyH * 0.14
+
+  const eyeY = visorY + visorH * 0.42
+  const eyeSpread = visorW * 0.26
+  const eyeLX = cx - eyeSpread
+  const eyeRX = cx + eyeSpread
+  const eyeSize = s * 0.055
+
+  const mouthY = visorY + visorH * 0.78
+
+  // Feet
+  const footW = s * 0.12
+  const footH = s * 0.05
+  const footY = bodyY + bodyH + s * 0.01
+
+  // Arms
+  const armW = s * 0.06
+  const armH = s * 0.18
+  const armY = bodyY + bodyH * 0.35
 
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`} style={{ width: s, height: s }}>
@@ -69,314 +106,400 @@ export function BravyBot({
         <motion.div
           initial={{ opacity: 0, y: 8, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="absolute -top-12 -right-2 bg-white rounded-2xl px-3.5 py-2 shadow-lg shadow-black/[0.06] border border-[#E8E4DF]/80 max-w-[160px] z-10"
+          className="absolute -top-14 left-1/2 -translate-x-1/2 bg-white rounded-2xl px-3.5 py-2.5 shadow-lg shadow-black/[0.08] border border-gray-100 max-w-[180px] z-10"
         >
-          <p className="text-[11px] font-medium text-[#1A1A2E] leading-snug">{speechBubble}</p>
-          <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-white border-r border-b border-[#E8E4DF]/80 rotate-45" />
+          <p className="text-[11px] font-medium text-gray-700 leading-snug text-center">{speechBubble}</p>
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-gray-100 rotate-45" />
         </motion.div>
       )}
 
       <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <radialGradient id="bravyGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#C1DBE8" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#BDB2FF" stopOpacity="0" />
+          {/* Body gradient - clean white with subtle 3D shading */}
+          <linearGradient id="bravyBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="50%" stopColor="#F8F9FA" />
+            <stop offset="100%" stopColor="#E9ECEF" />
+          </linearGradient>
+
+          {/* Subtle shadow for 3D depth */}
+          <linearGradient id="bravyBodyShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0" />
+            <stop offset="100%" stopColor="#DEE2E6" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* Visor gradient - glossy black */}
+          <linearGradient id="bravyVisor" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#2C2C34" />
+            <stop offset="40%" stopColor="#1A1A22" />
+            <stop offset="100%" stopColor="#0D0D12" />
+          </linearGradient>
+
+          {/* Blue eye glow */}
+          <radialGradient id="bravyEyeGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#60B5FF" stopOpacity="1" />
+            <stop offset="60%" stopColor="#3D8FE8" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#2B6CC4" stopOpacity="0.7" />
           </radialGradient>
-          <linearGradient id="bravyBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#C1DBE8" />
-            <stop offset="100%" stopColor="#A8C8DA" />
+
+          {/* Antenna glow */}
+          <radialGradient id="bravyAntennaGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#60B5FF" stopOpacity="1" />
+            <stop offset="100%" stopColor="#3D8FE8" stopOpacity="0.4" />
+          </radialGradient>
+
+          {/* Arm gradient */}
+          <linearGradient id="bravyArm" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="100%" stopColor="#E9ECEF" />
           </linearGradient>
-          <linearGradient id="bravyAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFF1B5" />
-            <stop offset="100%" stopColor="#FFE88A" />
-          </linearGradient>
-          <linearGradient id="bravyCheekGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#F4C2C2" />
-            <stop offset="100%" stopColor="#FFCBA4" />
-          </linearGradient>
-          <filter id="bravyShadow">
-            <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1A1A2E" floodOpacity="0.1" />
+
+          {/* 3D drop shadow */}
+          <filter id="bravy3DShadow">
+            <feDropShadow dx="0" dy={s * 0.04} stdDeviation={s * 0.04} floodColor="#1A1A22" floodOpacity="0.15" />
           </filter>
-          <filter id="bravyGlowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+
+          {/* Blue glow filter */}
+          <filter id="bravyBlueGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
         </defs>
 
-        {/* Background glow */}
-        <circle cx={half} cy={half} r={half} fill="url(#bravyGlow)" />
-
-        <g filter="url(#bravyShadow)">
-          {/* Antenna */}
-          <motion.g
-            animate={animate ? { rotate: [0, -4, 4, 0] } : {}}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            style={{ transformOrigin: `${half}px ${half * 0.5}px` }}
-          >
-            <line x1={half} y1={half * 0.5} x2={half} y2={half * 0.2} stroke="#591427" strokeWidth="2" strokeLinecap="round" />
-            <motion.circle
-              cx={half} cy={half * 0.16}
-              r={4}
-              fill="url(#bravyAccent)"
-              animate={animate ? { opacity: [0.7, 1, 0.7], r: [3.5, 4.5, 3.5] } : {}}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <circle cx={half} cy={half * 0.16} r={2} fill="#FFE066" />
-          </motion.g>
-
-          {/* Left arm */}
-          <motion.g
-            animate={animate ? armAnimation : {}}
-            style={{ transformOrigin: `${half * 0.42}px ${half * 0.75}px` }}
-          >
-            <rect
-              x={half * 0.26} y={half * 0.66}
-              width={s * 0.07} height={s * 0.18}
-              rx={s * 0.035}
-              fill="url(#bravyBodyGrad)"
-              stroke="#591427" strokeWidth="1.2"
-            />
-            <circle cx={half * 0.29} cy={half * 0.86} r={s * 0.045} fill="#FFF1B5" stroke="#591427" strokeWidth="1.2" />
-          </motion.g>
-
-          {/* Right arm */}
-          <motion.g
-            animate={animate ? armAnimation : {}}
-            style={{ transformOrigin: `${half * 1.58}px ${half * 0.75}px` }}
-          >
-            <rect
-              x={half * 0.67} y={half * 0.66}
-              width={s * 0.07} height={s * 0.18}
-              rx={s * 0.035}
-              fill="url(#bravyBodyGrad)"
-              stroke="#591427" strokeWidth="1.2"
-            />
-            <circle cx={half * 0.71} cy={half * 0.86} r={s * 0.045} fill="#FFF1B5" stroke="#591427" strokeWidth="1.2" />
-          </motion.g>
-
-          {/* Body */}
-          <rect
-            x={half * 0.36} y={half * 0.33}
-            width={half * 1.28} height={half * 1.34}
-            rx={s * 0.16}
-            fill="url(#bravyBodyGrad)"
-            stroke="#591427" strokeWidth="1.5"
-          />
-
-          {/* Screen/face area */}
-          <rect
-            x={half * 0.44} y={half * 0.43}
-            width={half * 1.12} height={half * 0.84}
-            rx={s * 0.09}
-            fill="white"
-            opacity="0.9"
-          />
-
-          {/* Eyes */}
-          {showHearts ? (
-            <>
-              <text x={half * 0.72} y={half * 0.73} fontSize="12" fill="#591427">
-                <motion.tspan
-                  animate={animate ? { scale: [1, 1.3, 1] } : {}}
-                  transition={{ duration: 0.6, repeat: Infinity }}
-                >&#x2665;</motion.tspan>
-              </text>
-              <text x={half * 1.12} y={half * 0.73} fontSize="12" fill="#591427">
-                <motion.tspan
-                  animate={animate ? { scale: [1, 1.3, 1] } : {}}
-                  transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }}
-                >&#x2665;</motion.tspan>
-              </text>
-            </>
-          ) : (
-            <>
-              {/* Left eye */}
-              <motion.ellipse
-                cx={half * 0.72} cy={half * 0.67}
-                rx={getEyeTransform().rx || 5}
-                ry={getEyeTransform().ry}
-                fill="#591427"
-                animate={animate && expression === 'thinking' ? { cx: [half * 0.72, half * 0.84, half * 0.72] } : {}}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              />
-              {/* Right eye (wink = line) */}
-              {isWink ? (
-                <motion.line
-                  x1={half * 1.18} y1={half * 0.67}
-                  x2={half * 1.3} y2={half * 0.67}
-                  stroke="#591427" strokeWidth="2" strokeLinecap="round"
-                  animate={animate ? { x1: [half * 1.18, half * 1.15, half * 1.18], x2: [half * 1.3, half * 1.33, half * 1.3] } : {}}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                />
-              ) : (
-                <ellipse
-                  cx={half * 1.28} cy={half * 0.67}
-                  rx={getEyeTransform().rx || 5}
-                  ry={getEyeTransform().ry}
-                  fill="#591427"
-                />
-              )}
-              {/* Eye highlights */}
-              {!isWink && (
-                <>
-                  <circle cx={half * 0.74} cy={half * 0.63} r={2.2} fill="white" />
-                  <circle cx={half * 1.30} cy={half * 0.63} r={2.2} fill="white" />
-                </>
-              )}
-            </>
-          )}
-
-          {/* Blush - warmer colors */}
-          <ellipse cx={half * 0.58} cy={half * 0.8} rx={6} ry={3.5} fill="url(#bravyCheekGrad)" opacity="0.5" />
-          <ellipse cx={half * 1.42} cy={half * 0.8} rx={6} ry={3.5} fill="url(#bravyCheekGrad)" opacity="0.5" />
-
-          {/* Mouth */}
-          <motion.path
-            d={getMouthPath()}
-            stroke="#591427"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            fill="none"
-            animate={animate && (expression === 'motivate' || expression === 'celebrate') ? { d: [
-              getMouthPath(),
-              `M ${half - 5} ${half + 6} Q ${half} ${half + 9} ${half + 5} ${half + 6}`,
-              getMouthPath()
-            ] } : {}}
-            transition={{ duration: 0.8, repeat: Infinity }}
-          />
-
-          {/* Chest accent light */}
+        {/* ── Antenna ── */}
+        <motion.g
+          animate={animate ? { rotate: [0, -3, 3, 0] } : {}}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          style={{ transformOrigin: `${cx}px ${bodyY}px` }}
+        >
+          <line x1={cx} y1={bodyY + 2} x2={cx} y2={bodyY - s * 0.1} stroke="#CED4DA" strokeWidth={s * 0.025} strokeLinecap="round" />
           <motion.circle
-            cx={half} cy={half * 1.38}
-            r={4.5}
-            fill="url(#bravyAccent)"
-            animate={animate ? { opacity: [0.7, 1, 0.7], r: [4, 5, 4] } : {}}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            cx={cx}
+            cy={bodyY - s * 0.1 - s * 0.025}
+            r={s * 0.032}
+            fill="url(#bravyAntennaGlow)"
+            animate={animate ? { opacity: [0.6, 1, 0.6], r: [s * 0.028, s * 0.036, s * 0.028] } : {}}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           />
-          <circle cx={half} cy={half * 1.38} r={2.2} fill="#FFE066" />
+        </motion.g>
 
-          {/* Feet */}
-          <ellipse cx={half * 0.64} cy={half * 1.7} rx={s * 0.085} ry={s * 0.035} fill="url(#bravyBodyGrad)" stroke="#591427" strokeWidth="1.2" />
-          <ellipse cx={half * 1.36} cy={half * 1.7} rx={s * 0.085} ry={s * 0.035} fill="url(#bravyBodyGrad)" stroke="#591427" strokeWidth="1.2" />
+        {/* ── Left arm ── */}
+        <motion.g
+          animate={animate ? leftArmAnim : {}}
+          style={{ transformOrigin: `${bodyX + 1}px ${armY + 2}px` }}
+        >
+          <rect x={bodyX - armW + 2} y={armY} width={armW} height={armH} rx={armW / 2} fill="url(#bravyArm)" stroke="#DEE2E6" strokeWidth={s * 0.008} />
+          {/* Hand */}
+          <circle cx={bodyX - armW / 2 + 2} cy={armY + armH} r={s * 0.038} fill="#F8F9FA" stroke="#DEE2E6" strokeWidth={s * 0.008} />
+        </motion.g>
+
+        {/* ── Right arm ── */}
+        <motion.g
+          animate={animate ? rightArmAnim : {}}
+          style={{ transformOrigin: `${bodyX + bodyW - 1}px ${armY + 2}px` }}
+        >
+          <rect x={bodyX + bodyW - 2} y={armY} width={armW} height={armH} rx={armW / 2} fill="url(#bravyArm)" stroke="#DEE2E6" strokeWidth={s * 0.008} />
+          {/* Hand */}
+          <circle cx={bodyX + bodyW - 2 + armW / 2} cy={armY + armH} r={s * 0.038} fill="#F8F9FA" stroke="#DEE2E6" strokeWidth={s * 0.008} />
+        </motion.g>
+
+        {/* ── Main body ── */}
+        <g filter="url(#bravy3DShadow)">
+          <rect
+            x={bodyX} y={bodyY}
+            width={bodyW} height={bodyH}
+            rx={bodyR}
+            fill="url(#bravyBody)"
+            stroke="#DEE2E6"
+            strokeWidth={s * 0.01}
+          />
+          {/* Subtle 3D overlay */}
+          <rect
+            x={bodyX} y={bodyY}
+            width={bodyW} height={bodyH}
+            rx={bodyR}
+            fill="url(#bravyBodyShadow)"
+          />
+          {/* Top highlight for gloss */}
+          <rect
+            x={bodyX + bodyW * 0.1} y={bodyY + bodyH * 0.02}
+            width={bodyW * 0.8} height={bodyH * 0.12}
+            rx={bodyR * 0.6}
+            fill="white"
+            opacity="0.5"
+          />
         </g>
 
-        {/* Sparkles & Effects */}
+        {/* ── Visor (black face area) ── */}
+        <rect
+          x={visorX} y={visorY}
+          width={visorW} height={visorH}
+          rx={s * 0.06}
+          fill="url(#bravyVisor)"
+        />
+        {/* Visor glossy reflection */}
+        <rect
+          x={visorX + visorW * 0.08} y={visorY + visorH * 0.06}
+          width={visorW * 0.84} height={visorH * 0.2}
+          rx={s * 0.03}
+          fill="white"
+          opacity="0.06"
+        />
+
+        {/* ── Eyes ── */}
+        {showHearts ? (
+          <>
+            <motion.text
+              x={eyeLX} y={eyeY + 1}
+              fontSize={s * 0.1}
+              textAnchor="middle"
+              fill="#FF6B8A"
+              animate={animate ? { scale: [1, 1.2, 1] } : {}}
+              style={{ transformOrigin: `${eyeLX}px ${eyeY}px` }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            >&#9829;</motion.text>
+            <motion.text
+              x={eyeRX} y={eyeY + 1}
+              fontSize={s * 0.1}
+              textAnchor="middle"
+              fill="#FF6B8A"
+              animate={animate ? { scale: [1, 1.2, 1] } : {}}
+              style={{ transformOrigin: `${eyeRX}px ${eyeY}px` }}
+              transition={{ duration: 0.8, repeat: Infinity, delay: 0.3 }}
+            >&#9829;</motion.text>
+          </>
+        ) : (
+          <>
+            {/* Left eye */}
+            {eyeStyle.left === 'star' ? (
+              <motion.text
+                x={eyeLX} y={eyeY + s * 0.025}
+                fontSize={s * 0.09}
+                textAnchor="middle"
+                fill="#60B5FF"
+                animate={animate ? { scale: [1, 1.2, 1] } : {}}
+                style={{ transformOrigin: `${eyeLX}px ${eyeY}px` }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+              >&#10022;</motion.text>
+            ) : (
+              <motion.ellipse
+                cx={eyeLX}
+                cy={eyeY}
+                rx={eyeSize * (eyeStyle.leftScale || 1)}
+                ry={eyeSize * 0.75 * (eyeStyle.leftScale || 1)}
+                fill="url(#bravyEyeGlow)"
+                filter="url(#bravyBlueGlow)"
+                animate={animate && eyeStyle.lookLeft ? { cx: [eyeLX, eyeLX - 3, eyeLX] } : {}}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
+
+            {/* Right eye */}
+            {eyeStyle.right === 'closed' ? (
+              <motion.line
+                x1={eyeRX - eyeSize * 0.7}
+                y1={eyeY}
+                x2={eyeRX + eyeSize * 0.7}
+                y2={eyeY}
+                stroke="#60B5FF"
+                strokeWidth={s * 0.018}
+                strokeLinecap="round"
+              />
+            ) : eyeStyle.right === 'star' ? (
+              <motion.text
+                x={eyeRX} y={eyeY + s * 0.025}
+                fontSize={s * 0.09}
+                textAnchor="middle"
+                fill="#60B5FF"
+                animate={animate ? { scale: [1, 1.2, 1] } : {}}
+                style={{ transformOrigin: `${eyeRX}px ${eyeY}px` }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
+              >&#10022;</motion.text>
+            ) : (
+              <motion.ellipse
+                cx={eyeRX}
+                cy={eyeY}
+                rx={eyeSize * (eyeStyle.rightScale || 1)}
+                ry={eyeSize * 0.75 * (eyeStyle.rightScale || 1)}
+                fill="url(#bravyEyeGlow)"
+                filter="url(#bravyBlueGlow)"
+                animate={animate && eyeStyle.lookLeft ? { cx: [eyeRX, eyeRX - 3, eyeRX] } : {}}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
+
+            {/* Eye highlights (white dots for 3D look) */}
+            {eyeStyle.left !== 'star' && eyeStyle.left !== 'heart' && (
+              <circle cx={eyeLX + eyeSize * 0.25} cy={eyeY - eyeSize * 0.2} r={eyeSize * 0.22} fill="white" opacity="0.8" />
+            )}
+            {eyeStyle.right !== 'star' && eyeStyle.right !== 'heart' && eyeStyle.right !== 'closed' && (
+              <circle cx={eyeRX + eyeSize * 0.25} cy={eyeY - eyeSize * 0.2} r={eyeSize * 0.22} fill="white" opacity="0.8" />
+            )}
+          </>
+        )}
+
+        {/* ── Mouth ── */}
+        <motion.path
+          d={getMouth().replace(/my/g, String(mouthY))}
+          stroke="#60B5FF"
+          strokeWidth={s * 0.015}
+          strokeLinecap="round"
+          fill="none"
+          opacity="0.7"
+          animate={animate && (expression === 'motivate' || expression === 'celebrate') ? { opacity: [0.7, 1, 0.7] } : {}}
+          transition={{ duration: 1, repeat: Infinity }}
+        />
+
+        {/* ── Chest accent (small blue circle) ── */}
+        <motion.circle
+          cx={cx}
+          cy={bodyY + bodyH * 0.82}
+          r={s * 0.025}
+          fill="#60B5FF"
+          animate={animate ? { opacity: [0.5, 1, 0.5] } : {}}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* ── Feet ── */}
+        <ellipse cx={cx - s * 0.09} cy={footY} rx={footW / 2} ry={footH / 2} fill="url(#bravyArm)" stroke="#DEE2E6" strokeWidth={s * 0.008} />
+        <ellipse cx={cx + s * 0.09} cy={footY} rx={footW / 2} ry={footH / 2} fill="url(#bravyArm)" stroke="#DEE2E6" strokeWidth={s * 0.008} />
+
+        {/* ── Sparkles & Effects ── */}
         {showSparkles && animate && (
           <>
             <motion.circle
-              cx={half * 0.18} cy={half * 0.28} r={2.5}
-              fill="#FFF1B5"
-              animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+              cx={cx - s * 0.32} cy={cy - s * 0.2}
+              r={s * 0.018}
+              fill="#60B5FF"
+              animate={{ opacity: [0, 1, 0], scale: [0, 1.3, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity, delay: 0 }}
             />
             <motion.circle
-              cx={half * 1.75} cy={half * 0.38} r={2}
-              fill="#C1DBE8"
-              animate={{ opacity: [0, 1, 0], scale: [0, 1, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-            />
-            <motion.circle
-              cx={half * 1.65} cy={half * 0.12} r={1.8}
+              cx={cx + s * 0.35} cy={cy - s * 0.15}
+              r={s * 0.015}
               fill="#BDB2FF"
-              animate={{ opacity: [0, 0.7, 0], scale: [0, 1, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: 1 }}
+              animate={{ opacity: [0, 0.8, 0], scale: [0, 1.1, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity, delay: 0.6 }}
             />
-            {/* Extra sparkle for celebrate */}
-            {showStarBurst && (
+            <motion.circle
+              cx={cx + s * 0.3} cy={cy + s * 0.3}
+              r={s * 0.013}
+              fill="#FFF1B5"
+              animate={{ opacity: [0, 0.7, 0], scale: [0, 1, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity, delay: 1.2 }}
+            />
+            {expression === 'celebrate' && (
               <>
                 <motion.circle
-                  cx={half * 0.12} cy={half * 0.6} r={2}
+                  cx={cx - s * 0.36} cy={cy + s * 0.1}
+                  r={s * 0.016}
                   fill="#FF6D3F"
-                  animate={{ opacity: [0, 0.8, 0], scale: [0, 1.1, 0] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: 0.3 }}
+                  animate={{ opacity: [0, 0.8, 0], scale: [0, 1.2, 0] }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: 0.3 }}
                 />
                 <motion.circle
-                  cx={half * 1.85} cy={half * 0.65} r={2.2}
+                  cx={cx + s * 0.38} cy={cy + s * 0.15}
+                  r={s * 0.014}
                   fill="#6BA389"
                   animate={{ opacity: [0, 0.8, 0], scale: [0, 1.1, 0] }}
-                  transition={{ duration: 1.2, repeat: Infinity, delay: 0.8 }}
+                  transition={{ duration: 1.4, repeat: Infinity, delay: 0.9 }}
                 />
               </>
             )}
           </>
         )}
+
+        {/* Floating shadow beneath robot */}
+        <ellipse
+          cx={cx}
+          cy={s * 0.94}
+          rx={s * 0.18}
+          ry={s * 0.025}
+          fill="#1A1A22"
+          opacity="0.06"
+        />
       </svg>
     </div>
   )
 }
 
-// Mini version for tight spaces
+// ─── Mini version for sidebar ────────────────────────────────
 export function BravyBotMini({ className = '' }: { className?: string }) {
-  return (
-    <BravyBot size={34} expression="happy" animate={false} className={className} />
-  )
+  return <BravyBot size={32} expression="happy" animate={false} className={className} />
 }
 
-// Motivational phrases per module
+// ─── Phrases per module ──────────────────────────────────────
 export const BRAVY_PHRASES: Record<string, string[]> = {
+  inicio: [
+    'Bienvenida a BRAVE Studio!',
+    'Vamos a crear contenido increible!',
+    'Tu asistente de contenido esta listo!',
+  ],
   marca: [
-    'Define tu marca, brillarás más! ✨',
-    'Tu marca es única, cuéntala!',
+    'Define tu marca, brillaras mas!',
+    'Tu marca es unica, cuentala!',
     'Vamos a crear algo especial!',
   ],
   planificar: [
-    'Planifica conmigo, todo encaja! 📋',
+    'Planifica conmigo, todo encaja!',
     'Organizamos tu mes perfecto!',
-    'Un plan = más clientas!',
+    'Un plan = mas clientas!',
   ],
   crear: [
-    'Crea algo que enamore! 🎬',
-    'Tu próximo reel va a ser genial!',
+    'Crea algo que enamore!',
+    'Tu proximo reel va a ser genial!',
     'A crear sin miedo!',
   ],
   stories: [
-    'Stories que conectan! 📸',
+    'Stories que conectan!',
     'Engancha a tu audiencia!',
-    'Cuenta historias mágicas!',
+    'Cuenta historias magicas!',
   ],
   ganchos: [
-    'Ganchos que atrapan! 🎣',
-    'Cada gancho = más visualizaciones!',
+    'Ganchos que atrapan!',
+    'Cada gancho = mas visualizaciones!',
     'Elige tu gancho perfecto!',
   ],
   asistente: [
-    'Hola! Soy Bravy! 🤖',
-    'Pregúntame lo que quieras!',
-    'Estoy aquí para ti!',
+    'Hola! Soy Bravy!',
+    'Preguntame lo que quieras!',
+    'Estoy aqui para ti!',
   ],
   biblioteca: [
-    'Tu biblioteca de oro! 📚',
+    'Tu biblioteca de oro!',
     'Todo guardado y listo!',
     'Tus ideas, organizadas!',
   ],
   calendario: [
-    'Tu mes, visualizado! 📅',
-    'Todo programado, sin estrés!',
-    'Organización = éxito!',
+    'Tu mes, visualizado!',
+    'Todo programado, sin estres!',
+    'Organizacion = exito!',
   ],
   loading: [
-    'Creando magia... ✨',
-    'Prepárate para algo bueno!',
+    'Creando magia...',
+    'Preparate para algo bueno!',
     'Casi listo, espera!',
   ],
 }
 
-// Motivational tips that rotate
 export const BRAVY_MOTIVATIONAL_TIPS = [
-  'La constancia vence al talento 💪',
-  'Cada post te acerca a tu objetivo 🎯',
-  'Tu voz importa, compártela! 📣',
-  'Hoy es buen día para crear 🌟',
-  'Tu proxima clienta está en Instagram 🔍',
-  'Un reel bien hecho = 10 clientas nuevas 🚀',
-  'Las historias conectan de verdad ❤️',
-  'Tú ya eres experta, solo muéstralo 👑',
-  'El contenido de valor siempre gana 🏆',
-  'No esperes la inspiración, créala! ⚡',
+  'La constancia vence al talento',
+  'Cada post te acerca a tu objetivo',
+  'Tu voz importa, compartela!',
+  'Hoy es buen día para crear',
+  'Tu proxima clienta esta en Instagram',
+  'Un reel bien hecho = 10 clientas nuevas',
+  'Las historias conectan de verdad',
+  'Tu ya eres experta, solo muestralo',
+  'El contenido de valor siempre gana',
+  'No esperes la inspiracion, creala!',
 ]
 
 export function getRandomBravyPhrase(module: string): string {
-  const phrases = BRAVY_PHRASES[module] || BRAVY_PHRASES.marca
+  const phrases = BRAVY_PHRASES[module] || BRAVY_PHRASES.inicio
   return phrases[Math.floor(Math.random() * phrases.length)]
 }
 
@@ -384,7 +507,7 @@ export function getRandomMotivationalTip(): string {
   return BRAVY_MOTIVATIONAL_TIPS[Math.floor(Math.random() * BRAVY_MOTIVATIONAL_TIPS.length)]
 }
 
-// MascotMotivator component - a small banner with rotating tips
+// ─── MascotMotivator banner ──────────────────────────────────
 export function MascotMotivator({ module }: { module: string }) {
   const phrase = getRandomBravyPhrase(module)
   const tip = getRandomMotivationalTip()

@@ -14,6 +14,7 @@ import {
   Copy, Save, RefreshCw, Trash2, FileText, Film,
   LayoutGrid, Repeat, Check, Loader2
 } from 'lucide-react'
+import { fetchJSON } from '@/lib/fetch-safe'
 
 interface ContentModalProps {
   item: ContentItem | null
@@ -76,9 +77,8 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
     setIsRegenerating(true)
     setIsLoading(true, 'Regenerando contenido...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'script',
           brandProfile,
@@ -91,8 +91,7 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
           },
         }),
       })
-      const data = await res.json()
-      if (data.result && !data.result.raw) {
+      if (data?.result && !data.result.raw) {
         const updated: ContentItem = {
           ...item,
           guion: data.result.guion || item.guion,
@@ -117,9 +116,8 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
     setIsConverting(true)
     setIsLoading(true, `Convirtiendo a ${toTipo}...`)
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'convert-content',
           brandProfile,
@@ -136,8 +134,7 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
           },
         }),
       })
-      const data = await res.json()
-      if (data.result && !data.result.raw) {
+      if (data?.result && !data.result.raw) {
         const converted: ContentItem = {
           ...item,
           id: generateId(),

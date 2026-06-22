@@ -19,6 +19,7 @@ import {
   Lightbulb,
   RefreshCw,
 } from 'lucide-react'
+import { fetchJSON } from '@/lib/fetch-safe'
 
 const SUGERENCIAS_RAPIDAS = [
   'No sé qué publicar hoy',
@@ -166,9 +167,8 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
     setInput('')
 
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'asistente-brave',
           brandProfile,
@@ -179,9 +179,8 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
           },
         }),
       })
-      if (!res.ok) throw new Error('Network error')
-      const data = await res.json()
-      const result = data.result
+      if (error) throw new Error(error)
+      const result = data?.result
       // El endpoint devuelve { raw: 'texto plano' } cuando la respuesta no es JSON
       const textoRespuesta = typeof result === 'string'
         ? result
@@ -233,16 +232,15 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
           reader.onloadend = async () => {
             const base64 = (reader.result as string).split(',')[1]
             try {
-              const res = await fetch('/api/asr', {
+              const { data, error } = await fetchJSON('/api/asr', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ audioBase64: base64 }),
               })
-              if (!res.ok) throw new Error('ASR error')
-              const data = await res.json()
-              const texto = data.text || ''
-              if (texto.trim()) {
-                await enviarMensaje(texto, 'audio')
+              if (!error) {
+                const texto = (data as any)?.text || ''
+                if (texto.trim()) {
+                  await enviarMensaje(texto, 'audio')
+                }
               }
             } catch (e) {
               console.error(e)

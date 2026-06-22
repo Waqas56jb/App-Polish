@@ -1,808 +1,570 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { useAppStore, ContentItem, ContentPlan, generateId } from '@/lib/store'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import {
-  Calendar, RefreshCw, Save, FileText, Sparkles,
-  ArrowRight, Download, CalendarPlus, Layers
-} from 'lucide-react'
-import { DraggableCard } from './draggable-card'
-import { ContentCardModal } from './content-modal'
+import { useState, useCallback } from 'react'
+import { useAppStore, ContentItem, generateId } from '@/lib/store'
+import { fetchJSON } from '@/lib/fetch-safe'
 import { BravyBot } from './bravy-bot'
+import { ContentCardModal } from './content-modal'
+import {
+  Calendar, Sparkles, Loader2, BookOpen, CalendarPlus,
+  RefreshCw, Film, LayoutGrid, ChevronDown, ChevronUp,
+  Copy, Check, X,
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { format, addDays, startOfWeek, nextMonday } from 'date-fns'
+import { es } from 'date-fns/locale'
+
+type PlanTipo = 'semanal' | 'mensual'
+type PlanView = 'config' | 'resultado'
 
 const OBJETIVOS = [
-  {
-    value: 'autoridad',
-    label: 'Autoridad',
-    desc: 'Posiciónate como experta',
-    longDesc: 'El contenido demostrará tu conocimiento técnico, educará a tu audiencia y desmentirá mitos del sector.'
-  },
-  {
-    value: 'reservas',
-    label: 'Reservas',
-    desc: 'Genera conversaciones y citas',
-    longDesc: 'El contenido se enfocará en transformaciones, casos de éxito y llamados claros a reservar.'
-  },
-  {
-    value: 'visibilidad',
-    label: 'Visibilidad',
-    desc: 'Llega a más personas y consigue más alcance',
-    longDesc: 'El contenido será viral, usando tendencias, retos y temas que generen debate y compartición.'
-  },
+  { value: 'reservas', label: 'Reservas', emoji: '🎯', desc: 'Conseguir más citas y reservas' },
+  { value: 'autoridad', label: 'Autoridad', emoji: '👑', desc: 'Posicionarte como experta' },
+  { value: 'visibilidad', label: 'Visibilidad', emoji: '🔥', desc: 'Llegar a más personas' },
 ]
 
-const FRECUENCIAS = [2, 3, 4, 5]
-
-type TipoContenido = 'reels' | 'carruseles' | 'mezcla'
+const FRECUENCIAS = [
+  { value: 2, label: '2 por semana', desc: 'Ligero' },
+  { value: 3, label: '3 por semana', desc: 'Recomendado' },
+  { value: 4, label: '4 por semana', desc: 'Intenso' },
+]
 
 export function Planificar() {
-  const {
-    brandProfile, addContentPlan, addLibraryItems, setActiveModule,
-    setIsLoading, isLoading, setBrandProfile, replaceLibraryItem,
-    scheduleContentItem, removeLibraryItem,
-    currentPlanItems, currentPlanConfig,
-    setCurrentPlanItems, updateCurrentPlanItem, removeCurrentPlanItem,
-    setCurrentPlanConfig, clearCurrentPlan,
-  } = useAppStore()
-  const [tipo, setTipo] = useState<'semanal' | 'mensual'>(currentPlanConfig?.tipo || 'semanal')
-  const [tipoContenido, setTipoContenido] = useState<TipoContenido>(currentPlanConfig?.tipoContenido || 'mezcla')
-  const [serviciosSeleccionados, setServiciosSeleccionados] = useState<string[]>(currentPlanConfig?.servicios || [])
-  const [frecuencia, setFrecuencia] = useState(currentPlanConfig?.frecuencia || 3)
-  const [objetivo, setObjetivo] = useState(currentPlanConfig?.objetivo || '')
-  const [openItemId, setOpenItemId] = useState<string | null>(null)
+  const { brandProfile, libraryItems, addLibraryItems, setIsLoading, setActiveModule } = useAppStore()
+
+  // Config state
+  const [planTipo, setPlanTipo] = useState<PlanTipo>('mensual')
+  const [frecuencia, setFrecuencia] = useState(3)
+  const [objetivo, setObjetivo] = useState('reservas')
+
+  // Result state
+  const [view, setView] = useState<PlanView>('config')
+  const [items, setItems] = useState<ContentItem[]>([])
+  const [generando, setGenerando] = useState(false)
+  const [regenerandoIdx, setRegenerandoIdx] = useState<number | null>(null)
+  const [copiadoIdx, setCopiadoIdx] = useState<number | null>(null)
+
+  // Modal
+  const [openItem, setOpenItem] = useState<ContentItem | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // Use store-backed plan items
-  const generatedContent = currentPlanItems
-  const setGeneratedContent = setCurrentPlanItems
-  const showResults = generatedContent.length > 0
+  // Expanded card
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
 
-  const openItem = openItemId ? generatedContent.find(c => c.id === openItemId) || null : null
+  // Calendar conflict dialog
+  const [showCalendarDialog, setShowCalendarDialog] = useState(false)
 
-  const servicios = brandProfile?.serviciosPrioritarios?.length
-    ? brandProfile.serviciosPrioritarios
-    : brandProfile?.servicios?.length
-      ? brandProfile.servicios
-      : ['Balayage', 'Mechas', 'Tinte', 'Corte', 'Peinado', 'Alisado', 'Permanente', 'Tratamientos', 'Keratina', 'Extensiones', 'Canas', 'Decoloración', 'Reflejos', 'Matizadores', 'Cepillado', 'Recogidos']
+  const totalSemanas = planTipo === 'semanal' ? 1 : 4
+  const totalItems = frecuencia * totalSemanas
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
+  // Check if calendar already has content
+  const calendarioItems = libraryItems.filter(i => i.estado === 'programado')
+  const hasCalendarioContent = calendarioItems.length > 0
 
-  const toggleServicio = (s: string) => {
-    if (serviciosSeleccionados.includes(s)) {
-      setServiciosSeleccionados(prev => prev.filter(x => x !== s))
-    } else if (serviciosSeleccionados.length < 3) {
-      setServiciosSeleccionados(prev => [...prev, s])
-    }
-  }
+  const [planError, setPlanError] = useState('')
 
-  const handleGenerate = async () => {
-    if (!objetivo || serviciosSeleccionados.length === 0) return
-
-    setIsLoading(true, 'Generando tu planificación...')
+  const generatePlan = useCallback(async () => {
+    setGenerando(true)
+    setPlanError('')
+    setIsLoading(true, 'Generando tu plan de contenido...')
     try {
-      const res = await fetch('/api/ai', {
+      const fechaInicio = format(nextMonday(new Date()), 'yyyy-MM-dd')
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'plan',
           brandProfile,
           context: {
-            tipo,
-            servicios: serviciosSeleccionados,
+            tipo: planTipo,
+            servicios: brandProfile?.serviciosPrioritarios?.length ? brandProfile.serviciosPrioritarios : brandProfile?.servicios,
             frecuencia,
             objetivo,
-            tipoContenido,
+            fechaInicio,
           },
         }),
+        timeoutMs: 90000,
       })
-
-      const data = await res.json()
-      const items: ContentItem[] = []
-
-      const getTipoForItem = (idx: number, fromAI?: string): 'reel' | 'carrusel' => {
-        if (tipoContenido === 'reels') return 'reel'
-        if (tipoContenido === 'carruseles') return 'carrusel'
-        if (fromAI === 'reel' || fromAI === 'carrusel') return fromAI
-        return idx % 2 === 0 ? 'reel' : 'carrusel'
+      if (error) { setPlanError(error); return }
+      let raw = data?.result
+      if (typeof raw === 'string') {
+        try { raw = JSON.parse(raw) } catch { raw = [] }
       }
-
-      if (Array.isArray(data.result)) {
-        data.result.forEach((item: any, idx: number) => {
-          const contentItem: ContentItem = {
-            id: generateId(),
-            tipo: getTipoForItem(idx, item.tipo),
-            titulo: item.titulo || 'Sin título',
-            objetivo: item.objetivo || objetivo,
-            servicio: item.servicio || serviciosSeleccionados[idx % serviciosSeleccionados.length] || '',
-            guion: '',
-            copy: '',
-            hashtags: '',
-            textoPortada: '',
-            formato: '',
-            estado: 'aprobado',
-            fecha: '',
-            diaSemana: item.dia || '',
-            slides: [],
-            storiesData: [],
-            descripcion: item.descripcion || '',
-            planId: '',
-            createdAt: new Date().toISOString(),
-          }
-          items.push(contentItem)
-        })
+      if (Array.isArray(raw) && raw.length > 0) {
+        const parsed: ContentItem[] = raw.map((r: any, i: number) => ({
+          id: `plan-${Date.now()}-${i}`,
+          tipo: r.tipo || 'reel',
+          titulo: r.titulo || `Contenido ${i + 1}`,
+          objetivo: r.objetivo || objetivo,
+          servicio: r.servicio || '',
+          guion: '',
+          copy: '',
+          hashtags: '',
+          textoPortada: r.titulo || '',
+          formato: r.tipo === 'carrusel' ? 'carrusel' : 'hablando a cámara',
+          estado: 'aprobado' as const,
+          fecha: r.fecha || '',
+          diaSemana: r.diaSemana || '',
+          slides: [],
+          storiesData: [],
+          descripcion: r.descripcion || '',
+          planId: `plan-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+        }))
+        setItems(parsed)
+        setView('resultado')
       } else {
-        // Fallback
-        const dias = ['Martes', 'Jueves', 'Domingo']
-        const ideasByObjetivo: Record<string, string[]> = {
-          autoridad: [
-            '3 mitos sobre {servicio} que debes dejar de creer',
-            'El error que estilistas novatas cometen con {servicio}',
-            'Cómo identifico si un cliente necesita {servicio}: mi método',
-            'Tutorial: técnica correcta de {servicio} paso a paso',
-          ],
-          reservas: [
-            'Antes y después: transformación con {servicio}',
-            'Solo 3 citas disponibles esta semana para {servicio}',
-            'Mi clienta no creía el resultado del {servicio}',
-            'Si llevas tiempo pensando en un {servicio}, esto es para ti',
-          ],
-          visibilidad: [
-            'El reto del {servicio} que se hizo viral',
-            'Lo que nadie te dice sobre el {servicio} (polémica)',
-            'Tag a tu amiga que necesita un {servicio}',
-            'Esto pasó cuando hice {servicio} en mi salón',
-          ],
-        }
-        const ideas = ideasByObjetivo[objetivo] || ideasByObjetivo.autoridad
-
-        for (let i = 0; i < frecuencia; i++) {
-          const servicio = serviciosSeleccionados[i % serviciosSeleccionados.length]
-          items.push({
-            id: generateId(),
-            tipo: getTipoForItem(i),
-            titulo: ideas[i % ideas.length].replace('{servicio}', servicio.toLowerCase()),
-            objetivo,
-            servicio,
-            guion: '',
-            copy: '',
-            hashtags: '',
-            textoPortada: '',
-            formato: '',
-            estado: 'aprobado',
-            fecha: '',
-            diaSemana: tipo === 'semanal' ? dias[i % 3] : `Semana ${Math.floor(i / frecuencia) + 1}`,
-            slides: [],
-            storiesData: [],
-            descripcion: `Idea alineada al objetivo "${objetivo}"`,
-            planId: '',
-            createdAt: new Date().toISOString(),
-          })
-        }
+        setPlanError('No se pudo generar el plan. Intenta de nuevo.')
       }
-
-      setGeneratedContent(items)
-      setCurrentPlanConfig({ tipo, tipoContenido, servicios: serviciosSeleccionados, frecuencia, objetivo })
-
-      // Auto-generate guion/copy/hashtags for each item in the background
-      autoGenerateScripts(items)
+    } catch (e) {
+      console.error('Plan generation error:', e)
+      setPlanError('Error inesperado. Intenta de nuevo.')
     } finally {
+      setGenerando(false)
       setIsLoading(false)
     }
-  }
+  }, [planTipo, frecuencia, objetivo, brandProfile, setIsLoading])
 
-  const autoGenerateScripts = async (items: ContentItem[]) => {
-    // Generate scripts in parallel (max 3 concurrent)
-    const batchSize = 3
-    for (let i = 0; i < items.length; i += batchSize) {
-      const batch = items.slice(i, i + batchSize)
-      await Promise.all(batch.map(async (item) => {
-        try {
-          const res = await fetch('/api/ai', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'script',
-              brandProfile,
-              context: {
-                titulo: item.titulo,
-                tipo: item.tipo,
-                objetivo: item.objetivo,
-                servicio: item.servicio,
-                formato: item.formato || 'hablando a cámara',
-              },
-            }),
-          })
-          const data = await res.json()
-          if (data.result && !data.result.raw) {
-            updateCurrentPlanItem(item.id, {
-              guion: data.result.guion || '',
-              copy: data.result.copy || '',
-              hashtags: data.result.hashtags || '',
-              textoPortada: data.result.textoPortada || '',
-            })
-          }
-        } catch (error) {
-          console.error('Error generating script for', item.titulo, error)
-        }
-      }))
-    }
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (over && active.id !== over.id) {
-      const oldIndex = generatedContent.findIndex(i => i.id === active.id)
-      const newIndex = generatedContent.findIndex(i => i.id === over.id)
-      if (oldIndex === -1 || newIndex === -1) return
-      const reordered = arrayMove(generatedContent, oldIndex, newIndex)
-      setGeneratedContent(reordered)
-    }
-  }
-
-  const handleRegenerate = async (item: ContentItem) => {
-    setIsLoading(true, 'Regenerando idea...')
+  const regenerateItem = async (index: number) => {
+    const item = items[index]
+    if (!item) return
+    setRegenerandoIdx(index)
+    setIsLoading(true, 'Generando contenido completo...')
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'reel-ideas',
-          brandProfile,
-          context: {
-            servicio: item.servicio,
-            objetivo: item.objetivo,
-            formato: item.formato || 'hablando a cámara',
-          },
-        }),
-      })
-      const data = await res.json()
-      let newTitulo = ''
-      if (Array.isArray(data.result) && data.result.length > 0) {
-        newTitulo = data.result[0].titulo
-      } else {
-        newTitulo = `Nueva idea sobre ${item.servicio}`
-      }
-      updateCurrentPlanItem(item.id, {
-        titulo: newTitulo,
-        descripcion: data.result?.[0]?.descripcion || item.descripcion,
-      })
-    } catch {
-      // ignore
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleDelete = (id: string) => {
-    removeCurrentPlanItem(id)
-  }
-
-  const handleSaveToLibrary = (item: ContentItem) => {
-    addLibraryItems([{ ...item, id: generateId() }])
-  }
-
-  const handleConvert = async (item: ContentItem) => {
-    const fromTipo = item.tipo
-    const toTipo = item.tipo === 'reel' ? 'carrusel' : 'reel'
-    setIsLoading(true, `Convirtiendo a ${toTipo}...`)
-    try {
-      const res = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'convert-content',
+          type: 'script',
           brandProfile,
           context: {
             titulo: item.titulo,
+            tipo: item.tipo,
             objetivo: item.objetivo,
             servicio: item.servicio,
             formato: item.formato,
-            fromTipo,
-            toTipo,
-            guion: item.guion,
-            copy: item.copy,
-            hashtags: item.hashtags,
           },
         }),
+        timeoutMs: 60000,
       })
-      const data = await res.json()
-      if (data.result && !data.result.raw) {
-        const converted: ContentItem = {
-          ...item,
-          tipo: toTipo,
-          titulo: data.result.titulo || item.titulo,
-          guion: toTipo === 'reel' ? (data.result.guion || item.guion) : '',
-          copy: data.result.copy || item.copy,
-          hashtags: data.result.hashtags || item.hashtags,
-          textoPortada: data.result.textoPortada || item.textoPortada,
-          slides: toTipo === 'carrusel' && data.result.slides ? data.result.slides : [],
-        }
-        // Replace the item in store
-        setCurrentPlanItems(generatedContent.map(c => c.id === item.id ? converted : c))
+      if (error) { console.error('Regenerate error:', error); return }
+      if (data?.result && !data.result.raw) {
+        setItems(prev => prev.map((it, i) => i === index ? {
+          ...it,
+          guion: data.result.guion || it.guion,
+          copy: data.result.copy || it.copy,
+          hashtags: data.result.hashtags || it.hashtags,
+          textoPortada: data.result.textoPortada || it.textoPortada,
+        } : it))
       }
-    } catch (error) {
-      console.error('Convert error:', error)
+    } catch (e) {
+      console.error('Regenerate error:', e)
     } finally {
+      setRegenerandoIdx(null)
       setIsLoading(false)
     }
   }
 
-  const handleAssignDay = (id: string, diaSemana: string) => {
-    updateCurrentPlanItem(id, { diaSemana })
+  const copyItem = (index: number) => {
+    const item = items[index]
+    const text = `${item.titulo}\n\n${item.guion}\n\n${item.copy}\n\n${item.hashtags}`
+    navigator.clipboard.writeText(text)
+    setCopiadoIdx(index)
+    setTimeout(() => setCopiadoIdx(null), 2000)
   }
 
-  const handleAssignDate = (id: string, fecha: string) => {
-    updateCurrentPlanItem(id, { fecha, estado: 'programado' })
-  }
-
-  const handleOpen = (item: ContentItem) => {
-    setOpenItemId(item.id)
+  const handleOpenItem = (item: ContentItem) => {
+    setOpenItem(item)
     setModalOpen(true)
   }
 
-  const handleModalClose = () => {
-    setModalOpen(false)
-    // Sync any updates from the modal back to local state
-    if (openItem) {
-      // Check store for updated version
+  // Save to Biblioteca (without calendar)
+  const saveToBiblioteca = () => {
+    addLibraryItems(items.map(item => ({ ...item, id: generateId(), estado: 'aprobado' as const })))
+  }
+
+  // Send to Calendario
+  const sendToCalendario = () => {
+    if (hasCalendarioContent) {
+      setShowCalendarDialog(true)
+    } else {
+      confirmSendToCalendar('add')
     }
   }
 
-  const getNextWeekdayDate = (diaSemana: string): string => {
-    if (!diaSemana) return ''
-    const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-    const targetDay = dias.indexOf(diaSemana)
-    if (targetDay === -1) return ''
-    const today = new Date()
-    const todayDay = today.getDay()
-    let diff = (targetDay - todayDay + 7) % 7
-    // If today is the same day, schedule for today
-    const result = new Date(today)
-    result.setDate(today.getDate() + diff)
-    return result.toISOString().split('T')[0]
-  }
+  const confirmSendToCalendar = (action: 'replace' | 'add') => {
+    setShowCalendarDialog(false)
 
-  const handleSavePlanToCalendar = () => {
-    const planId = generateId()
-    const itemsWithPlan = generatedContent.map(item => {
-      // If item has diaSemana but no fecha, derive fecha from diaSemana
-      let fecha = item.fecha
-      let estado = item.estado
-      if (!fecha && item.diaSemana) {
-        fecha = getNextWeekdayDate(item.diaSemana)
-        estado = 'programado' as const
-      }
-      return {
-        ...item,
-        planId,
-        fecha,
-        estado: fecha ? 'programado' as const : estado,
-      }
-    })
-
-    const plan: ContentPlan = {
-      id: planId,
-      tipo,
-      servicios: serviciosSeleccionados,
-      frecuencia,
-      objetivo,
-      contenido: itemsWithPlan,
-      createdAt: new Date().toISOString(),
+    if (action === 'replace') {
+      // Remove old scheduled items, add new ones
+      const oldIds = libraryItems.filter(i => i.estado === 'programado').map(i => i.id)
+      oldIds.forEach(id => useAppStore.getState().removeLibraryItem(id))
+      addLibraryItems(items.map(item => ({ ...item, id: generateId(), estado: 'programado' as const })))
+    } else {
+      // Add new items, pushing dates if overlap
+      const existingDates = new Set(
+        libraryItems.filter(i => i.estado === 'programado' && i.fecha).map(i => i.fecha)
+      )
+      const shifted = items.map(item => {
+        let fecha = item.fecha
+        if (fecha && existingDates.has(fecha)) {
+          // Push to next available day
+          let d = new Date(fecha)
+          for (let i = 0; i < 30; i++) {
+            d = addDays(d, 1)
+            const ds = format(d, 'yyyy-MM-dd')
+            if (!existingDates.has(ds)) break
+          }
+          fecha = format(d, 'yyyy-MM-dd')
+          existingDates.add(fecha)
+        } else if (fecha) {
+          existingDates.add(fecha)
+        }
+        return { ...item, id: generateId(), estado: 'programado' as const, fecha }
+      })
+      addLibraryItems(shifted)
     }
 
-    addContentPlan(plan)
-    addLibraryItems(itemsWithPlan)
-    alert('✓ Planificación guardada en calendario y biblioteca')
+    setActiveModule('calendario')
   }
 
-  const handleDownloadPDF = () => {
-    // Generate a simple printable view
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
+  const getTipoColor = (tipo: string) => tipo === 'carrusel' ? 'bg-[#FFF1B5] text-[#591427]' : 'bg-[#C1DBE8] text-[#2A1520]'
+  const getTipoIcon = (tipo: string) => tipo === 'carrusel' ? <LayoutGrid className="w-3.5 h-3.5" /> : <Film className="w-3.5 h-3.5" />
 
-    const html = `
-      <html>
-      <head>
-        <title>Planificación ${tipo} - BRÄVE STUDIO</title>
-        <style>
-          body { font-family: -apple-system, sans-serif; padding: 40px; color: #2A1520; }
-          h1 { color: #591427; }
-          .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 30px; }
-          .day { border: 1px solid #E8DDD5; padding: 10px; min-height: 80px; }
-          .day-name { font-weight: bold; color: #591427; margin-bottom: 5px; }
-          .item { background: #F5F0EB; padding: 5px; margin: 3px 0; font-size: 12px; border-radius: 4px; }
-          .reel { border-left: 3px solid #C1DBE8; }
-          .carrusel { border-left: 3px solid #FFF1B5; }
-          .content-block { page-break-inside: avoid; margin-bottom: 20px; padding: 15px; border: 1px solid #E8DDD5; border-radius: 8px; }
-          .tipo-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; color: white; }
-          .reel-badge { background: #C1DBE8; }
-          .carrusel-badge { background: #FFF1B5; }
-          h2 { color: #591427; margin-bottom: 5px; }
-          .meta { color: #666; font-size: 12px; margin-bottom: 10px; }
-          .section { margin: 8px 0; }
-          .section-label { font-weight: bold; color: #591427; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <h1>Planificación ${tipo} — BRÄVE STUDIO</h1>
-        <p><strong>Objetivo:</strong> ${objetivo} · <strong>Frecuencia:</strong> ${frecuencia}/semana · <strong>Tipo:</strong> ${tipoContenido}</p>
-        <p><strong>Servicios:</strong> ${serviciosSeleccionados.join(', ')}</p>
-
-        <h2>Vista Calendario</h2>
-        <div class="calendar">
-          ${['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(dia => `
-            <div class="day">
-              <div class="day-name">${dia}</div>
-              ${generatedContent.filter(c => c.diaSemana === dia).map(c => `
-                <div class="item ${c.tipo}">
-                  <span class="tipo-badge ${c.tipo}-badge">${c.tipo.toUpperCase()}</span><br>
-                  ${c.titulo}
-                </div>
-              `).join('')}
-            </div>
-          `).join('')}
-        </div>
-
-        <h2>Contenido por orden cronológico</h2>
-        ${generatedContent.map((c, i) => `
-          <div class="content-block">
-            <h2>${i + 1}. ${c.titulo}</h2>
-            <div class="meta">
-              <span class="tipo-badge ${c.tipo}-badge">${c.tipo.toUpperCase()}</span>
-              · ${c.diaSemana || 'Sin día'} · ${c.servicio} · ${c.objetivo}
-            </div>
-            ${c.descripcion ? `<div class="section"><div class="section-label">Descripción:</div>${c.descripcion}</div>` : ''}
-            ${c.guion ? `<div class="section"><div class="section-label">Guión:</div><pre style="white-space:pre-wrap;font-family:inherit;">${c.guion}</pre></div>` : ''}
-            ${c.copy ? `<div class="section"><div class="section-label">Copy:</div>${c.copy}</div>` : ''}
-            ${c.hashtags ? `<div class="section"><div class="section-label">Hashtags:</div>${c.hashtags}</div>` : ''}
-          </div>
-        `).join('')}
-      </body>
-      </html>
-    `
-    printWindow.document.write(html)
-    printWindow.document.close()
-    setTimeout(() => {
-      printWindow.print()
-    }, 500)
-  }
-
-  if (!brandProfile) {
+  // ─── CONFIG VIEW ───
+  if (view === 'config') {
     return (
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="text-center space-y-3 mb-4">
-          <h2 className="text-3xl font-bold text-[#2A1520]">Planificar</h2>
-          <p className="text-muted-foreground text-base">Crea tu planificación de contenido en minutos</p>
-        </div>
+      <div className="max-w-lg mx-auto">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="brave-float inline-block mb-3">
+              <BravyBot size={64} expression="excited" animate speechBubble="Planifiquemos tu contenido!" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground">Planificar contenido</h2>
+            <p className="text-sm text-muted-foreground mt-1">Elige y genera tu plan en un clic</p>
+          </div>
 
-        <Card className="border-l-4 border-l-[#FFF1B5] bg-[#FFFBF0] shadow-md">
-          <CardContent className="p-5 flex items-start gap-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F5F0EB] shrink-0">
-              <Sparkles className="w-6 h-6 text-[#C1DBE8]" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-[#2A1520] mb-1">Personaliza tu planificación</h3>
-              <p className="text-sm text-muted-foreground mb-3">
-                Aunque puedes planificar sin tu Marca BRÄVE, completarla hará que las ideas sean mucho más personalizadas para tu salón.
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#591427] hover:bg-[#7A2A40] text-white">
-                  Crear Mi Marca BRÄVE
-                  <ArrowRight className="w-3 h-3 ml-1" />
-                </Button>
-                <Button
-                  onClick={() => {
-                    setBrandProfile({
-                      nombre: '', salon: '', ciudad: '', instagram: '',
-                      experiencia: '', servicios: [], serviciosPrioritarios: [],
-                      objetivos: '', clientaIdeal: '', preguntasFrecuentes: '',
-                      erroresFrecuentes: '', nivelCamara: '', facturacion: '',
-                    })
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
+          {/* Tipo: Semanal / Mensual */}
+          <div className="mb-5">
+            <label className="text-sm font-semibold text-foreground mb-2 block">Duración</label>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { value: 'semanal' as PlanTipo, label: '1 Semana', desc: `${frecuencia} publicaciones` },
+                { value: 'mensual' as PlanTipo, label: '1 Mes', desc: `${frecuencia * 4} publicaciones` },
+              ]).map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setPlanTipo(opt.value)}
+                  className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 ${
+                    planTipo === opt.value
+                      ? 'border-[#591427] bg-[#591427]/5 shadow-md'
+                      : 'border-border bg-card hover:border-[#591427]/30'
+                  }`}
                 >
-                  Continuar sin marca
-                </Button>
-              </div>
+                  <p className={`font-bold text-sm ${planTipo === opt.value ? 'text-[#591427]' : 'text-foreground'}`}>
+                    {opt.label}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                </button>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Frecuencia */}
+          <div className="mb-5">
+            <label className="text-sm font-semibold text-foreground mb-2 block">Publicaciones por semana</label>
+            <div className="grid grid-cols-3 gap-2">
+              {FRECUENCIAS.map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => setFrecuencia(f.value)}
+                  className={`p-3 rounded-2xl border-2 text-center transition-all duration-200 ${
+                    frecuencia === f.value
+                      ? 'border-[#591427] bg-[#591427]/5 shadow-md'
+                      : 'border-border bg-card hover:border-[#591427]/30'
+                  }`}
+                >
+                  <p className={`font-bold text-lg ${frecuencia === f.value ? 'text-[#591427]' : 'text-foreground'}`}>
+                    {f.value}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">{f.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Objetivo */}
+          <div className="mb-6">
+            <label className="text-sm font-semibold text-foreground mb-2 block">Objetivo principal</label>
+            <div className="space-y-2">
+              {OBJETIVOS.map(o => (
+                <button
+                  key={o.value}
+                  onClick={() => setObjetivo(o.value)}
+                  className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all duration-200 ${
+                    objetivo === o.value
+                      ? 'border-[#591427] bg-[#591427]/5 shadow-md'
+                      : 'border-border bg-card hover:border-[#591427]/30'
+                  }`}
+                >
+                  <span className="text-xl">{o.emoji}</span>
+                  <div>
+                    <p className={`font-bold text-sm ${objetivo === o.value ? 'text-[#591427]' : 'text-foreground'}`}>{o.label}</p>
+                    <p className="text-xs text-muted-foreground">{o.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Generate button */}
+          <button
+            onClick={generatePlan}
+            disabled={generando || !brandProfile}
+            className="w-full py-4 rounded-2xl brave-gradient text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-lg hover:opacity-90 transition-all duration-200 disabled:opacity-50"
+          >
+            {generando ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Sparkles className="w-5 h-5" />
+            )}
+            {generando ? 'Generando plan...' : `Generar plan de ${totalItems} contenidos`}
+          </button>
+
+          {planError && (
+            <motion.p
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xs text-center text-red-500 mt-3 max-w-sm mx-auto"
+            >
+              {planError}
+            </motion.p>
+          )}
+
+          {!brandProfile && (
+            <p className="text-xs text-center text-muted-foreground mt-2">
+              Configura tu marca primero para personalizar el plan
+            </p>
+          )}
+        </motion.div>
       </div>
     )
   }
 
+  // ─── RESULT VIEW ───
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-3 mb-4">
-        <div className="flex items-center justify-center gap-3">
-          <BravyBot size={40} expression="motivate" animate={false} />
-          <h2 className="text-3xl font-bold text-[#2A1520]">Planificar</h2>
-        </div>
-        <p className="text-muted-foreground text-base">Crea tu planificación de contenido en minutos</p>
-      </div>
-
-      {!showResults ? (
-        <>
-          {/* Plan Type */}
-          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2A1520]">Tipo de Planificación</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                {(['semanal', 'mensual'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTipo(t)}
-                    className={`p-4 rounded-xl text-center font-medium transition-all duration-200 ${
-                      tipo === t
-                        ? 'bg-[#591427] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
-                    }`}
-                  >
-                    <Calendar className="w-6 h-6 mx-auto mb-2" />
-                    {t === 'semanal' ? 'Semanal' : 'Mensual'}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Content Type Selector */}
-          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
-                <Layers className="w-5 h-5 text-[#C1DBE8]" />
-                Tipo de Contenido
-              </CardTitle>
-              <CardDescription>¿Qué formatos quieres incluir en tu planificación?</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-3">
-                {([
-                  { value: 'reels' as TipoContenido, label: 'Solo Reels', icon: '🎬' },
-                  { value: 'carruseles' as TipoContenido, label: 'Solo Carruseles', icon: '🖼️' },
-                  { value: 'mezcla' as TipoContenido, label: 'Mezcla', icon: '✨' },
-                ]).map((tc) => (
-                  <button
-                    key={tc.value}
-                    onClick={() => setTipoContenido(tc.value)}
-                    className={`p-4 rounded-xl text-center transition-all duration-200 ${
-                      tipoContenido === tc.value
-                        ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
-                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
-                    }`}
-                  >
-                    <span className="text-2xl block mb-1">{tc.icon}</span>
-                    <span className="text-xs font-medium block">{tc.label}</span>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Services */}
-          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2A1520]">Servicios a Potenciar</CardTitle>
-              <CardDescription>Selecciona máximo 3 servicios</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {servicios.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => toggleServicio(s)}
-                    disabled={!serviciosSeleccionados.includes(s) && serviciosSeleccionados.length >= 3}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                      serviciosSeleccionados.includes(s)
-                        ? 'bg-[#591427] text-white shadow-md'
-                        : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
-                    } ${!serviciosSeleccionados.includes(s) && serviciosSeleccionados.length >= 3 ? 'opacity-40 cursor-not-allowed' : ''}`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Frequency */}
-          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2A1520]">Frecuencia Semanal</CardTitle>
-              <CardDescription>¿Cuántas publicaciones por semana?</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-4 gap-3">
-                {FRECUENCIAS.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFrecuencia(f)}
-                    className={`p-4 rounded-xl text-center font-bold transition-all duration-200 ${
-                      frecuencia === f
-                        ? 'bg-[#591427] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
-                    }`}
-                  >
-                    <span className="text-2xl block">{f}</span>
-                    <span className="text-xs font-normal mt-1 block">por semana</span>
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Objective */}
-          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2A1520]">Objetivo Principal</CardTitle>
-              <CardDescription>El objetivo modificará el tipo de ideas generadas por la IA</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {OBJETIVOS.map((obj) => (
-                  <button
-                    key={obj.value}
-                    onClick={() => setObjetivo(obj.value)}
-                    className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
-                      objetivo === obj.value
-                        ? 'bg-[#591427] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
-                    }`}
-                  >
-                    <div className="flex items-baseline justify-between mb-1">
-                      <span className="font-bold">{obj.label}</span>
-                    </div>
-                    <p className={`text-sm ${objetivo === obj.value ? 'text-white/80' : 'text-muted-foreground'}`}>
-                      {obj.desc}
-                    </p>
-                    {objetivo === obj.value && (
-                      <p className="text-xs mt-2 text-white/70 italic">{obj.longDesc}</p>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Generate Button */}
-          <div className="flex justify-center pt-2 pb-8">
-            <Button
-              onClick={handleGenerate}
-              disabled={isLoading || serviciosSeleccionados.length === 0 || !objetivo}
-              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg brave-gradient hover:opacity-90 text-white disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Generando planificación...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  GENERAR PLANIFICACIÓN
-                </>
-              )}
-            </Button>
+    <div className="max-w-2xl mx-auto">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">
+              Plan {planTipo === 'semanal' ? 'semanal' : 'mensual'}
+            </h2>
+            <p className="text-sm text-muted-foreground">{items.length} contenidos listos</p>
           </div>
-        </>
-      ) : (
-        <>
-          {/* Top toolbar */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h3 className="text-xl font-bold text-[#2A1520]">Tu Planificación</h3>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSavePlanToCalendar}
-                className="border-[#591427] text-[#591427] hover:bg-[#F5F0EB]"
-              >
-                <CalendarPlus className="w-4 h-4 mr-2" />
-                Guardar en calendario
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadPDF}
-                className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Descargar PDF
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGenerate}
-                className="border-[#E8DDD5] text-[#2A1520] hover:bg-[#F5F0EB]"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Regenerar plan
-              </Button>
-            </div>
-          </div>
-
-          <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <span className="text-[#591427]">💡</span>
-            Arrastra las tarjetas para reorganizar el orden. Usa el botón 📅 para asignar día o fecha.
-          </div>
-
-          {/* Draggable cards */}
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+          <button
+            onClick={() => { setView('config'); setItems([]) }}
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
-            <SortableContext
-              items={generatedContent.map(c => c.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-3">
-                {generatedContent.map((item) => (
-                  <DraggableCard
-                    key={item.id}
-                    item={item}
-                    onOpen={handleOpen}
-                    onRegenerate={handleRegenerate}
-                    onDelete={handleDelete}
-                    onSave={handleSaveToLibrary}
-                    onConvert={handleConvert}
-                    onAssignDay={handleAssignDay}
-                    onAssignDate={handleAssignDate}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+            <RefreshCw className="w-3.5 h-3.5" />
+            Nuevo plan
+          </button>
+        </div>
 
-          {/* Bottom actions */}
-          <div className="flex justify-center pt-4 pb-8 gap-3">
-            <Button
-              onClick={handleSavePlanToCalendar}
-              className="px-8 py-5 text-base font-bold rounded-xl shadow-lg bg-[#591427] hover:bg-[#7A2A40] text-white"
-            >
-              <Save className="w-5 h-5 mr-2" />
-              Guardar Planificación
-            </Button>
-          </div>
-        </>
-      )}
+        {/* Cards list */}
+        <div className="space-y-2.5">
+          {items.map((item, idx) => {
+            const isExpanded = expandedIdx === idx
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                className="brave-glass rounded-2xl border border-border/50 overflow-hidden brave-glow"
+              >
+                {/* Card header - clickable to expand/open */}
+                <button
+                  onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+                  className="w-full text-left p-4 flex items-start gap-3"
+                >
+                  {/* Type badge */}
+                  <span className={`shrink-0 mt-0.5 ${getTipoColor(item.tipo)} rounded-lg px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1`}>
+                    {getTipoIcon(item.tipo)}
+                    {item.tipo.toUpperCase()}
+                  </span>
 
-      {/* Content Modal */}
-      <ContentCardModal
-        item={openItem}
-        isOpen={modalOpen}
-        onClose={handleModalClose}
-        onDelete={handleDelete}
-      />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      {item.fecha && (
+                        <span className="text-[10px] font-semibold text-[#591427] bg-[#FFF1B5]/60 px-2 py-0.5 rounded-full">
+                          {item.diaSemana} {item.fecha && format(new Date(item.fecha + 'T12:00:00'), 'd MMM', { locale: es })}
+                        </span>
+                      )}
+                      <span className="text-[10px] text-muted-foreground">{item.servicio}</span>
+                    </div>
+                    <h3 className="font-semibold text-sm text-foreground leading-snug">{item.titulo}</h3>
+                    {item.descripcion && (
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.descripcion}</p>
+                    )}
+                  </div>
+
+                  <div className="shrink-0 mt-1">
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  </div>
+                </button>
+
+                {/* Expanded content */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
+                        {/* Guion */}
+                        {item.guion && (
+                          <div>
+                            <p className="text-[10px] font-bold text-[#591427] uppercase tracking-wide mb-1">Guión</p>
+                            <div className="bg-muted/50 rounded-xl p-3 text-xs text-foreground/80 whitespace-pre-line leading-relaxed max-h-40 overflow-y-auto">
+                              {item.guion}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Copy */}
+                        {item.copy && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-[10px] font-bold text-[#591427] uppercase tracking-wide">Copy</p>
+                              <button onClick={() => copyItem(idx)} className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1">
+                                {copiadoIdx === idx ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                {copiadoIdx === idx ? 'Copiado' : 'Copiar'}
+                              </button>
+                            </div>
+                            <div className="bg-muted/50 rounded-xl p-3 text-xs text-foreground/80 leading-relaxed">
+                              {item.copy}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Hashtags */}
+                        {item.hashtags && (
+                          <div>
+                            <p className="text-[10px] font-bold text-[#591427] uppercase tracking-wide mb-1">Hashtags</p>
+                            <p className="text-xs text-[#7EC8E3]">{item.hashtags}</p>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); regenerateItem(idx) }}
+                            disabled={regenerandoIdx === idx}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
+                          >
+                            {regenerandoIdx === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                            Regenerar
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleOpenItem(item) }}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
+                          >
+                            Abrir ficha
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* Bottom actions */}
+        <div className="mt-6 grid grid-cols-2 gap-3 sticky bottom-4 z-10">
+          <button
+            onClick={saveToBiblioteca}
+            className="py-3.5 rounded-2xl bg-white border-2 border-[#C1DBE8] text-[#591427] font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#C1DBE8]/10 transition-all brave-card-hover"
+          >
+            <BookOpen className="w-4 h-4" />
+            Guardar en biblioteca
+          </button>
+          <button
+            onClick={sendToCalendario}
+            className="py-3.5 rounded-2xl brave-gradient text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:opacity-90 transition-all"
+          >
+            <CalendarPlus className="w-4 h-4" />
+            Enviar al calendario
+          </button>
+        </div>
+
+        {/* Calendar conflict dialog */}
+        <AnimatePresence>
+          {showCalendarDialog && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
+              onClick={() => setShowCalendarDialog(false)}
+            >
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="brave-glass-strong rounded-3xl shadow-2xl p-6 max-w-sm w-full"
+              >
+                <div className="text-center mb-4">
+                  <div className="brave-float inline-block mb-2">
+                    <BravyBot size={48} expression="thinking" animate />
+                  </div>
+                  <h3 className="font-bold text-foreground text-base">Ya tienes contenido en el calendario</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Tienes {calendarioItems.length} contenido{calendarioItems.length > 1 ? 's' : ''} programado{calendarioItems.length > 1 ? 's' : ''}. ¿Qué quieres hacer?
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    onClick={() => confirmSendToCalendar('replace')}
+                    className="w-full p-3.5 rounded-2xl border-2 border-[#591427] text-left hover:bg-[#591427]/5 transition-colors"
+                  >
+                    <p className="font-bold text-sm text-[#591427]">Sustituir plan actual</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Elimina lo anterior y pone el nuevo plan</p>
+                  </button>
+                  <button
+                    onClick={() => confirmSendToCalendar('add')}
+                    className="w-full p-3.5 rounded-2xl border-2 border-[#C1DBE8] text-left hover:bg-[#C1DBE8]/10 transition-colors"
+                  >
+                    <p className="font-bold text-sm text-foreground">Añadir a continuación</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Si hay días ocupados, los pone en las semanas siguientes</p>
+                  </button>
+                  <button
+                    onClick={() => setShowCalendarDialog(false)}
+                    className="w-full p-3 rounded-2xl text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Content Modal */}
+        <ContentCardModal
+          item={openItem}
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          showConvertButton={false}
+        />
+      </motion.div>
     </div>
   )
 }

@@ -12,28 +12,30 @@ import {
   Instagram,
   Bot,
   LayoutGrid,
+  Home,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useMemo } from 'react'
 
-const modules: { key: ModuleType; label: string; icon: React.ReactNode }[] = [
-  { key: 'marca', label: 'Mi Marca', icon: <Crown className="w-[18px] h-[18px]" /> },
-  { key: 'planificar', label: 'Planificar', icon: <Calendar className="w-[18px] h-[18px]" /> },
-  { key: 'crear', label: 'Crear', icon: <PenTool className="w-[18px] h-[18px]" /> },
-  { key: 'stories', label: 'Stories', icon: <Instagram className="w-[18px] h-[18px]" /> },
-  { key: 'ganchos', label: 'Ganchos', icon: <LayoutGrid className="w-[18px] h-[18px]" /> },
-  { key: 'asistente', label: 'Asistente', icon: <Bot className="w-[18px] h-[18px]" /> },
-  { key: 'biblioteca', label: 'Biblioteca', icon: <BookOpen className="w-[18px] h-[18px]" /> },
-  { key: 'calendario', label: 'Calendario', icon: <Sparkles className="w-[18px] h-[18px]" /> },
+const modules: { key: ModuleType; label: string; icon: React.ReactNode; color: string }[] = [
+  { key: 'inicio', label: 'Inicio', icon: <Home className="w-[18px] h-[18px]" />, color: '#60B5FF' },
+  { key: 'marca', label: 'Mi Marca', icon: <Crown className="w-[18px] h-[18px]" />, color: '#FFF1B5' },
+  { key: 'planificar', label: 'Planificar', icon: <Calendar className="w-[18px] h-[18px]" />, color: '#C1DBE8' },
+  { key: 'crear', label: 'Crear', icon: <PenTool className="w-[18px] h-[18px]" />, color: '#BDB2FF' },
+  { key: 'stories', label: 'Stories', icon: <Instagram className="w-[18px] h-[18px]" />, color: '#F4C2C2' },
+  { key: 'ganchos', label: 'Ganchos', icon: <LayoutGrid className="w-[18px] h-[18px]" />, color: '#FF6D3F' },
+  { key: 'asistente', label: 'Asistente', icon: <Bot className="w-[18px] h-[18px]" />, color: '#B8E0D2' },
+  { key: 'biblioteca', label: 'Biblioteca', icon: <BookOpen className="w-[18px] h-[18px]" />, color: '#7EC8E3' },
+  { key: 'calendario', label: 'Calendario', icon: <Sparkles className="w-[18px] h-[18px]" />, color: '#F5D76E' },
 ]
 
 export function AppSidebar() {
   const { activeModule, setActiveModule } = useAppStore()
   const mascotPhrase = useMemo(() => getRandomBravyPhrase(activeModule), [activeModule])
-  const [mounted, setMounted] = useState(false)
+  const activeColor = modules.find(m => m.key === activeModule)?.color || '#60B5FF'
 
   return (
-    <aside className="w-[72px] hover:w-[240px] min-h-screen brave-gradient flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group/shadow shadow-2xl overflow-hidden">
+    <aside className="w-[72px] hover:w-[240px] min-h-screen brave-gradient flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group/sidebar shadow-2xl overflow-hidden shrink-0">
       {/* Logo + Mascot */}
       <div className="px-3 py-5 border-b border-white/10">
         <div className="flex items-center gap-2.5">
@@ -46,12 +48,12 @@ export function AppSidebar() {
             <BravyBotMini />
           </motion.div>
           <div className="min-w-0 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
-            <h1 className="text-lg font-bold text-white tracking-tight leading-none">BRÄVE</h1>
-            <p className="text-[9px] text-[#FFF1B5] font-semibold tracking-[0.15em] uppercase mt-0.5">Studio</p>
+            <h1 className="text-lg font-bold text-white tracking-tight leading-none">BRAVE</h1>
+            <p className="text-[9px] text-[#FFF1B5] font-semibold tracking-[0.2em] uppercase mt-0.5">Studio</p>
           </div>
         </div>
 
-        {/* Mascot speech bubble on hover */}
+        {/* Mascot speech bubble */}
         <AnimatePresence>
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -81,9 +83,10 @@ export function AppSidebar() {
                 : 'text-white/60 hover:bg-white/10 hover:text-white'
             }`}
           >
-            <span className={`shrink-0 transition-colors duration-200 ${
-              activeModule === mod.key ? 'text-[#FFF1B5]' : ''
-            }`}>
+            <span
+              className="shrink-0 transition-colors duration-200"
+              style={{ color: activeModule === mod.key ? mod.color : undefined }}
+            >
               {mod.icon}
             </span>
             <span className="min-w-0 truncate opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200">

@@ -30,37 +30,38 @@ export async function POST(req: NextRequest) {
 
     switch (type) {
       case 'plan': {
-        const { tipo, servicios, frecuencia, objetivo, tipoContenido } = context
+        const { tipo, servicios, frecuencia, objetivo, tipoContenido, fechaInicio } = context
         const objetivoDesc = getObjetivoDescription(objetivo)
-        const tipoContenidoDesc = getTipoContenidoDescription(tipoContenido)
-        systemPrompt = `Eres una experta en marketing para salones de belleza y estilistas. Generas contenido estratégico para Instagram. Siempre respondes en español. El formato de salida debe ser JSON válido.`
-        userPrompt = `${brandContext}
+        const totalSemanas = tipo === 'semanal' ? 1 : 4
+        const totalItems = frecuencia * totalSemanas
+        const today = fechaInicio || new Date().toISOString().split('T')[0]
 
-Genera una planificación ${tipo} de contenido para Instagram con estas especificaciones:
-- Tipo: ${tipo}
-- Servicios a potenciar: ${servicios?.join(', ')}
-- Frecuencia: ${frecuencia} publicaciones por semana
-- Objetivo principal: ${objetivo} — ${objetivoDesc}
-- Tipo de contenido: ${tipoContenidoDesc}
+        systemPrompt = `Eres una experta en marketing para salones de belleza. Generas planes de contenido RÁPIDOS y efectivos. Respondes SOLO en JSON válido, en español. Sé concisa.`
 
-IMPORTANTE - El objetivo "${objetivo}" debe guiar el ENFOQUE de cada idea:
-${objetivoDesc}
-
-Cada idea generada debe estar claramente alineada con este objetivo. Por ejemplo:
-- Si es "autoridad": ideas educativas, tutoriales, consejos de experta, mitos que desmentir
-- Si es "reservas": ideas que generan conversión, antes/después, casos de éxito, ofertas, urgencia
-- Si es "visibilidad": ideas virales, tendencias, retos, polémicas suaves, contenido compartible
-
-Genera un listado de contenidos. Cada contenido debe tener:
-- dia: día de la semana (Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo)
-- tipo: ${tipoContenido === 'reels' ? "'reel'" : tipoContenido === 'carruseles' ? "'carrusel'" : "'reel' o 'carrusel'"}
-- titulo: título atractivo del contenido, alineado al objetivo
-- objetivo: "${objetivo}"
-- servicio: servicio relacionado de los seleccionados
-- descripcion: breve descripción de qué tratará el contenido (1-2 frases)
-
-Responde SOLO con un JSON array, sin texto adicional. Ejemplo:
-[{"dia":"Martes","tipo":"reel","titulo":"...","objetivo":"autoridad","servicio":"...","descripcion":"..."}]`
+        userPrompt = [
+          brandContext || 'No hay perfil de marca configurado aún.',
+          '',
+          `Planificación ${tipo} de contenido para Instagram:`,
+          `- ${totalSemanas} semana(s), ${frecuencia} posts/semana = ${totalItems} contenidos`,
+          `- Servicios: ${servicios?.join(', ') || 'principales del salón'}`,
+          `- Objetivo: ${objetivo}`,
+          '- Inicio: ' + today,
+          '',
+          'REGLAS:',
+          '- Distribuye en días laborables, alternando reel y carrusel.',
+          '- Fechas reales empezando desde ' + today + '.',
+          '- NO generes guion, copy ni hashtags ahora. Solo la propuesta.',
+          '',
+          'Responde SOLO con un JSON array:',
+          '[{',
+          '  "titulo": "título atractivo (máx 8 palabras)",',
+          '  "tipo": "reel" o "carrusel",',
+          '  "diaSemana": "Martes",',
+          '  "fecha": "2025-01-14",',
+          '  "servicio": "Balayage",',
+          '  "descripcion": "qué mostrar y por qué funciona (1 frase)"',
+          '}]',
+        ].filter(Boolean).join('\n')
         break
       }
 
@@ -257,7 +258,7 @@ Responde SOLO con un JSON con esta estructura:
           '',
           'ENCUESTAS:',
           'En AL MENOS UNA de las stories (preferiblemente la primera o una intermedia) incluye una encuesta',
-          'para generar interacción. La encuesta debe tener: la pregunta exacta y 2-4 opciones de respuesta.',
+          'para generar interacción. La encuesta debe tener: la pregunta exacta y SOLO 2 o 3 opciones de respuesta como máximo (nunca más de 3).',
           'Solo incluye encuesta si aporta valor real a la historia, no por obligación.',
           '',
           'CTA OFICIAL BRÄVE (cortos, humanos, conversacionales):',
@@ -312,7 +313,7 @@ Responde SOLO con un JSON con esta estructura:
           '      "ideaVisual": "idea visual concreta de una de las categorías BRÄVE",',
           '      "encuesta": {',
           '        "pregunta": "texto de la pregunta de la encuesta",',
-          '        "respuestas": ["opción 1", "opción 2", "opción 3"]',
+          '        "respuestas": ["opción 1", "opción 2"]  // SOLO 2 o 3 opciones máximo, nunca más',
           '      } o null',
           '    }',
           '    // ... ' + totalStories + ' stories en total',

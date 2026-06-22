@@ -28,6 +28,7 @@ import {
   Plus,
   X,
 } from 'lucide-react'
+import { fetchJSON } from '@/lib/fetch-safe'
 
 interface BraveEncuesta {
   pregunta: string
@@ -268,16 +269,14 @@ function SecuenciaStories() {
         reader.readAsDataURL(blob)
       })
 
-      const res = await fetch('/api/asr', {
+      const { data, error } = await fetchJSON('/api/asr', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ audioBase64: base64 }),
       })
-      const data = await res.json()
-      if (data.error) {
-        setError('Error transcribiendo audio: ' + data.error)
-      } else if (data.text) {
-        setTrabajoRealizado(prev => prev ? prev + ' ' + data.text : data.text)
+      if (error) {
+        setError('Error transcribiendo audio: ' + error)
+      } else if ((data as any)?.text) {
+        setTrabajoRealizado(prev => prev ? prev + ' ' + (data as any).text : (data as any).text)
       } else {
         setError('No se pudo transcribir el audio.')
       }
@@ -311,9 +310,8 @@ function SecuenciaStories() {
     setIsLoading(true, `Creando tus ${numStories} Stories BRÄVE...`)
     setSavedToLibrary(false)
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'stories-brave',
           brandProfile,
@@ -326,11 +324,10 @@ function SecuenciaStories() {
           },
         }),
       })
-      const data = await res.json()
-      if (data.error) {
-        setError(data.error)
+      if (error) {
+        setError(error)
       } else {
-        const r = data.result
+        const r = data?.result
         if (Array.isArray(r) && r.length > 0 && r[0].numero) {
           setResultado({
             trabajo: servicio || trabajoRealizado || 'trabajo de hoy',
@@ -925,9 +922,8 @@ function CajaDePreguntas() {
     setIsLoading(true, `Generando ${numPreguntas} preguntas para tu caja...`)
     setSavedToLibrary(false)
     try {
-      const res = await fetch('/api/ai', {
+      const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'preguntas-caja',
           brandProfile,
@@ -938,11 +934,10 @@ function CajaDePreguntas() {
           },
         }),
       })
-      const data = await res.json()
-      if (data.error) {
-        setError(data.error)
+      if (error) {
+        setError(error)
       } else {
-        const r = data.result
+        const r = data?.result
         if (r && r.preguntas && Array.isArray(r.preguntas)) {
           setResultado(r as CajaPreguntasResult)
         } else if (Array.isArray(r) && r.length > 0 && r[0].pregunta) {

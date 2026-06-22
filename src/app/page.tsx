@@ -2,6 +2,7 @@
 
 import { useAppStore } from '@/lib/store'
 import { AppSidebar } from '@/components/brave/app-sidebar'
+import { InicioHome } from '@/components/brave/inicio-home'
 import { MiMarca } from '@/components/brave/mi-marca'
 import { Planificar } from '@/components/brave/planificar'
 import { Crear } from '@/components/brave/crear'
@@ -24,7 +25,7 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen items-center justify-center" style={{ background: '#FFFBF0' }}>
+      <div className="flex min-h-screen items-center justify-center brave-bg-pattern">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -33,8 +34,8 @@ export default function Home() {
           <div className="brave-float inline-block mb-4">
             <BravyBot size={80} expression="wave" animate />
           </div>
-          <h1 className="text-2xl font-bold text-[#591427] tracking-tight">BRÄVE STUDIO</h1>
-          <p className="text-sm text-[#8A7080] mt-1">Cargando...</p>
+          <h1 className="text-2xl font-bold text-[#1A1A2E] tracking-tight">BRAVE STUDIO</h1>
+          <p className="text-sm text-[#7A7A8A] mt-1">Cargando...</p>
         </motion.div>
       </div>
     )
@@ -42,6 +43,7 @@ export default function Home() {
 
   const renderModule = () => {
     switch (activeModule) {
+      case 'inicio': return <InicioHome />
       case 'marca': return <MiMarca />
       case 'planificar': return <Planificar />
       case 'crear': return <Crear />
@@ -50,19 +52,19 @@ export default function Home() {
       case 'asistente': return <AsistenteBrave />
       case 'biblioteca': return <Biblioteca />
       case 'calendario': return <CalendarioView />
-      default: return <MiMarca />
+      default: return <InicioHome />
     }
   }
 
   const mostrarFlotante = activeModule !== 'asistente'
 
   return (
-    <div className="flex min-h-screen" style={{ background: '#FFFBF0' }}>
+    <div className="flex min-h-screen brave-bg-pattern overflow-hidden">
       {/* Sidebar */}
       <AppSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen">
+      <main className="flex-1 min-h-screen min-w-0">
         <motion.div
           key={activeModule}
           initial={{ opacity: 0, y: 8 }}
@@ -74,7 +76,7 @@ export default function Home() {
         </motion.div>
       </main>
 
-      {/* Asistente BRÄVE flotante */}
+      {/* Asistente flotante */}
       {mostrarFlotante && <AsistenteFlotante />}
 
       {/* Dame Una Idea Dialog */}
@@ -86,7 +88,7 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/15 backdrop-blur-sm z-[60] flex items-center justify-center"
+          className="fixed inset-0 bg-black/10 backdrop-blur-sm z-[60] flex items-center justify-center"
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -97,8 +99,8 @@ export default function Home() {
             <div className="brave-float inline-block mb-4">
               <BravyBot size={72} expression="excited" animate speechBubble={loadingMessage || 'Generando...'} />
             </div>
-            <p className="text-[#591427] font-medium text-sm mt-2">{loadingMessage || 'Generando contenido...'}</p>
-            <div className="mt-4 h-1.5 bg-[#F5F0EB] rounded-full overflow-hidden">
+            <p className="text-[#1A1A2E] font-medium text-sm mt-2">{loadingMessage || 'Generando contenido...'}</p>
+            <div className="mt-4 h-1.5 bg-muted rounded-full overflow-hidden">
               <div className="h-full brave-shimmer rounded-full" style={{ width: '60%' }} />
             </div>
           </motion.div>
