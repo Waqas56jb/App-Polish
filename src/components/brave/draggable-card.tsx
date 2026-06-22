@@ -47,9 +47,9 @@ export function DraggableCard({
 
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
-      case 'reel': return 'bg-[#C17C83]'
-      case 'carrusel': return 'bg-[#C9A96E]'
-      case 'story': return 'bg-[#7D2E42]'
+      case 'reel': return 'bg-[#C1DBE8]'
+      case 'carrusel': return 'bg-[#FFF1B5]'
+      case 'story': return 'bg-[#591427]'
       default: return 'bg-gray-500'
     }
   }
@@ -67,17 +67,17 @@ export function DraggableCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-white rounded-xl shadow-md border border-[#E0D5D1] overflow-hidden ${isDragging ? 'shadow-2xl ring-2 ring-[#C17C83]' : ''}`}
+      className={`brave-glass brave-card-hover brave-glow rounded-2xl border border-[#E8DDD5] overflow-hidden ${isDragging ? 'shadow-2xl ring-2 ring-[#C1DBE8]' : ''}`}
     >
       <div className="flex items-stretch">
         {/* Drag handle */}
         <button
           {...attributes}
           {...listeners}
-          className="bg-[#F3E8E5] hover:bg-[#E0D5D1] px-2 flex items-center cursor-grab active:cursor-grabbing touch-none transition-colors"
+          className="bg-[#F5F0EB] hover:bg-[#E8DDD5] px-2 flex items-center cursor-grab active:cursor-grabbing touch-none transition-colors"
           title="Arrastra para reordenar"
         >
-          <GripVertical className="w-4 h-4 text-[#7D2E42]" />
+          <GripVertical className="w-4 h-4 text-[#591427]" />
         </button>
 
         {/* Content */}
@@ -90,17 +90,17 @@ export function DraggableCard({
                   {item.tipo.toUpperCase()}
                 </span>
                 {item.objetivo && (
-                  <span className="bg-[#F3E8E5] text-[#7D2E42] text-[10px] px-2 py-0.5 rounded-full capitalize">
+                  <span className="bg-[#F5F0EB] text-[#591427] text-[10px] px-2 py-0.5 rounded-full capitalize">
                     {item.objetivo}
                   </span>
                 )}
                 {item.servicio && (
-                  <span className="bg-white border border-[#E0D5D1] text-[#2D1F22] text-[10px] px-2 py-0.5 rounded-full">
+                  <span className="bg-white border border-[#E8DDD5] text-[#2A1520] text-[10px] px-2 py-0.5 rounded-full">
                     {item.servicio}
                   </span>
                 )}
               </div>
-              <h4 className="font-semibold text-[#2D1F22] text-sm leading-tight">{item.titulo}</h4>
+              <h4 className="font-semibold text-[#2A1520] text-sm leading-tight">{item.titulo}</h4>
               {item.descripcion && (
                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.descripcion}</p>
               )}
@@ -108,13 +108,13 @@ export function DraggableCard({
               {/* Day/Date badges */}
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 {item.diaSemana && (
-                  <Badge variant="outline" className="text-[10px] border-[#C9A96E] text-[#7D2E42]">
+                  <Badge variant="outline" className="text-[10px] border-[#FFF1B5] text-[#591427]">
                     <Calendar className="w-2.5 h-2.5 mr-1" />
                     {item.diaSemana}
                   </Badge>
                 )}
                 {item.fecha && (
-                  <Badge variant="outline" className="text-[10px] border-[#C17C83] text-[#7D2E42]">
+                  <Badge variant="outline" className="text-[10px] border-[#C1DBE8] text-[#591427]">
                     <Calendar className="w-2.5 h-2.5 mr-1" />
                     {item.fecha}
                   </Badge>
@@ -128,14 +128,14 @@ export function DraggableCard({
 
               {/* Date controls */}
               {showDateControls && (onAssignDay || onAssignDate) && (
-                <div className="mt-3 p-3 bg-[#FBF7F5] rounded-lg space-y-2">
+                <div className="mt-3 p-3 bg-[#FFFBF0] rounded-lg space-y-2">
                   {onAssignDay && (
                     <div>
                       <label className="text-[10px] text-muted-foreground block mb-1">Día de la semana</label>
                       <select
                         value={item.diaSemana || ''}
                         onChange={(e) => onAssignDay(item.id, e.target.value)}
-                        className="w-full text-xs border border-[#E0D5D1] rounded-md px-2 py-1.5 bg-white"
+                        className="w-full text-xs border border-[#E8DDD5] rounded-md px-2 py-1.5 bg-white"
                       >
                         {DIAS_SEMANA.map(d => (
                           <option key={d} value={d}>{d || 'Sin asignar'}</option>
@@ -150,7 +150,7 @@ export function DraggableCard({
                         type="date"
                         value={item.fecha || ''}
                         onChange={(e) => onAssignDate(item.id, e.target.value)}
-                        className="w-full text-xs border border-[#E0D5D1] rounded-md px-2 py-1.5 bg-white"
+                        className="w-full text-xs border border-[#E8DDD5] rounded-md px-2 py-1.5 bg-white"
                       />
                     </div>
                   )}
@@ -160,12 +160,12 @@ export function DraggableCard({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-1 mt-3 pt-2 border-t border-[#F3E8E5]">
+          <div className="flex items-center gap-1 mt-3 pt-2 border-t border-[#F5F0EB]">
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onOpen(item)}
-              className="text-[#7D2E42] hover:text-[#933A54] hover:bg-[#F3E8E5] h-7 px-2 text-xs"
+              className="text-[#591427] hover:text-[#7A2A40] hover:bg-[#F5F0EB] h-7 px-2 text-xs"
               title="Abrir contenido"
             >
               <Maximize2 className="w-3.5 h-3.5" />
@@ -174,7 +174,7 @@ export function DraggableCard({
               size="sm"
               variant="ghost"
               onClick={() => onRegenerate(item)}
-              className="text-[#C17C83] hover:text-[#7D2E42] hover:bg-[#F3E8E5] h-7 px-2 text-xs"
+              className="text-[#C1DBE8] hover:text-[#591427] hover:bg-[#F5F0EB] h-7 px-2 text-xs"
               title="Regenerar idea"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -184,7 +184,7 @@ export function DraggableCard({
                 size="sm"
                 variant="ghost"
                 onClick={() => onConvert(item)}
-                className="text-[#C9A96E] hover:text-[#7D2E42] hover:bg-[#FBF7F5] h-7 px-2 text-xs"
+                className="text-[#FFF1B5] hover:text-[#591427] hover:bg-[#FFFBF0] h-7 px-2 text-xs"
                 title={`Convertir a ${item.tipo === 'reel' ? 'carrusel' : 'reel'}`}
               >
                 <Repeat className="w-3.5 h-3.5" />
@@ -213,7 +213,7 @@ export function DraggableCard({
                 size="sm"
                 variant="ghost"
                 onClick={() => setShowDateControls(!showDateControls)}
-                className={`h-7 px-2 text-xs ml-auto ${showDateControls ? 'bg-[#F3E8E5] text-[#7D2E42]' : 'text-[#7D2E42] hover:bg-[#F3E8E5]'}`}
+                className={`h-7 px-2 text-xs ml-auto ${showDateControls ? 'bg-[#F5F0EB] text-[#591427]' : 'text-[#591427] hover:bg-[#F5F0EB]'}`}
                 title="Asignar fecha"
               >
                 <Calendar className="w-3.5 h-3.5" />

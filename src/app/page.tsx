@@ -12,7 +12,9 @@ import { AsistenteBrave } from '@/components/brave/asistente-brave'
 import { BancoGanchos } from '@/components/brave/banco-ganchos'
 import { AsistenteFlotante } from '@/components/brave/asistente-flotante'
 import { DameUnaIdea } from '@/components/brave/dame-una-idea'
+import { BravyBot } from '@/components/brave/bravy-bot'
 import { useSyncExternalStore } from 'react'
+import { motion } from 'framer-motion'
 
 const emptySubscribe = () => () => {}
 
@@ -22,14 +24,18 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen items-center justify-center" style={{ background: '#FBF7F5' }}>
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full brave-gradient shadow-lg mb-4 animate-pulse">
-            <span className="text-2xl">👑</span>
+      <div className="flex min-h-screen items-center justify-center" style={{ background: '#FFFBF0' }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="brave-float inline-block mb-4">
+            <BravyBot size={80} expression="wave" animate />
           </div>
-          <h1 className="text-2xl font-bold text-[#2D1F22]">BRÄVE STUDIO</h1>
-          <p className="text-sm text-muted-foreground mt-1">Cargando...</p>
-        </div>
+          <h1 className="text-2xl font-bold text-[#591427] tracking-tight">BRÄVE STUDIO</h1>
+          <p className="text-sm text-[#8A7080] mt-1">Cargando...</p>
+        </motion.div>
       </div>
     )
   }
@@ -48,19 +54,24 @@ export default function Home() {
     }
   }
 
-  // El asistente flotante no se muestra cuando ya está activo como módulo principal
   const mostrarFlotante = activeModule !== 'asistente'
 
   return (
-    <div className="flex min-h-screen" style={{ background: '#FBF7F5' }}>
+    <div className="flex min-h-screen" style={{ background: '#FFFBF0' }}>
       {/* Sidebar */}
       <AppSidebar />
 
       {/* Main Content */}
       <main className="flex-1 min-h-screen">
-        <div className="p-8 max-w-[1200px] mx-auto">
+        <motion.div
+          key={activeModule}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="p-6 md:p-8 max-w-[1200px] mx-auto"
+        >
           {renderModule()}
-        </div>
+        </motion.div>
       </main>
 
       {/* Asistente BRÄVE flotante */}
@@ -71,17 +82,27 @@ export default function Home() {
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] flex items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full brave-gradient shadow-lg mb-4">
-              <span className="text-2xl animate-pulse">✨</span>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/15 backdrop-blur-sm z-[60] flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className="brave-glass-strong rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center"
+          >
+            <div className="brave-float inline-block mb-4">
+              <BravyBot size={72} expression="excited" animate speechBubble={loadingMessage || 'Generando...'} />
             </div>
-            <p className="text-[#2D1F22] font-medium">{loadingMessage || 'Generando contenido...'}</p>
-            <div className="mt-4 h-2 bg-[#F3E8E5] rounded-full overflow-hidden">
-              <div className="h-full brave-gradient rounded-full animate-pulse" style={{ width: '60%' }} />
+            <p className="text-[#591427] font-medium text-sm mt-2">{loadingMessage || 'Generando contenido...'}</p>
+            <div className="mt-4 h-1.5 bg-[#F5F0EB] rounded-full overflow-hidden">
+              <div className="h-full brave-shimmer rounded-full" style={{ width: '60%' }} />
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </div>
   )

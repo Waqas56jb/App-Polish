@@ -68,9 +68,9 @@ export function CalendarioView() {
 
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
-      case 'reel': return 'bg-[#C17C83]'
-      case 'carrusel': return 'bg-[#C9A96E]'
-      case 'story': return 'bg-[#7D2E42]'
+      case 'reel': return 'bg-[#C1DBE8]'
+      case 'carrusel': return 'bg-[#FFF1B5]'
+      case 'story': return 'bg-[#591427]'
       default: return 'bg-gray-400'
     }
   }
@@ -148,7 +148,7 @@ export function CalendarioView() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-3 mb-4">
-        <h2 className="text-3xl font-bold text-[#2D1F22]">Calendario</h2>
+        <h2 className="text-3xl font-bold text-[#2A1520]">Calendario</h2>
         <p className="text-muted-foreground text-base">
           {scheduledItems.length} contenidos programados
         </p>
@@ -157,16 +157,16 @@ export function CalendarioView() {
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={navigatePrev} className="border-[#E0D5D1] hover:bg-[#F3E8E5]">
+          <Button variant="outline" size="sm" onClick={navigatePrev} className="border-[#E8DDD5] hover:bg-[#F5F0EB]">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <h3 className="text-lg font-bold text-[#2D1F22] min-w-[200px] text-center capitalize">
+          <h3 className="text-lg font-bold text-[#2A1520] min-w-[200px] text-center capitalize">
             {viewMode === 'mes'
               ? format(currentDate, 'MMMM yyyy', { locale: es })
               : `Semana del ${format(weekStart, 'd MMM', { locale: es })}`
             }
           </h3>
-          <Button variant="outline" size="sm" onClick={navigateNext} className="border-[#E0D5D1] hover:bg-[#F3E8E5]">
+          <Button variant="outline" size="sm" onClick={navigateNext} className="border-[#E8DDD5] hover:bg-[#F5F0EB]">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -176,15 +176,15 @@ export function CalendarioView() {
             variant="outline"
             size="sm"
             onClick={goToToday}
-            className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+            className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
           >
             Hoy
           </Button>
-          <div className="flex rounded-xl overflow-hidden border-2 border-[#E0D5D1]">
+          <div className="flex rounded-xl overflow-hidden border-2 border-[#E8DDD5]">
             <button
               onClick={() => setViewMode('mes')}
               className={`px-4 py-2 text-sm font-medium transition-all ${
-                viewMode === 'mes' ? 'bg-[#7D2E42] text-white' : 'bg-white text-[#2D1F22]'
+                viewMode === 'mes' ? 'bg-[#591427] text-white' : 'bg-white text-[#2A1520]'
               }`}
             >
               Mes
@@ -192,7 +192,7 @@ export function CalendarioView() {
             <button
               onClick={() => setViewMode('semana')}
               className={`px-4 py-2 text-sm font-medium transition-all ${
-                viewMode === 'semana' ? 'bg-[#7D2E42] text-white' : 'bg-white text-[#2D1F22]'
+                viewMode === 'semana' ? 'bg-[#591427] text-white' : 'bg-white text-[#2A1520]'
               }`}
             >
               Semana
@@ -203,17 +203,17 @@ export function CalendarioView() {
 
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#C17C83]"></span> Reel</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#C9A96E]"></span> Carrusel</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#7D2E42]"></span> Story</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#C1DBE8]"></span> Reel</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#FFF1B5]"></span> Carrusel</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#591427]"></span> Story</span>
       </div>
 
       {/* Monthly View */}
       {viewMode === 'mes' && (
-        <Card className="border-none shadow-md overflow-hidden">
-          <div className="grid grid-cols-7 bg-[#F3E8E5]">
+        <Card className="brave-glass brave-glow rounded-3xl border-none overflow-hidden">
+          <div className="grid grid-cols-7 bg-[#F5F0EB]">
             {weekDayNames.map((d) => (
-              <div key={d} className="p-3 text-center text-xs font-bold text-[#7D2E42] uppercase tracking-wider">
+              <div key={d} className="p-3 text-center text-xs font-bold text-[#591427] uppercase tracking-wider">
                 {d}
               </div>
             ))}
@@ -228,15 +228,15 @@ export function CalendarioView() {
               return (
                 <div
                   key={idx}
-                  className={`min-h-[100px] p-2 border border-[#F3E8E5] ${
-                    !isCurrentMonth ? 'bg-[#FBF7F5]/50' : 'bg-white'
-                  } ${isToday ? 'bg-[#F3E8E5]/30' : ''}`}
+                  className={`min-h-[100px] p-2 border border-[#F5F0EB] ${
+                    !isCurrentMonth ? 'bg-[#FFFBF0]/50' : 'bg-white'
+                  } ${isToday ? 'bg-[#F5F0EB]/30' : ''}`}
                 >
                   <div className={`text-sm font-medium mb-1 ${
                     isToday
-                      ? 'w-7 h-7 rounded-full bg-[#7D2E42] text-white flex items-center justify-center'
+                      ? 'w-7 h-7 rounded-full bg-[#591427] text-white flex items-center justify-center'
                       : isCurrentMonth
-                        ? 'text-[#2D1F22]'
+                        ? 'text-[#2A1520]'
                         : 'text-muted-foreground/40'
                   }`}>
                     {format(date, 'd')}
@@ -275,12 +275,12 @@ export function CalendarioView() {
             const isToday = isSameDay(date, new Date())
 
             return (
-              <Card key={idx} className={`border-none shadow-md ${isToday ? 'ring-2 ring-[#7D2E42]' : ''}`}>
+              <Card key={idx} className={`border-none shadow-md ${isToday ? 'ring-2 ring-[#591427]' : ''}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    <div className={`text-center min-w-[60px] ${isToday ? 'text-[#7D2E42]' : 'text-[#2D1F22]'}`}>
+                    <div className={`text-center min-w-[60px] ${isToday ? 'text-[#591427]' : 'text-[#2A1520]'}`}>
                       <div className="text-xs font-medium capitalize">{format(date, 'EEE', { locale: es })}</div>
-                      <div className={`text-2xl font-bold ${isToday ? 'bg-[#7D2E42] text-white w-10 h-10 rounded-full flex items-center justify-center mx-auto' : ''}`}>
+                      <div className={`text-2xl font-bold ${isToday ? 'bg-[#591427] text-white w-10 h-10 rounded-full flex items-center justify-center mx-auto' : ''}`}>
                         {format(date, 'd')}
                       </div>
                     </div>
@@ -305,7 +305,7 @@ export function CalendarioView() {
                                     type="date"
                                     value={item.fecha || ''}
                                     onChange={(e) => handleChangeDate(item.id, e.target.value)}
-                                    className="text-xs px-2 py-1 rounded text-[#2D1F22]"
+                                    className="text-xs px-2 py-1 rounded text-[#2A1520]"
                                     autoFocus
                                   />
                                 </div>
@@ -365,18 +365,18 @@ export function CalendarioView() {
       {scheduledItems.length > 0 && (
         <Card className="border-none shadow-md mt-6">
           <CardContent className="p-5">
-            <h3 className="text-base font-bold text-[#2D1F22] mb-4">Todos los Contenidos Programados</h3>
+            <h3 className="text-base font-bold text-[#2A1520] mb-4">Todos los Contenidos Programados</h3>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {scheduledItems.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-[#FBF7F5] hover:bg-[#F3E8E5] transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-[#FFFBF0] hover:bg-[#F5F0EB] transition-colors"
                 >
                   <div className={`${getTipoColor(item.tipo)} text-white p-2 rounded-lg shrink-0`}>
                     {getTipoIcon(item.tipo)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-[#2D1F22] truncate">{item.titulo}</p>
+                    <p className="font-medium text-sm text-[#2A1520] truncate">{item.titulo}</p>
                     <p className="text-xs text-muted-foreground">{item.servicio} · {item.objetivo}</p>
                   </div>
                   <div className="flex gap-1 items-center shrink-0">
@@ -385,7 +385,7 @@ export function CalendarioView() {
                         type="date"
                         value={item.fecha || ''}
                         onChange={(e) => handleChangeDate(item.id, e.target.value)}
-                        className="text-xs px-2 py-1 border border-[#E0D5D1] rounded text-[#2D1F22]"
+                        className="text-xs px-2 py-1 border border-[#E8DDD5] rounded text-[#2A1520]"
                         autoFocus
                       />
                     ) : (
@@ -394,7 +394,7 @@ export function CalendarioView() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 w-7 p-0 text-[#7D2E42] hover:bg-[#F3E8E5]"
+                      className="h-7 w-7 p-0 text-[#591427] hover:bg-[#F5F0EB]"
                       onClick={() => handleOpen(item)}
                       title="Abrir contenido"
                     >
@@ -403,7 +403,7 @@ export function CalendarioView() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 w-7 p-0 text-[#C17C83] hover:bg-[#F3E8E5]"
+                      className="h-7 w-7 p-0 text-[#C1DBE8] hover:bg-[#F5F0EB]"
                       onClick={() => handleRegenerate(item)}
                       title="Regenerar"
                     >
@@ -412,7 +412,7 @@ export function CalendarioView() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 w-7 p-0 text-[#7D2E42] hover:bg-[#F3E8E5]"
+                      className="h-7 w-7 p-0 text-[#591427] hover:bg-[#F5F0EB]"
                       onClick={() => setEditingDateId(editingDateId === item.id ? null : item.id)}
                       title="Cambiar fecha"
                     >

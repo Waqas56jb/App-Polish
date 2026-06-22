@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useAppStore, BrandProfile } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { BravyBot } from '@/components/brave/bravy-bot'
 import {
   Crown, Mic, Save, Sparkles, CheckCircle2, Upload, FileText,
   MessageSquareText, ListChecks, Wand2, Loader2, FileUp, X
@@ -198,6 +200,7 @@ export function MiMarca() {
           context: { documentText },
         }),
       })
+
       const data = await res.json()
 
       if (data.result && !data.result.raw) {
@@ -292,24 +295,32 @@ export function MiMarca() {
   ]
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className="max-w-3xl mx-auto space-y-6"
+    >
       {/* Header */}
       <div className="text-center space-y-3 mb-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full brave-gradient shadow-lg">
-          <Crown className="w-8 h-8 text-white" />
+        <div className="flex items-center justify-center gap-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full brave-gradient shadow-lg brave-glow">
+            <Crown className="w-8 h-8 text-white" />
+          </div>
+          <BravyBot expression="happy" size={48} />
         </div>
-        <h2 className="text-3xl font-bold text-[#2D1F22]">Mi Marca BRÄVE</h2>
+        <h2 className="text-3xl font-bold text-[#2A1520]">Mi Marca BRÄVE</h2>
         <p className="text-muted-foreground text-base max-w-md mx-auto">
           Crea tu documento estratégico. Toda la aplicación usará esta información para personalizar tu contenido.
         </p>
       </div>
 
       {/* Info banner - not mandatory */}
-      <Card className="border-l-4 border-l-[#C9A96E] bg-[#FBF7F5] shadow-sm">
-        <CardContent className="p-4 flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-[#C9A96E] mt-0.5 shrink-0" />
+      <Card className="brave-glass brave-card-hover rounded-3xl border-l-4 border-l-[#FFF1B5] bg-[#FFFBF0] shadow-sm">
+        <CardContent className="p-5 flex items-start gap-3">
+          <Sparkles className="w-5 h-5 text-[#FFF1B5] mt-0.5 shrink-0" />
           <div className="text-sm">
-            <p className="font-medium text-[#2D1F22]">No es obligatorio, pero muy recomendable</p>
+            <p className="font-medium text-[#2A1520]">No es obligatorio, pero muy recomendable</p>
             <p className="text-muted-foreground mt-1">
               Puedes empezar a crear contenido sin completar tu marca, pero hacerlo mejorará muchísimo la personalización de todo lo que genera la IA.
             </p>
@@ -323,10 +334,10 @@ export function MiMarca() {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+            className={`brave-focus flex items-center gap-2 px-5 py-2.5 rounded-2xl font-medium transition-all duration-200 ${
               activeTab === tab.key
-                ? 'bg-[#7D2E42] text-white shadow-md'
-                : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                ? 'bg-[#591427] text-white shadow-md brave-glow'
+                : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
             }`}
           >
             {tab.icon}
@@ -337,11 +348,17 @@ export function MiMarca() {
 
       {/* TAB 1: Document Upload / Paste */}
       {activeTab === 'documento' && (
-        <div className="space-y-4">
-          <Card className="border-none shadow-md">
+        <motion.div
+          key="documento"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="space-y-4"
+        >
+          <Card className="brave-glass brave-card-hover rounded-3xl border-none shadow-md">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22] flex items-center gap-2">
-                <FileUp className="w-5 h-5 text-[#C17C83]" />
+              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+                <FileUp className="w-5 h-5 text-[#C1DBE8]" />
                 Sube o pega tu Documento de Marca
               </CardTitle>
               <CardDescription>
@@ -352,7 +369,7 @@ export function MiMarca() {
               {/* File Upload */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-[#C17C83]/40 rounded-2xl p-8 text-center cursor-pointer hover:bg-[#FBF7F5] transition-colors"
+                className="brave-card-hover border-2 border-dashed border-[#C1DBE8]/40 rounded-3xl p-8 text-center cursor-pointer hover:bg-[#FFFBF0] transition-colors"
               >
                 <input
                   ref={fileInputRef}
@@ -361,8 +378,8 @@ export function MiMarca() {
                   onChange={handleFileUpload}
                   className="hidden"
                 />
-                <Upload className="w-10 h-10 text-[#C17C83] mx-auto mb-3" />
-                <p className="font-medium text-[#2D1F22]">
+                <Upload className="w-10 h-10 text-[#C1DBE8] mx-auto mb-3" />
+                <p className="font-medium text-[#2A1520]">
                   {documentName ? documentName : 'Haz clic para subir tu documento'}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -372,15 +389,15 @@ export function MiMarca() {
 
               {/* Paste area */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22] flex items-center gap-2">
-                  <MessageSquareText className="w-4 h-4 text-[#C17C83]" />
+                <label className="text-sm font-medium text-[#2A1520] flex items-center gap-2">
+                  <MessageSquareText className="w-4 h-4 text-[#C1DBE8]" />
                   O pega el texto de tu documento aquí
                 </label>
                 <Textarea
                   placeholder="Pega aquí todo el texto de tu documento de marca..."
                   value={documentText}
                   onChange={(e) => setDocumentText(e.target.value)}
-                  className="min-h-[200px] border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83] font-mono text-sm"
+                  className="brave-focus min-h-[200px] border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] font-mono text-sm rounded-2xl"
                 />
                 <div className="flex justify-between items-center text-xs text-muted-foreground">
                   <span>{documentText.length} caracteres</span>
@@ -400,7 +417,7 @@ export function MiMarca() {
                 <Button
                   onClick={handleExtract}
                   disabled={!documentText.trim() || isExtracting}
-                  className="flex-1 bg-[#C17C83] hover:bg-[#B06B74] text-white disabled:opacity-50"
+                  className="brave-focus flex-1 bg-[#C1DBE8] hover:bg-[#A8CCE0] text-[#2A1520] disabled:opacity-50 rounded-2xl"
                 >
                   {isExtracting ? (
                     <>
@@ -428,7 +445,7 @@ export function MiMarca() {
                       setTimeout(() => setSaved(false), 3000)
                     }}
                     variant="outline"
-                    className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                    className="brave-focus border-[#C1DBE8] text-[#591427] hover:bg-[#F5F0EB] rounded-2xl"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Guardar texto
@@ -437,7 +454,7 @@ export function MiMarca() {
               </div>
 
               {extracted && (
-                <Card className="border-l-4 border-l-green-500 bg-green-50">
+                <Card className="border-l-4 border-l-green-500 bg-green-50 rounded-3xl">
                   <CardContent className="p-3 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-600" />
                     <p className="text-sm text-green-800">
@@ -450,10 +467,10 @@ export function MiMarca() {
           </Card>
 
           {/* Help card */}
-          <Card className="border-l-4 border-l-[#C17C83] bg-[#FBF7F5]">
-            <CardContent className="p-4">
-              <h4 className="font-bold text-[#2D1F22] text-sm flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-[#C17C83]" />
+          <Card className="brave-glass brave-card-hover rounded-3xl border-l-4 border-l-[#C1DBE8] bg-[#FFFBF0]">
+            <CardContent className="p-5">
+              <h4 className="font-bold text-[#2A1520] text-sm flex items-center gap-2 mb-2">
+                <Sparkles className="w-4 h-4 text-[#C1DBE8]" />
                 ¿No tienes un documento de marca todavía?
               </h4>
               <p className="text-sm text-muted-foreground mb-3">
@@ -463,23 +480,29 @@ export function MiMarca() {
                 onClick={() => setActiveTab('guiado')}
                 variant="outline"
                 size="sm"
-                className="border-[#7D2E42] text-[#7D2E42] hover:bg-[#F3E8E5]"
+                className="brave-focus border-[#591427] text-[#591427] hover:bg-[#F5F0EB] rounded-2xl"
               >
                 <ListChecks className="w-4 h-4 mr-2" />
                 Ir al Asistente Guiado
               </Button>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       )}
 
       {/* TAB 2: Guided Questions Assistant */}
       {activeTab === 'guiado' && (
-        <div className="space-y-4">
-          <Card className="border-none shadow-md">
+        <motion.div
+          key="guiado"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="space-y-4"
+        >
+          <Card className="brave-glass brave-card-hover rounded-3xl border-none shadow-md">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22] flex items-center gap-2">
-                <ListChecks className="w-5 h-5 text-[#C17C83]" />
+              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+                <ListChecks className="w-5 h-5 text-[#C1DBE8]" />
                 Asistente de Preguntas
               </CardTitle>
               <CardDescription>
@@ -493,20 +516,20 @@ export function MiMarca() {
                 return (
                   <div
                     key={item.key}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`brave-card-hover p-4 rounded-2xl border-2 transition-all ${
                       isAnswered
-                        ? 'border-[#C9A96E]/40 bg-[#FBF7F5]'
-                        : 'border-[#E0D5D1] bg-white'
+                        ? 'border-[#FFF1B5]/40 bg-[#FFFBF0]'
+                        : 'border-[#E8DDD5] bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-3 mb-3">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                        isAnswered ? 'bg-[#C9A96E] text-white' : 'bg-[#F3E8E5] text-[#7D2E42]'
+                        isAnswered ? 'bg-[#FFF1B5] text-[#2A1520]' : 'bg-[#F5F0EB] text-[#591427]'
                       }`}>
                         {isAnswered ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                       </div>
                       <div className="flex-1">
-                        <label className="text-sm font-medium text-[#2D1F22] block">
+                        <label className="text-sm font-medium text-[#2A1520] block">
                           {item.q}
                         </label>
                       </div>
@@ -518,11 +541,11 @@ export function MiMarca() {
                           placeholder={item.placeholder}
                           value={value}
                           onChange={(e) => updateGuidedAnswer(item.key, e.target.value)}
-                          className="min-h-[80px] pr-10 border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83] text-sm"
+                          className="brave-focus min-h-[80px] pr-10 border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] text-sm rounded-xl"
                         />
                         <button
                           onClick={() => handleMicClick(item.key, value, (v) => updateGuidedAnswer(item.key, v))}
-                          className={`absolute right-3 top-3 ${activeMicField === item.key && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C17C83]'}`}
+                          className={`brave-focus absolute right-3 top-3 ${activeMicField === item.key && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C1DBE8]'}`}
                           title="Responder con voz"
                         >
                           <Mic className="w-4 h-4" />
@@ -534,11 +557,11 @@ export function MiMarca() {
                           placeholder={item.placeholder}
                           value={value}
                           onChange={(e) => updateGuidedAnswer(item.key, e.target.value)}
-                          className="pr-10 border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83] text-sm"
+                          className="brave-focus pr-10 border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] text-sm rounded-xl"
                         />
                         <button
                           onClick={() => handleMicClick(item.key, value, (v) => updateGuidedAnswer(item.key, v))}
-                          className={`absolute right-3 top-1/2 -translate-y-1/2 ${activeMicField === item.key && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C17C83]'}`}
+                          className={`brave-focus absolute right-3 top-1/2 -translate-y-1/2 ${activeMicField === item.key && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C1DBE8]'}`}
                           title="Responder con voz"
                         >
                           <Mic className="w-4 h-4" />
@@ -558,11 +581,11 @@ export function MiMarca() {
               <div className="flex justify-center pt-4">
                 <Button
                   onClick={handleGuidedSave}
-                  className={`px-8 py-5 text-base font-bold rounded-xl shadow-lg ${
+                  className={`brave-focus px-8 py-5 text-base font-bold rounded-2xl shadow-lg brave-glow ${
                     saved
                       ? 'bg-green-600 hover:bg-green-600'
-                      : 'bg-[#7D2E42] hover:bg-[#933A54]'
-                    } text-white`}
+                      : 'bg-[#591427] hover:bg-[#7D2040]'
+                  } text-white`}
                 >
                   {saved ? (
                     <>
@@ -579,49 +602,54 @@ export function MiMarca() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       )}
 
       {/* TAB 3: Direct Form */}
       {activeTab === 'formulario' && (
-        <>
+        <motion.div
+          key="formulario"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+        >
           {/* Basic Info */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover rounded-3xl border-none shadow-md">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Información Básica</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Información Básica</CardTitle>
               <CardDescription>Datos de tu salón y tu perfil profesional</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#2D1F22]">Nombre</label>
+                  <label className="text-sm font-medium text-[#2A1520]">Nombre</label>
                   <div className="relative">
                     <Input
                       placeholder="Tu nombre"
                       value={form.nombre}
                       onChange={(e) => updateField('nombre', e.target.value)}
-                      className="pr-10 border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+                      className="brave-focus pr-10 border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] rounded-xl"
                     />
                     <button
                       onClick={() => handleMicClick('nombre', form.nombre, (v) => updateField('nombre', v))}
-                      className={`absolute right-3 top-1/2 -translate-y-1/2 ${activeMicField === 'nombre' && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C17C83]'}`}
+                      className={`brave-focus absolute right-3 top-1/2 -translate-y-1/2 ${activeMicField === 'nombre' && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C1DBE8]'}`}
                     >
                       <Mic className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#2D1F22]">Salón</label>
+                  <label className="text-sm font-medium text-[#2A1520]">Salón</label>
                   <div className="relative">
                     <Input
                       placeholder="Nombre del salón"
                       value={form.salon}
                       onChange={(e) => updateField('salon', e.target.value)}
-                      className="pr-10 border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+                      className="brave-focus pr-10 border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] rounded-xl"
                     />
                     <button
                       onClick={() => handleMicClick('salon', form.salon, (v) => updateField('salon', v))}
-                      className={`absolute right-3 top-1/2 -translate-y-1/2 ${activeMicField === 'salon' && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C17C83]'}`}
+                      className={`brave-focus absolute right-3 top-1/2 -translate-y-1/2 ${activeMicField === 'salon' && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C1DBE8]'}`}
                     >
                       <Mic className="w-4 h-4" />
                     </button>
@@ -631,41 +659,41 @@ export function MiMarca() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#2D1F22]">Ciudad</label>
+                  <label className="text-sm font-medium text-[#2A1520]">Ciudad</label>
                   <Input
                     placeholder="Tu ciudad"
                     value={form.ciudad}
                     onChange={(e) => updateField('ciudad', e.target.value)}
-                    className="border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+                    className="brave-focus border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] rounded-xl"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#2D1F22]">Instagram</label>
+                  <label className="text-sm font-medium text-[#2A1520]">Instagram</label>
                   <Input
                     placeholder="@tuinstagram"
                     value={form.instagram}
                     onChange={(e) => updateField('instagram', e.target.value)}
-                    className="border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+                    className="brave-focus border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] rounded-xl"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Años de experiencia</label>
+                <label className="text-sm font-medium text-[#2A1520]">Años de experiencia</label>
                 <Input
                   placeholder="Ej: 10 años"
                   value={form.experiencia}
                   onChange={(e) => updateField('experiencia', e.target.value)}
-                  className="border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+                  className="brave-focus border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] rounded-xl"
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Services */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover rounded-3xl border-none shadow-md mt-4">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Servicios</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Servicios</CardTitle>
               <CardDescription>Selecciona los servicios que ofreces</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -674,10 +702,10 @@ export function MiMarca() {
                   <button
                     key={servicio}
                     onClick={() => toggleServicio(servicio, 'servicios')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    className={`brave-focus px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                       form.servicios.includes(servicio)
-                        ? 'bg-[#C17C83] text-white shadow-md'
-                        : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                        ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+                        : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                     }`}
                   >
                     {servicio}
@@ -686,7 +714,7 @@ export function MiMarca() {
               </div>
 
               <div className="mt-6">
-                <label className="text-sm font-medium text-[#2D1F22] mb-2 block">
+                <label className="text-sm font-medium text-[#2A1520] mb-2 block">
                   Servicios Prioritarios <span className="text-muted-foreground font-normal">(máximo 3)</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -695,10 +723,10 @@ export function MiMarca() {
                       key={servicio}
                       onClick={() => toggleServicio(servicio, 'serviciosPrioritarios')}
                       disabled={!form.serviciosPrioritarios.includes(servicio) && form.serviciosPrioritarios.length >= 3}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      className={`brave-focus px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                         form.serviciosPrioritarios.includes(servicio)
-                          ? 'bg-[#7D2E42] text-white shadow-md'
-                          : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                          ? 'bg-[#591427] text-white shadow-md'
+                          : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
                       } ${!form.serviciosPrioritarios.includes(servicio) && form.serviciosPrioritarios.length >= 3 ? 'opacity-40 cursor-not-allowed' : ''}`}
                     >
                       {servicio}
@@ -713,9 +741,9 @@ export function MiMarca() {
           </Card>
 
           {/* Strategy */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover rounded-3xl border-none shadow-md mt-4">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Estrategia</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Estrategia</CardTitle>
               <CardDescription>Información clave para personalizar tu contenido</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -726,17 +754,17 @@ export function MiMarca() {
                 { key: 'erroresFrecuentes' as const, label: 'Errores frecuentes', placeholder: '¿Qué errores ves que cometen tus clientas?' },
               ].map((field) => (
                 <div key={field.key} className="space-y-2">
-                  <label className="text-sm font-medium text-[#2D1F22]">{field.label}</label>
+                  <label className="text-sm font-medium text-[#2A1520]">{field.label}</label>
                   <div className="relative">
                     <Textarea
                       placeholder={field.placeholder}
                       value={form[field.key]}
                       onChange={(e) => updateField(field.key, e.target.value)}
-                      className="min-h-[80px] pr-10 border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+                      className="brave-focus min-h-[80px] pr-10 border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] rounded-xl"
                     />
                     <button
                       onClick={() => handleMicClick(field.key, form[field.key], (v) => updateField(field.key, v))}
-                      className={`absolute right-3 top-3 ${activeMicField === field.key && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C17C83]'}`}
+                      className={`brave-focus absolute right-3 top-3 ${activeMicField === field.key && isRecording ? 'text-red-500 animate-pulse' : 'text-muted-foreground hover:text-[#C1DBE8]'}`}
                     >
                       <Mic className="w-4 h-4" />
                     </button>
@@ -747,9 +775,9 @@ export function MiMarca() {
           </Card>
 
           {/* Comfort Level */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover rounded-3xl border-none shadow-md mt-4">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Comodidad a Cámara</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Comodidad a Cámara</CardTitle>
               <CardDescription>Esto ayudará a adaptar el tipo de contenido que te recomendamos</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -758,10 +786,10 @@ export function MiMarca() {
                   <button
                     key={nivel}
                     onClick={() => updateField('nivelCamara', nivel)}
-                    className={`px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-left ${
+                    className={`brave-focus px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200 text-left ${
                       form.nivelCamara === nivel
-                        ? 'bg-[#7D2E42] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                        ? 'bg-[#591427] text-white shadow-md'
+                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
                     }`}
                   >
                     {nivel}
@@ -770,12 +798,12 @@ export function MiMarca() {
               </div>
 
               <div className="space-y-2 mt-4">
-                <label className="text-sm font-medium text-[#2D1F22]">Facturación aproximada mensual</label>
+                <label className="text-sm font-medium text-[#2A1520]">Facturación aproximada mensual</label>
                 <Input
                   placeholder="Ej: 3000€ - 5000€"
                   value={form.facturacion}
                   onChange={(e) => updateField('facturacion', e.target.value)}
-                  className="border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+                  className="brave-focus border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8] rounded-xl"
                 />
               </div>
             </CardContent>
@@ -785,10 +813,10 @@ export function MiMarca() {
           <div className="flex justify-center pt-2 pb-4">
             <Button
               onClick={handleSave}
-              className={`px-8 py-6 text-base font-bold rounded-xl shadow-lg transition-all duration-200 ${
+              className={`brave-focus px-8 py-6 text-base font-bold rounded-2xl shadow-lg transition-all duration-200 brave-glow ${
                 saved
                   ? 'bg-green-600 hover:bg-green-600 text-white'
-                  : 'bg-[#7D2E42] hover:bg-[#933A54] text-white'
+                  : 'bg-[#591427] hover:bg-[#7D2040] text-white'
               }`}
             >
               {saved ? (
@@ -804,56 +832,62 @@ export function MiMarca() {
               )}
             </Button>
           </div>
-        </>
+        </motion.div>
       )}
 
       {/* Brand Profile Summary - always visible if exists */}
       {brandProfile && (brandProfile.nombre || brandProfile.salon || brandProfile.documentText) && (
-        <Card className="border-l-4 border-l-[#C9A96E] shadow-md bg-[#FBF7F5]">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2 text-[#2D1F22]">
-              <Sparkles className="w-4 h-4 text-[#C9A96E]" />
-              Tu Documento BRÄVE actual
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><span className="text-muted-foreground">Nombre:</span> <span className="font-medium">{brandProfile.nombre || '—'}</span></div>
-              <div><span className="text-muted-foreground">Salón:</span> <span className="font-medium">{brandProfile.salon || '—'}</span></div>
-              <div><span className="text-muted-foreground">Ciudad:</span> <span className="font-medium">{brandProfile.ciudad || '—'}</span></div>
-              <div><span className="text-muted-foreground">Experiencia:</span> <span className="font-medium">{brandProfile.experiencia || '—'}</span></div>
-            </div>
-            {brandProfile.servicios && brandProfile.servicios.length > 0 && (
-              <div className="mt-3">
-                <span className="text-muted-foreground text-sm">Servicios:</span>
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {brandProfile.servicios.map(s => (
-                    <Badge key={s} variant="secondary" className="bg-[#F3E8E5] text-[#2D1F22] text-xs">{s}</Badge>
-                  ))}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+        >
+          <Card className="brave-glass brave-card-hover rounded-3xl border-l-4 border-l-[#FFF1B5] shadow-md bg-[#FFFBF0]">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2 text-[#2A1520]">
+                <Sparkles className="w-4 h-4 text-[#FFF1B5]" />
+                Tu Documento BRÄVE actual
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Nombre:</span> <span className="font-medium">{brandProfile.nombre || '—'}</span></div>
+                <div><span className="text-muted-foreground">Salón:</span> <span className="font-medium">{brandProfile.salon || '—'}</span></div>
+                <div><span className="text-muted-foreground">Ciudad:</span> <span className="font-medium">{brandProfile.ciudad || '—'}</span></div>
+                <div><span className="text-muted-foreground">Experiencia:</span> <span className="font-medium">{brandProfile.experiencia || '—'}</span></div>
+              </div>
+              {brandProfile.servicios && brandProfile.servicios.length > 0 && (
+                <div className="mt-3">
+                  <span className="text-muted-foreground text-sm">Servicios:</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {brandProfile.servicios.map(s => (
+                      <Badge key={s} variant="secondary" className="bg-[#F5F0EB] text-[#2A1520] text-xs rounded-full">{s}</Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {brandProfile.serviciosPrioritarios && brandProfile.serviciosPrioritarios.length > 0 && (
-              <div className="mt-2">
-                <span className="text-muted-foreground text-sm">Prioritarios:</span>
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {brandProfile.serviciosPrioritarios.map(s => (
-                    <Badge key={s} className="bg-[#7D2E42] text-white text-xs">{s}</Badge>
-                  ))}
+              )}
+              {brandProfile.serviciosPrioritarios && brandProfile.serviciosPrioritarios.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-muted-foreground text-sm">Prioritarios:</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {brandProfile.serviciosPrioritarios.map(s => (
+                      <Badge key={s} className="bg-[#591427] text-white text-xs rounded-full">{s}</Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {brandProfile.documentText && (
-              <div className="mt-3 pt-3 border-t border-[#E0D5D1]">
-                <span className="text-muted-foreground text-xs flex items-center gap-1">
-                  <FileText className="w-3 h-3" />
-                  Documento subido: {brandProfile.documentName || 'texto pegado'} ({brandProfile.documentText.length} caracteres)
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+              {brandProfile.documentText && (
+                <div className="mt-3 pt-3 border-t border-[#E8DDD5]">
+                  <span className="text-muted-foreground text-xs flex items-center gap-1">
+                    <FileText className="w-3 h-3" />
+                    Documento subido: {brandProfile.documentName || 'texto pegado'} ({brandProfile.documentText.length} caracteres)
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }

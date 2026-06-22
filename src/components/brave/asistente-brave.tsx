@@ -295,26 +295,26 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
             <Bot className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#2D1F22]">Asistente BRÄVE</h2>
-            <p className="text-sm text-[#7D2E42]/70 mt-1">
+            <h2 className="text-2xl font-bold text-[#2A1520]">Asistente BRÄVE</h2>
+            <p className="text-sm text-[#591427]/70 mt-1">
               Pregúntame qué publicar, cómo avanzar o qué mejorar hoy.
             </p>
           </div>
         </div>
         {compacto && onClose && (
-          <Button variant="ghost" size="sm" onClick={onClose} className="text-[#2D1F22]">
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-[#2A1520]">
             <X className="w-5 h-5" />
           </Button>
         )}
       </div>
 
       {/* Roadmap compacto */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#F3E8E5] mb-3">
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#F5F0EB] mb-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60">
             Tu roadmap BRÄVE
           </p>
-          <p className="text-[10px] text-[#7D2E42]/50">
+          <p className="text-[10px] text-[#591427]/50">
             Te recomiendo enfocarte en lo más bajo
           </p>
         </div>
@@ -331,14 +331,14 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
             const isWeak = score <= 4
             return (
               <div key={area.key} className="text-center">
-                <div className="h-1.5 bg-[#F3E8E5] rounded-full overflow-hidden mb-1.5">
+                <div className="h-1.5 bg-[#F5F0EB] rounded-full overflow-hidden mb-1.5">
                   <div
-                    className={`h-full rounded-full ${isWeak ? 'bg-[#C17C83]' : 'bg-[#C9A96E]'}`}
+                    className={`h-full rounded-full ${isWeak ? 'bg-[#C1DBE8]' : 'bg-[#FFF1B5]'}`}
                     style={{ width: pct + '%' }}
                   />
                 </div>
-                <p className="text-[10px] font-medium text-[#2D1F22]">{area.label}</p>
-                <p className="text-[10px] text-[#7D2E42]/60">{score}/10</p>
+                <p className="text-[10px] font-medium text-[#2A1520]">{area.label}</p>
+                <p className="text-[10px] text-[#591427]/60">{score}/10</p>
               </div>
             )
           })}
@@ -348,13 +348,13 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
       {/* Mensajes */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-[#F3E8E5] p-4 space-y-4"
+        className="flex-1 overflow-y-auto bg-white rounded-2xl shadow-sm border border-[#F5F0EB] p-4 space-y-4"
       >
         {mensajes.map(m => (
           <div key={m.id} className={`flex gap-3 ${m.rol === 'user' ? 'flex-row-reverse' : ''}`}>
             <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
               m.rol === 'user'
-                ? 'bg-[#C9A96E] text-[#2D1F22]'
+                ? 'bg-[#FFF1B5] text-[#2A1520]'
                 : 'brave-gradient text-white'
             }`}>
               {m.rol === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
@@ -362,12 +362,12 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
             <div className={`max-w-[78%] ${m.rol === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-2`}>
               <div className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
                 m.rol === 'user'
-                  ? 'bg-[#C9A96E] text-[#2D1F22] rounded-tr-sm'
-                  : 'bg-[#FBF7F5] text-[#2D1F22] rounded-tl-sm border border-[#F3E8E5]'
+                  ? 'bg-[#FFF1B5] text-[#2A1520] rounded-tr-sm'
+                  : 'bg-[#FFFBF0] text-[#2A1520] rounded-tl-sm border border-[#F5F0EB]'
               }`}>
                 {m.texto}
                 {m.modo === 'audio' && m.rol === 'user' && (
-                  <span className="inline-flex items-center gap-1 ml-2 text-[10px] text-[#2D1F22]/60">
+                  <span className="inline-flex items-center gap-1 ml-2 text-[10px] text-[#2A1520]/60">
                     <Volume2 className="w-3 h-3" /> enviado por audio
                   </span>
                 )}
@@ -379,7 +379,7 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
                       key={i}
                       onClick={() => handleSugerencia(s)}
                       disabled={enviando}
-                      className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-[#C9A96E]/40 text-[#7D2E42] hover:bg-[#C9A96E]/10 transition-colors disabled:opacity-50"
+                      className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-[#FFF1B5]/40 text-[#591427] hover:bg-[#FFF1B5]/10 transition-colors disabled:opacity-50"
                     >
                       {s}
                     </button>
@@ -395,21 +395,21 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
             <div className="w-9 h-9 rounded-full brave-gradient flex items-center justify-center shrink-0">
               <Bot className="w-4 h-4 text-white" />
             </div>
-            <div className="rounded-2xl px-4 py-3 bg-[#FBF7F5] border border-[#F3E8E5] flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[#7D2E42]" />
-              <span className="text-sm text-[#7D2E42]">Pensando...</span>
+            <div className="rounded-2xl px-4 py-3 bg-[#FFFBF0] border border-[#F5F0EB] flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-[#591427]" />
+              <span className="text-sm text-[#591427]">Pensando...</span>
             </div>
           </div>
         )}
 
         {transcribiendo && (
           <div className="flex gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#C17C83] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#C1DBE8] flex items-center justify-center shrink-0">
               <Mic className="w-4 h-4 text-white animate-pulse" />
             </div>
-            <div className="rounded-2xl px-4 py-3 bg-[#FBF7F5] border border-[#F3E8E5] flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[#7D2E42]" />
-              <span className="text-sm text-[#7D2E42]">Transcribiendo tu audio...</span>
+            <div className="rounded-2xl px-4 py-3 bg-[#FFFBF0] border border-[#F5F0EB] flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-[#591427]" />
+              <span className="text-sm text-[#591427]">Transcribiendo tu audio...</span>
             </div>
           </div>
         )}
@@ -423,7 +423,7 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
               key={i}
               onClick={() => handleSugerencia(s)}
               disabled={enviando}
-              className="text-xs px-3 py-1.5 rounded-full bg-white border border-[#C9A96E]/40 text-[#7D2E42] hover:bg-[#C9A96E]/10 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              className="text-xs px-3 py-1.5 rounded-full bg-white border border-[#FFF1B5]/40 text-[#591427] hover:bg-[#FFF1B5]/10 transition-colors disabled:opacity-50 flex items-center gap-1.5"
             >
               <Lightbulb className="w-3 h-3" />
               {s}
@@ -443,7 +443,7 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
                 clearAsistenteMensajes()
               }
             }}
-            className="text-[#7D2E42]/60 hover:text-[#7D2E42] text-xs"
+            className="text-[#591427]/60 hover:text-[#591427] text-xs"
           >
             <Trash2 className="w-3 h-3 mr-1.5" /> Vaciar conversación
           </Button>
@@ -451,7 +451,7 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
       )}
 
       {/* Entrada */}
-      <div className="mt-3 bg-white rounded-2xl shadow-sm border border-[#F3E8E5] p-3">
+      <div className="mt-3 bg-white rounded-2xl shadow-sm border border-[#F5F0EB] p-3">
         <div className="flex items-end gap-2">
           <Textarea
             ref={inputRef}
@@ -466,7 +466,7 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
           <Button
             onClick={grabando ? detenerGrabacion : iniciarGrabacion}
             disabled={enviando || transcribiendo}
-            className={`shrink-0 ${grabando ? 'bg-[#C17C83] hover:bg-[#a86570]' : 'bg-[#7D2E42] hover:bg-[#5d2334]'}`}
+            className={`shrink-0 ${grabando ? 'bg-[#C1DBE8] hover:bg-[#8BB8D0]' : 'bg-[#591427] hover:bg-[#3D0E1B]'}`}
             size="icon"
             title={grabando ? 'Detener grabación' : 'Enviar audio'}
           >
@@ -482,11 +482,11 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
             {enviando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </div>
-        <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#7D2E42]/50">
+        <div className="mt-1.5 flex items-center justify-between text-[10px] text-[#591427]/50">
           <span>Enter para enviar · Shift+Enter para nueva línea</span>
           {grabando && (
-            <span className="text-[#C17C83] font-medium flex items-center gap-1">
-              <span className="w-1.5 h-1.5 bg-[#C17C83] rounded-full animate-pulse" />
+            <span className="text-[#C1DBE8] font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-[#C1DBE8] rounded-full animate-pulse" />
               Grabando audio
             </span>
           )}

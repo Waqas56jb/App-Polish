@@ -41,47 +41,56 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-brave-rose: #C17C83;
-  --color-brave-burgundy: #7D2E42;
-  --color-brave-cream: #FBF7F5;
-  --color-brave-warm: #F3E8E5;
-  --color-brave-dark: #2D1F22;
-  --color-brave-gold: #C9A96E;
+
+  /* Pantone 2025 Palette */
+  --color-brave-buttermilk: #FFF1B5;
+  --color-brave-pastel-blue: #C1DBE8;
+  --color-brave-chocolate: #591427;
+
+  /* Extended palette */
+  --color-brave-cream: #FFFBF0;
+  --color-brave-sky: #E8F4FC;
+  --color-brave-burgundy-light: #7A2A40;
+  --color-brave-dark: #2A1520;
+  --color-brave-warm-gray: #F5F0EB;
+  --color-brave-gold: #F5D680;
+  --color-brave-blue-deep: #8BB8D0;
+  --color-brave-rose: #E8C4C8;
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.98 0.008 30);
-  --foreground: oklch(0.18 0.015 10);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.015 10);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.015 10);
-  --primary: oklch(0.58 0.09 10);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.015 30);
-  --secondary-foreground: oklch(0.30 0.04 10);
-  --muted: oklch(0.94 0.012 30);
-  --muted-foreground: oklch(0.50 0.02 10);
-  --accent: oklch(0.40 0.10 10);
-  --accent-foreground: oklch(1 0 0);
+  --radius: 0.85rem;
+  --background: #FFFBF0;
+  --foreground: #2A1520;
+  --card: #FFFFFF;
+  --card-foreground: #2A1520;
+  --popover: #FFFFFF;
+  --popover-foreground: #2A1520;
+  --primary: #591427;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F0EB;
+  --secondary-foreground: #591427;
+  --muted: #F5F0EB;
+  --muted-foreground: #8A7080;
+  --accent: #C1DBE8;
+  --accent-foreground: #591427;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.015 30);
-  --input: oklch(0.91 0.015 30);
-  --ring: oklch(0.58 0.09 10);
-  --chart-1: oklch(0.58 0.09 10);
-  --chart-2: oklch(0.65 0.12 350);
-  --chart-3: oklch(0.55 0.06 30);
-  --chart-4: oklch(0.75 0.10 60);
-  --chart-5: oklch(0.45 0.08 340);
-  --sidebar: oklch(0.28 0.06 10);
-  --sidebar-foreground: oklch(0.95 0.01 30);
-  --sidebar-primary: oklch(0.75 0.10 40);
-  --sidebar-primary-foreground: oklch(0.18 0.015 10);
-  --sidebar-accent: oklch(0.38 0.08 10);
-  --sidebar-accent-foreground: oklch(0.95 0.01 30);
-  --sidebar-border: oklch(0.40 0.06 10);
-  --sidebar-ring: oklch(0.58 0.09 10);
+  --border: #E8DDD5;
+  --input: #E8DDD5;
+  --ring: #591427;
+  --chart-1: #591427;
+  --chart-2: #C1DBE8;
+  --chart-3: #FFF1B5;
+  --chart-4: #8BB8D0;
+  --chart-5: #E8C4C8;
+  --sidebar: #591427;
+  --sidebar-foreground: #FFFBF0;
+  --sidebar-primary: #FFF1B5;
+  --sidebar-primary-foreground: #591427;
+  --sidebar-accent: #7A2A40;
+  --sidebar-accent-foreground: #FFFBF0;
+  --sidebar-border: #7A2A40;
+  --sidebar-ring: #FFF1B5;
 }
 
 @layer base {
@@ -93,9 +102,10 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Apple-style thin */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -103,33 +113,143 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.80 0.03 30);
-  border-radius: 3px;
+  background: #C1DBE8;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.65 0.06 30);
+  background: #8BB8D0;
 }
 
-/* Brave-specific styles */
+/* ========== BRAVE STUDIO DESIGN SYSTEM ========== */
+
+/* Glass morphism card */
+.brave-glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.brave-glass-strong {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Primary gradient - Chocolate Cosmos → Burgundy */
 .brave-gradient {
-  background: linear-gradient(135deg, #7D2E42 0%, #C17C83 100%);
+  background: linear-gradient(135deg, #591427 0%, #7A2A40 50%, #8B3050 100%);
 }
 
+/* Accent gradient - Pastel Blue → Sky */
+.brave-gradient-blue {
+  background: linear-gradient(135deg, #C1DBE8 0%, #8BB8D0 100%);
+}
+
+/* Warm gradient - Buttermilk → Gold */
+.brave-gradient-warm {
+  background: linear-gradient(135deg, #FFF1B5 0%, #F5D680 100%);
+}
+
+/* Card hover effect - subtle Apple-style lift */
 .brave-card-hover {
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .brave-card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px -5px oklch(0.58 0.09 10 / 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px -10px rgba(89, 20, 39, 0.12),
+              0 4px 12px -2px rgba(193, 219, 232, 0.3);
 }
 
+/* Soft inner glow */
+.brave-glow {
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.6),
+              0 4px 16px -4px rgba(89, 20, 39, 0.08);
+}
+
+/* Pulse animation for mascot */
 .brave-pulse {
   animation: brave-pulse 2s ease-in-out infinite;
 }
 
 @keyframes brave-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+
+/* Floating animation */
+.brave-float {
+  animation: brave-float 3s ease-in-out infinite;
+}
+
+@keyframes brave-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Shimmer loading effect */
+.brave-shimmer {
+  background: linear-gradient(
+    90deg,
+    #F5F0EB 0%,
+    #C1DBE8 50%,
+    #F5F0EB 100%
+  );
+  background-size: 200% 100%;
+  animation: brave-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes brave-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Sidebar navigation item styles */
+.brave-nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.brave-nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: rgba(255, 241, 181, 0.15);
+  border-radius: 0 12px 12px 0;
+  transition: width 0.25s ease;
+}
+
+.brave-nav-item:hover::before,
+.brave-nav-item.active::before {
+  width: 100%;
+}
+
+/* Badge pill styles */
+.brave-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Smooth transitions for interactive elements */
+.brave-transition {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Focus ring style */
+.brave-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFBF0, 0 0 0 4px #591427;
+  border-radius: inherit;
 }

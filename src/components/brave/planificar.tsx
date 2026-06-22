@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { DraggableCard } from './draggable-card'
 import { ContentCardModal } from './content-modal'
+import { BravyBot } from './bravy-bot'
 
 const OBJETIVOS = [
   {
@@ -428,22 +429,22 @@ export function Planificar() {
       <head>
         <title>Planificación ${tipo} - BRÄVE STUDIO</title>
         <style>
-          body { font-family: -apple-system, sans-serif; padding: 40px; color: #2D1F22; }
-          h1 { color: #7D2E42; }
+          body { font-family: -apple-system, sans-serif; padding: 40px; color: #2A1520; }
+          h1 { color: #591427; }
           .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 30px; }
-          .day { border: 1px solid #E0D5D1; padding: 10px; min-height: 80px; }
-          .day-name { font-weight: bold; color: #7D2E42; margin-bottom: 5px; }
-          .item { background: #F3E8E5; padding: 5px; margin: 3px 0; font-size: 12px; border-radius: 4px; }
-          .reel { border-left: 3px solid #C17C83; }
-          .carrusel { border-left: 3px solid #C9A96E; }
-          .content-block { page-break-inside: avoid; margin-bottom: 20px; padding: 15px; border: 1px solid #E0D5D1; border-radius: 8px; }
+          .day { border: 1px solid #E8DDD5; padding: 10px; min-height: 80px; }
+          .day-name { font-weight: bold; color: #591427; margin-bottom: 5px; }
+          .item { background: #F5F0EB; padding: 5px; margin: 3px 0; font-size: 12px; border-radius: 4px; }
+          .reel { border-left: 3px solid #C1DBE8; }
+          .carrusel { border-left: 3px solid #FFF1B5; }
+          .content-block { page-break-inside: avoid; margin-bottom: 20px; padding: 15px; border: 1px solid #E8DDD5; border-radius: 8px; }
           .tipo-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; color: white; }
-          .reel-badge { background: #C17C83; }
-          .carrusel-badge { background: #C9A96E; }
-          h2 { color: #7D2E42; margin-bottom: 5px; }
+          .reel-badge { background: #C1DBE8; }
+          .carrusel-badge { background: #FFF1B5; }
+          h2 { color: #591427; margin-bottom: 5px; }
           .meta { color: #666; font-size: 12px; margin-bottom: 10px; }
           .section { margin: 8px 0; }
-          .section-label { font-weight: bold; color: #7D2E42; font-size: 12px; }
+          .section-label { font-weight: bold; color: #591427; font-size: 12px; }
         </style>
       </head>
       <body>
@@ -494,22 +495,22 @@ export function Planificar() {
     return (
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center space-y-3 mb-4">
-          <h2 className="text-3xl font-bold text-[#2D1F22]">Planificar</h2>
+          <h2 className="text-3xl font-bold text-[#2A1520]">Planificar</h2>
           <p className="text-muted-foreground text-base">Crea tu planificación de contenido en minutos</p>
         </div>
 
-        <Card className="border-l-4 border-l-[#C9A96E] bg-[#FBF7F5] shadow-md">
+        <Card className="border-l-4 border-l-[#FFF1B5] bg-[#FFFBF0] shadow-md">
           <CardContent className="p-5 flex items-start gap-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F3E8E5] shrink-0">
-              <Sparkles className="w-6 h-6 text-[#C17C83]" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F5F0EB] shrink-0">
+              <Sparkles className="w-6 h-6 text-[#C1DBE8]" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-[#2D1F22] mb-1">Personaliza tu planificación</h3>
+              <h3 className="font-bold text-[#2A1520] mb-1">Personaliza tu planificación</h3>
               <p className="text-sm text-muted-foreground mb-3">
                 Aunque puedes planificar sin tu Marca BRÄVE, completarla hará que las ideas sean mucho más personalizadas para tu salón.
               </p>
               <div className="flex gap-2 flex-wrap">
-                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#7D2E42] hover:bg-[#933A54] text-white">
+                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#591427] hover:bg-[#7A2A40] text-white">
                   Crear Mi Marca BRÄVE
                   <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
@@ -524,7 +525,7 @@ export function Planificar() {
                   }}
                   variant="outline"
                   size="sm"
-                  className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                  className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
                 >
                   Continuar sin marca
                 </Button>
@@ -540,16 +541,19 @@ export function Planificar() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-3 mb-4">
-        <h2 className="text-3xl font-bold text-[#2D1F22]">Planificar</h2>
+        <div className="flex items-center justify-center gap-3">
+          <BravyBot size={40} expression="motivate" animate={false} />
+          <h2 className="text-3xl font-bold text-[#2A1520]">Planificar</h2>
+        </div>
         <p className="text-muted-foreground text-base">Crea tu planificación de contenido en minutos</p>
       </div>
 
       {!showResults ? (
         <>
           {/* Plan Type */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Tipo de Planificación</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Tipo de Planificación</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
@@ -559,8 +563,8 @@ export function Planificar() {
                     onClick={() => setTipo(t)}
                     className={`p-4 rounded-xl text-center font-medium transition-all duration-200 ${
                       tipo === t
-                        ? 'bg-[#7D2E42] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                        ? 'bg-[#591427] text-white shadow-md'
+                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
                     }`}
                   >
                     <Calendar className="w-6 h-6 mx-auto mb-2" />
@@ -572,10 +576,10 @@ export function Planificar() {
           </Card>
 
           {/* Content Type Selector */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22] flex items-center gap-2">
-                <Layers className="w-5 h-5 text-[#C17C83]" />
+              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+                <Layers className="w-5 h-5 text-[#C1DBE8]" />
                 Tipo de Contenido
               </CardTitle>
               <CardDescription>¿Qué formatos quieres incluir en tu planificación?</CardDescription>
@@ -592,8 +596,8 @@ export function Planificar() {
                     onClick={() => setTipoContenido(tc.value)}
                     className={`p-4 rounded-xl text-center transition-all duration-200 ${
                       tipoContenido === tc.value
-                        ? 'bg-[#C17C83] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                        ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
                     }`}
                   >
                     <span className="text-2xl block mb-1">{tc.icon}</span>
@@ -605,9 +609,9 @@ export function Planificar() {
           </Card>
 
           {/* Services */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Servicios a Potenciar</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Servicios a Potenciar</CardTitle>
               <CardDescription>Selecciona máximo 3 servicios</CardDescription>
             </CardHeader>
             <CardContent>
@@ -619,8 +623,8 @@ export function Planificar() {
                     disabled={!serviciosSeleccionados.includes(s) && serviciosSeleccionados.length >= 3}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                       serviciosSeleccionados.includes(s)
-                        ? 'bg-[#7D2E42] text-white shadow-md'
-                        : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                        ? 'bg-[#591427] text-white shadow-md'
+                        : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                     } ${!serviciosSeleccionados.includes(s) && serviciosSeleccionados.length >= 3 ? 'opacity-40 cursor-not-allowed' : ''}`}
                   >
                     {s}
@@ -631,9 +635,9 @@ export function Planificar() {
           </Card>
 
           {/* Frequency */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Frecuencia Semanal</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Frecuencia Semanal</CardTitle>
               <CardDescription>¿Cuántas publicaciones por semana?</CardDescription>
             </CardHeader>
             <CardContent>
@@ -644,8 +648,8 @@ export function Planificar() {
                     onClick={() => setFrecuencia(f)}
                     className={`p-4 rounded-xl text-center font-bold transition-all duration-200 ${
                       frecuencia === f
-                        ? 'bg-[#7D2E42] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                        ? 'bg-[#591427] text-white shadow-md'
+                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
                     }`}
                   >
                     <span className="text-2xl block">{f}</span>
@@ -657,9 +661,9 @@ export function Planificar() {
           </Card>
 
           {/* Objective */}
-          <Card className="border-none shadow-md">
+          <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22]">Objetivo Principal</CardTitle>
+              <CardTitle className="text-lg text-[#2A1520]">Objetivo Principal</CardTitle>
               <CardDescription>El objetivo modificará el tipo de ideas generadas por la IA</CardDescription>
             </CardHeader>
             <CardContent>
@@ -670,8 +674,8 @@ export function Planificar() {
                     onClick={() => setObjetivo(obj.value)}
                     className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
                       objetivo === obj.value
-                        ? 'bg-[#7D2E42] text-white shadow-md'
-                        : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                        ? 'bg-[#591427] text-white shadow-md'
+                        : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8]'
                     }`}
                   >
                     <div className="flex items-baseline justify-between mb-1">
@@ -694,7 +698,7 @@ export function Planificar() {
             <Button
               onClick={handleGenerate}
               disabled={isLoading || serviciosSeleccionados.length === 0 || !objetivo}
-              className="px-8 py-6 text-base font-bold rounded-xl shadow-lg bg-[#C17C83] hover:bg-[#B06B74] text-white disabled:opacity-50"
+              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg brave-gradient hover:opacity-90 text-white disabled:opacity-50"
             >
               {isLoading ? (
                 <>
@@ -714,13 +718,13 @@ export function Planificar() {
         <>
           {/* Top toolbar */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h3 className="text-xl font-bold text-[#2D1F22]">Tu Planificación</h3>
+            <h3 className="text-xl font-bold text-[#2A1520]">Tu Planificación</h3>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSavePlanToCalendar}
-                className="border-[#7D2E42] text-[#7D2E42] hover:bg-[#F3E8E5]"
+                className="border-[#591427] text-[#591427] hover:bg-[#F5F0EB]"
               >
                 <CalendarPlus className="w-4 h-4 mr-2" />
                 Guardar en calendario
@@ -729,7 +733,7 @@ export function Planificar() {
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadPDF}
-                className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Descargar PDF
@@ -738,7 +742,7 @@ export function Planificar() {
                 variant="outline"
                 size="sm"
                 onClick={handleGenerate}
-                className="border-[#E0D5D1] text-[#2D1F22] hover:bg-[#F3E8E5]"
+                className="border-[#E8DDD5] text-[#2A1520] hover:bg-[#F5F0EB]"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Regenerar plan
@@ -747,7 +751,7 @@ export function Planificar() {
           </div>
 
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <span className="text-[#7D2E42]">💡</span>
+            <span className="text-[#591427]">💡</span>
             Arrastra las tarjetas para reorganizar el orden. Usa el botón 📅 para asignar día o fecha.
           </div>
 
@@ -783,7 +787,7 @@ export function Planificar() {
           <div className="flex justify-center pt-4 pb-8 gap-3">
             <Button
               onClick={handleSavePlanToCalendar}
-              className="px-8 py-5 text-base font-bold rounded-xl shadow-lg bg-[#7D2E42] hover:bg-[#933A54] text-white"
+              className="px-8 py-5 text-base font-bold rounded-xl shadow-lg bg-[#591427] hover:bg-[#7A2A40] text-white"
             >
               <Save className="w-5 h-5 mr-2" />
               Guardar Planificación

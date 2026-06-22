@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import { BravyBot } from '@/components/brave/bravy-bot'
 import {
   PenTool, Film, LayoutGrid, BookOpen, Sparkles,
   RefreshCw, Save, Copy, FileText, CheckCircle2,
@@ -64,22 +65,22 @@ export function Crear() {
     return (
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="text-center space-y-3 mb-4">
-          <h2 className="text-3xl font-bold text-[#2D1F22]">Crear</h2>
+          <h2 className="text-3xl font-bold text-[#2A1520]">Crear</h2>
           <p className="text-muted-foreground text-base">Genera contenidos individuales para tu Instagram</p>
         </div>
 
-        <Card className="border-l-4 border-l-[#C9A96E] bg-[#FBF7F5] shadow-md">
+        <Card className="border-l-4 border-l-[#FFF1B5] bg-[#FFFBF0] shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
           <CardContent className="p-5 flex items-start gap-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F3E8E5] shrink-0">
-              <PenTool className="w-6 h-6 text-[#C17C83]" />
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#F5F0EB] shrink-0">
+              <PenTool className="w-6 h-6 text-[#C1DBE8]" />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-[#2D1F22] mb-1">Personaliza tu contenido</h3>
+              <h3 className="font-bold text-[#2A1520] mb-1">Personaliza tu contenido</h3>
               <p className="text-sm text-muted-foreground mb-3">
                 Aunque puedes crear contenido sin tu Marca BRÄVE, completarla hará que las ideas sean mucho más personalizadas para tu salón.
               </p>
               <div className="flex gap-2 flex-wrap">
-                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#7D2E42] hover:bg-[#933A54] text-white">
+                <Button onClick={() => setActiveModule('marca')} size="sm" className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl">
                   Crear Mi Marca BRÄVE
                   <ArrowRight className="w-3 h-3 ml-1" />
                 </Button>
@@ -94,7 +95,7 @@ export function Crear() {
                   }}
                   variant="outline"
                   size="sm"
-                  className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                  className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB] rounded-2xl"
                 >
                   Continuar sin marca
                 </Button>
@@ -306,8 +307,9 @@ export function Crear() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-3 mb-8">
-        <h2 className="text-3xl font-bold text-[#2D1F22]">Crear</h2>
+        <h2 className="text-3xl font-bold text-[#2A1520]">Crear</h2>
         <p className="text-muted-foreground text-base">Genera contenidos individuales para tu Instagram</p>
+        <BravyBot />
       </div>
 
       {/* Sub-module tabs */}
@@ -320,10 +322,10 @@ export function Crear() {
           <button
             key={tab.key}
             onClick={() => setSubModule(tab.key)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+            className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-200 ${
               subModule === tab.key
-                ? 'bg-[#7D2E42] text-white shadow-md'
-                : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C17C83]'
+                ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+                : 'bg-white/60 border border-[#E8DDD5] text-[#2A1520] hover:border-[#C1DBE8] hover:bg-[#C1DBE8]/30'
             }`}
           >
             {tab.icon}
@@ -335,17 +337,17 @@ export function Crear() {
       {/* REELS SUBMODULE */}
       {subModule === 'reels' && !showReelScript && (
         <>
-          <Card className="border-none shadow-md">
+          <Card className="border-none shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22] flex items-center gap-2">
-                <Film className="w-5 h-5 text-[#C17C83]" />
+              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+                <Film className="w-5 h-5 text-[#C1DBE8]" />
                 Crear Reel
               </CardTitle>
               <CardDescription>Configura tu Reel y genera ideas</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Servicio</label>
+                <label className="text-sm font-medium text-[#2A1520]">Servicio</label>
                 <div className="flex flex-wrap gap-2">
                   {servicios.map((s) => (
                     <button
@@ -353,8 +355,8 @@ export function Crear() {
                       onClick={() => setReelServicio(s)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         reelServicio === s
-                          ? 'bg-[#7D2E42] text-white shadow-md'
-                          : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                          ? 'bg-[#591427] text-white shadow-md'
+                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                       }`}
                     >
                       {s}
@@ -364,7 +366,7 @@ export function Crear() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Objetivo</label>
+                <label className="text-sm font-medium text-[#2A1520]">Objetivo</label>
                 <div className="flex flex-wrap gap-2">
                   {OBJETIVOS_REEL.map((obj) => (
                     <button
@@ -372,8 +374,8 @@ export function Crear() {
                       onClick={() => setReelObjetivo(obj.value)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         reelObjetivo === obj.value
-                          ? 'bg-[#C17C83] text-white shadow-md'
-                          : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                          ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                       }`}
                     >
                       {obj.label}
@@ -383,7 +385,7 @@ export function Crear() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Formato</label>
+                <label className="text-sm font-medium text-[#2A1520]">Formato</label>
                 <div className="flex flex-wrap gap-2">
                   {FORMATOS.map((fmt) => (
                     <button
@@ -391,8 +393,8 @@ export function Crear() {
                       onClick={() => setReelFormato(fmt.value)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         reelFormato === fmt.value
-                          ? 'bg-[#C9A96E] text-white shadow-md'
-                          : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                          ? 'bg-[#FFF1B5] text-[#2A1520] shadow-md'
+                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                       }`}
                     >
                       {fmt.label}
@@ -407,7 +409,7 @@ export function Crear() {
             <Button
               onClick={generateReelIdeas}
               disabled={isLoading || !reelServicio || !reelObjetivo}
-              className="px-8 py-6 text-base font-bold rounded-xl shadow-lg bg-[#C17C83] hover:bg-[#B06B74] text-white disabled:opacity-50"
+              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg bg-gradient-to-r from-[#591427] to-[#C1DBE8] hover:from-[#7A2A40] hover:to-[#8BB8D0] text-white disabled:opacity-50"
             >
               {isLoading ? (
                 <><RefreshCw className="w-5 h-5 mr-2 animate-spin" />Generando ideas...</>
@@ -420,9 +422,9 @@ export function Crear() {
           {/* Ideas list */}
           {reelIdeas.length > 0 && (
             <div className="space-y-3 mt-4">
-              <h3 className="text-lg font-bold text-[#2D1F22]">10 Ideas de Reel</h3>
+              <h3 className="text-lg font-bold text-[#2A1520]">10 Ideas de Reel</h3>
               {reelIdeas.map((idea, idx) => (
-                <Card key={idx} className={`brave-card-hover border-none shadow-md ${selectedIdeas.has(idx) ? 'ring-2 ring-[#7D2E42]' : ''}`}>
+                <Card key={idx} className={`brave-glass brave-card-hover brave-glow border-none shadow-md rounded-3xl ${selectedIdeas.has(idx) ? 'ring-2 ring-[#591427]' : ''}`}>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-start gap-3">
@@ -434,16 +436,16 @@ export function Crear() {
                             setSelectedIdeas(next)
                           }}
                           className={`mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                            selectedIdeas.has(idx) ? 'bg-[#7D2E42] border-[#7D2E42]' : 'border-[#E0D5D1]'
+                            selectedIdeas.has(idx) ? 'bg-[#591427] border-[#591427]' : 'border-[#E8DDD5]'
                           }`}
                         >
                           {selectedIdeas.has(idx) && <CheckCircle2 className="w-4 h-4 text-white" />}
                         </button>
                         <div>
-                          <p className="font-medium text-[#2D1F22]">{idea.titulo}</p>
+                          <p className="font-medium text-[#2A1520]">{idea.titulo}</p>
                           <div className="flex gap-2 mt-1">
-                            <Badge variant="secondary" className="bg-[#F3E8E5] text-[#2D1F22] text-xs">{idea.objetivo}</Badge>
-                            <Badge variant="secondary" className="bg-[#F3E8E5] text-[#2D1F22] text-xs">{idea.formato}</Badge>
+                            <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520] text-xs">{idea.objetivo}</Badge>
+                            <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520] text-xs">{idea.formato}</Badge>
                           </div>
                         </div>
                       </div>
@@ -455,7 +457,7 @@ export function Crear() {
                             setReelIdeas([])
                             generateScript(idea)
                           }}
-                          className="text-[#C17C83] hover:text-[#7D2E42] hover:bg-[#F3E8E5]"
+                          className="text-[#C1DBE8] hover:text-[#591427] hover:bg-[#F5F0EB]"
                         >
                           <FileText className="w-4 h-4" />
                         </Button>
@@ -490,7 +492,7 @@ export function Crear() {
                       addLibraryItems(items)
                       setSelectedIdeas(new Set())
                     }}
-                    className="bg-[#7D2E42] hover:bg-[#933A54] text-white"
+                    className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
                   >
                     <Save className="w-4 h-4 mr-2" />
                     Guardar {selectedIdeas.size} ideas
@@ -504,38 +506,38 @@ export function Crear() {
 
       {/* REEL SCRIPT */}
       {subModule === 'reels' && showReelScript && currentScript && (
-        <Card className="border-none shadow-md border-l-4 border-l-[#7D2E42]">
+        <Card className="border-none shadow-md border-l-4 border-l-[#591427] brave-glass brave-card-hover brave-glow rounded-3xl">
           <CardHeader>
-            <CardTitle className="text-lg text-[#2D1F22] flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#C17C83]" />
+            <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#C1DBE8]" />
               Guión del Reel
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#7D2E42]">GUIÓN</label>
-              <div className="bg-[#FBF7F5] p-4 rounded-xl whitespace-pre-line text-sm text-[#2D1F22]">
+              <label className="text-sm font-bold text-[#591427]">GUIÓN</label>
+              <div className="bg-[#FFFBF0] p-4 rounded-xl whitespace-pre-line text-sm text-[#2A1520]">
                 {currentScript.guion}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#7D2E42]">COPY (Descripción)</label>
-              <div className="bg-[#FBF7F5] p-4 rounded-xl text-sm text-[#2D1F22]">
+              <label className="text-sm font-bold text-[#591427]">COPY (Descripción)</label>
+              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#2A1520]">
                 {currentScript.copy}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#7D2E42]">HASHTAGS</label>
-              <div className="bg-[#FBF7F5] p-4 rounded-xl text-sm text-[#C17C83]">
+              <label className="text-sm font-bold text-[#591427]">HASHTAGS</label>
+              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#C1DBE8]">
                 {currentScript.hashtags}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#7D2E42]">TEXTO PORTADA</label>
-              <div className="bg-[#FBF7F5] p-4 rounded-xl text-sm text-[#2D1F22] font-medium">
+              <label className="text-sm font-bold text-[#591427]">TEXTO PORTADA</label>
+              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#2A1520] font-medium">
                 {currentScript.textoPortada}
               </div>
             </div>
@@ -543,7 +545,7 @@ export function Crear() {
             <div className="flex gap-3 pt-4">
               <Button
                 onClick={() => copyToClipboard(currentScript.guion + '\n\n' + currentScript.copy + '\n\n' + currentScript.hashtags)}
-                className="bg-[#C17C83] hover:bg-[#B06B74] text-white"
+                className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] rounded-2xl"
               >
                 <Copy className="w-4 h-4 mr-2" />
                 Copiar todo
@@ -569,7 +571,7 @@ export function Crear() {
                     createdAt: new Date().toISOString(),
                   })
                 }}
-                className="bg-[#7D2E42] hover:bg-[#933A54] text-white"
+                className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
               >
                 <Save className="w-4 h-4 mr-2" />
                 Guardar
@@ -580,7 +582,7 @@ export function Crear() {
                   setShowReelScript(false)
                   setCurrentScript(null)
                 }}
-                className="border-[#E0D5D1]"
+                className="border-[#E8DDD5] rounded-2xl"
               >
                 Volver a ideas
               </Button>
@@ -592,17 +594,17 @@ export function Crear() {
       {/* STORIES SUBMODULE */}
       {subModule === 'stories' && (
         <>
-          <Card className="border-none shadow-md">
+          <Card className="border-none shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22] flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-[#C17C83]" />
+              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-[#C1DBE8]" />
                 Crear Stories
               </CardTitle>
               <CardDescription>Genera una secuencia de 3 stories</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Servicio</label>
+                <label className="text-sm font-medium text-[#2A1520]">Servicio</label>
                 <div className="flex flex-wrap gap-2">
                   {servicios.map((s) => (
                     <button
@@ -610,8 +612,8 @@ export function Crear() {
                       onClick={() => setStoryServicio(s)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         storyServicio === s
-                          ? 'bg-[#7D2E42] text-white shadow-md'
-                          : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                          ? 'bg-[#591427] text-white shadow-md'
+                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                       }`}
                     >
                       {s}
@@ -621,7 +623,7 @@ export function Crear() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Objetivo</label>
+                <label className="text-sm font-medium text-[#2A1520]">Objetivo</label>
                 <div className="flex flex-wrap gap-2">
                   {['autoridad', 'reservas', 'educación', 'venta'].map((obj) => (
                     <button
@@ -629,8 +631,8 @@ export function Crear() {
                       onClick={() => setStoryObjetivo(obj)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
                         storyObjetivo === obj
-                          ? 'bg-[#C17C83] text-white shadow-md'
-                          : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                          ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                       }`}
                     >
                       {obj}
@@ -645,7 +647,7 @@ export function Crear() {
             <Button
               onClick={generateStories}
               disabled={isLoading || !storyServicio}
-              className="px-8 py-6 text-base font-bold rounded-xl shadow-lg bg-[#C17C83] hover:bg-[#B06B74] text-white disabled:opacity-50"
+              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg bg-gradient-to-r from-[#591427] to-[#C1DBE8] hover:from-[#7A2A40] hover:to-[#8BB8D0] text-white disabled:opacity-50"
             >
               {isLoading ? (
                 <><RefreshCw className="w-5 h-5 mr-2 animate-spin" />Generando...</>
@@ -657,18 +659,18 @@ export function Crear() {
 
           {storyResult && (
             <div className="space-y-4 mt-4">
-              <h3 className="text-lg font-bold text-[#2D1F22]">Tu Secuencia de Stories</h3>
+              <h3 className="text-lg font-bold text-[#2A1520]">Tu Secuencia de Stories</h3>
               {storyResult.stories.map((story: any, idx: number) => (
-                <Card key={idx} className="brave-card-hover border-none shadow-md">
+                <Card key={idx} className="brave-glass brave-card-hover brave-glow border-none shadow-md rounded-3xl">
                   <CardContent className="p-5">
                     <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-[#7D2E42] flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-[#591427] flex items-center justify-center text-white font-bold text-sm shrink-0">
                         {story.numero}
                       </div>
                       <div className="flex-1 space-y-2">
-                        <p className="font-medium text-[#2D1F22]">{story.texto}</p>
+                        <p className="font-medium text-[#2A1520]">{story.texto}</p>
                         <div className="flex gap-2 flex-wrap">
-                          <Badge className="bg-[#C9A96E] text-white text-xs">
+                          <Badge className="bg-[#FFF1B5] text-[#2A1520] text-xs">
                             Sticker: {story.sticker}
                           </Badge>
                         </div>
@@ -678,7 +680,7 @@ export function Crear() {
                         size="sm"
                         variant="ghost"
                         onClick={() => copyToClipboard(story.texto)}
-                        className="text-[#C17C83] hover:text-[#7D2E42]"
+                        className="text-[#C1DBE8] hover:text-[#591427]"
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -689,7 +691,7 @@ export function Crear() {
               <div className="flex gap-3 justify-center pt-2">
                 <Button
                   onClick={() => copyToClipboard(storyResult.stories.map((s: any) => `Story ${s.numero}: ${s.texto}\nSticker: ${s.sticker}`).join('\n\n'))}
-                  className="bg-[#C17C83] hover:bg-[#B06B74] text-white"
+                  className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] rounded-2xl"
                 >
                   <Copy className="w-4 h-4 mr-2" />Copiar todo
                 </Button>
@@ -712,7 +714,7 @@ export function Crear() {
                     planId: '',
                     createdAt: new Date().toISOString(),
                   })}
-                  className="bg-[#7D2E42] hover:bg-[#933A54] text-white"
+                  className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
                 >
                   <Save className="w-4 h-4 mr-2" />Guardar
                 </Button>
@@ -725,17 +727,17 @@ export function Crear() {
       {/* CAROUSEL SUBMODULE */}
       {subModule === 'carruseles' && (
         <>
-          <Card className="border-none shadow-md">
+          <Card className="border-none shadow-md brave-glass brave-card-hover brave-glow rounded-3xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg text-[#2D1F22] flex items-center gap-2">
-                <LayoutGrid className="w-5 h-5 text-[#C17C83]" />
+              <CardTitle className="text-lg text-[#2A1520] flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-[#C1DBE8]" />
                 Crear Carrusel
               </CardTitle>
               <CardDescription>Genera contenido para carruseles de Instagram</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Servicio</label>
+                <label className="text-sm font-medium text-[#2A1520]">Servicio</label>
                 <div className="flex flex-wrap gap-2">
                   {servicios.map((s) => (
                     <button
@@ -743,8 +745,8 @@ export function Crear() {
                       onClick={() => setCarouselServicio(s)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         carouselServicio === s
-                          ? 'bg-[#7D2E42] text-white shadow-md'
-                          : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                          ? 'bg-[#591427] text-white shadow-md'
+                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                       }`}
                     >
                       {s}
@@ -754,7 +756,7 @@ export function Crear() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Objetivo</label>
+                <label className="text-sm font-medium text-[#2A1520]">Objetivo</label>
                 <div className="flex flex-wrap gap-2">
                   {['autoridad', 'educación', 'venta', 'visibilidad'].map((obj) => (
                     <button
@@ -762,8 +764,8 @@ export function Crear() {
                       onClick={() => setCarouselObjetivo(obj)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
                         carouselObjetivo === obj
-                          ? 'bg-[#C17C83] text-white shadow-md'
-                          : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                          ? 'bg-[#C1DBE8] text-[#2A1520] shadow-md'
+                          : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                       }`}
                     >
                       {obj}
@@ -773,16 +775,16 @@ export function Crear() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#2D1F22]">Número de slides</label>
+                <label className="text-sm font-medium text-[#2A1520]">Número de slides</label>
                 <div className="grid grid-cols-5 gap-3">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
                       onClick={() => setCarouselSlides(n)}
-                      className={`p-3 rounded-xl text-center font-bold transition-all ${
+                      className={`p-3 rounded-2xl text-center font-bold transition-all ${
                         carouselSlides === n
-                          ? 'bg-[#C9A96E] text-white shadow-md'
-                          : 'bg-white border-2 border-[#E0D5D1] text-[#2D1F22] hover:border-[#C9A96E]'
+                          ? 'bg-[#FFF1B5] text-[#2A1520] shadow-md'
+                          : 'bg-white border-2 border-[#E8DDD5] text-[#2A1520] hover:border-[#FFF1B5]'
                       }`}
                     >
                       {n}
@@ -797,7 +799,7 @@ export function Crear() {
             <Button
               onClick={generateCarousel}
               disabled={isLoading || !carouselServicio}
-              className="px-8 py-6 text-base font-bold rounded-xl shadow-lg bg-[#C17C83] hover:bg-[#B06B74] text-white disabled:opacity-50"
+              className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg bg-gradient-to-r from-[#591427] to-[#C1DBE8] hover:from-[#7A2A40] hover:to-[#8BB8D0] text-white disabled:opacity-50"
             >
               {isLoading ? (
                 <><RefreshCw className="w-5 h-5 mr-2 animate-spin" />Generando...</>
@@ -809,20 +811,20 @@ export function Crear() {
 
           {carouselResult && (
             <div className="space-y-4 mt-4">
-              <h3 className="text-lg font-bold text-[#2D1F22]">Tu Carrusel</h3>
+              <h3 className="text-lg font-bold text-[#2A1520]">Tu Carrusel</h3>
               {carouselResult.slides.map((slide: any, idx: number) => (
-                <Card key={idx} className="brave-card-hover border-none shadow-md">
+                <Card key={idx} className="brave-glass brave-card-hover brave-glow border-none shadow-md rounded-3xl">
                   <CardContent className="p-5">
                     <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-[#C9A96E] flex items-center justify-center text-white font-bold text-sm shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#FFF1B5] flex items-center justify-center text-[#2A1520] font-bold text-sm shrink-0">
                         {slide.numero}
                       </div>
-                      <p className="font-medium text-[#2D1F22] flex-1">{slide.texto}</p>
+                      <p className="font-medium text-[#2A1520] flex-1">{slide.texto}</p>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => copyToClipboard(slide.texto)}
-                        className="text-[#C17C83] hover:text-[#7D2E42]"
+                        className="text-[#C1DBE8] hover:text-[#591427]"
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -832,19 +834,19 @@ export function Crear() {
               ))}
 
               {carouselResult.copy && (
-                <Card className="border-none shadow-md bg-[#FBF7F5]">
+                <Card className="border-none shadow-md bg-[#FFFBF0] brave-glass brave-card-hover brave-glow rounded-3xl">
                   <CardContent className="p-4">
-                    <label className="text-sm font-bold text-[#7D2E42]">COPY</label>
-                    <p className="text-sm text-[#2D1F22] mt-1">{carouselResult.copy}</p>
+                    <label className="text-sm font-bold text-[#591427]">COPY</label>
+                    <p className="text-sm text-[#2A1520] mt-1">{carouselResult.copy}</p>
                   </CardContent>
                 </Card>
               )}
 
               {carouselResult.hashtags && (
-                <Card className="border-none shadow-md bg-[#FBF7F5]">
+                <Card className="border-none shadow-md bg-[#FFFBF0] brave-glass brave-card-hover brave-glow rounded-3xl">
                   <CardContent className="p-4">
-                    <label className="text-sm font-bold text-[#7D2E42]">HASHTAGS</label>
-                    <p className="text-sm text-[#C17C83] mt-1">{carouselResult.hashtags}</p>
+                    <label className="text-sm font-bold text-[#591427]">HASHTAGS</label>
+                    <p className="text-sm text-[#C1DBE8] mt-1">{carouselResult.hashtags}</p>
                   </CardContent>
                 </Card>
               )}
@@ -856,7 +858,7 @@ export function Crear() {
                     '\n\nCopy: ' + carouselResult.copy +
                     '\n\nHashtags: ' + carouselResult.hashtags
                   )}
-                  className="bg-[#C17C83] hover:bg-[#B06B74] text-white"
+                  className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] rounded-2xl"
                 >
                   <Copy className="w-4 h-4 mr-2" />Copiar todo
                 </Button>
@@ -879,7 +881,7 @@ export function Crear() {
                     planId: '',
                     createdAt: new Date().toISOString(),
                   })}
-                  className="bg-[#7D2E42] hover:bg-[#933A54] text-white"
+                  className="bg-[#591427] hover:bg-[#7A2A40] text-white rounded-2xl"
                 >
                   <Save className="w-4 h-4 mr-2" />Guardar
                 </Button>

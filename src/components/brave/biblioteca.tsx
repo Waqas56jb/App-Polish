@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { BravyBot } from '@/components/brave/bravy-bot'
 import { useAppStore, ContentItem } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -50,17 +51,17 @@ export function Biblioteca() {
 
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
-      case 'reel': return 'bg-[#C17C83]'
-      case 'carrusel': return 'bg-[#C9A96E]'
-      case 'story': return 'bg-[#7D2E42]'
+      case 'reel': return 'bg-[#C1DBE8]'
+      case 'carrusel': return 'bg-[#FFF1B5]'
+      case 'story': return 'bg-[#591427]'
       default: return 'bg-gray-500'
     }
   }
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
-      case 'borrador': return <Badge variant="secondary" className="bg-[#F3E8E5] text-[#2D1F22]">Borrador</Badge>
-      case 'aprobado': return <Badge className="bg-[#C9A96E] text-white">Aprobado</Badge>
+      case 'borrador': return <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520]">Borrador</Badge>
+      case 'aprobado': return <Badge className="bg-[#FFF1B5] text-white">Aprobado</Badge>
       case 'programado': return <Badge className="bg-green-600 text-white">Programado</Badge>
       default: return <Badge variant="secondary">Borrador</Badge>
     }
@@ -73,10 +74,10 @@ export function Biblioteca() {
   if (libraryItems.length === 0) {
     return (
       <div className="max-w-2xl mx-auto text-center py-20">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#F3E8E5] mb-4">
-          <BookOpen className="w-8 h-8 text-[#C17C83]" />
+        <div className="brave-float inline-block mb-4">
+          <BravyBot size={64} expression="happy" animate />
         </div>
-        <h3 className="text-xl font-bold text-[#2D1F22] mb-2">Tu Biblioteca está vacía</h3>
+        <h3 className="text-xl font-bold text-[#2A1520] mb-2">Tu Biblioteca está vacía</h3>
         <p className="text-muted-foreground">Los contenidos que generes se guardarán aquí automáticamente.</p>
       </div>
     )
@@ -86,12 +87,12 @@ export function Biblioteca() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center space-y-3 mb-6">
-        <h2 className="text-3xl font-bold text-[#2D1F22]">Biblioteca</h2>
+        <h2 className="text-3xl font-bold text-[#2A1520]">Biblioteca</h2>
         <p className="text-muted-foreground text-base">{libraryItems.length} contenidos guardados</p>
       </div>
 
       {/* Search & Filters */}
-      <Card className="border-none shadow-md">
+      <Card className="brave-glass brave-card-hover brave-glow rounded-3xl border-none">
         <CardContent className="p-4 space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -99,7 +100,7 @@ export function Biblioteca() {
               placeholder="Buscar contenido..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 border-[#E0D5D1] focus:border-[#C17C83] focus:ring-[#C17C83]"
+              className="pl-10 border-[#E8DDD5] focus:border-[#C1DBE8] focus:ring-[#C1DBE8]"
             />
           </div>
 
@@ -119,8 +120,8 @@ export function Biblioteca() {
                   onClick={() => setFilterType(f.key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     filterType === f.key
-                      ? 'bg-[#7D2E42] text-white'
-                      : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                      ? 'bg-[#591427] text-white'
+                      : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                   }`}
                 >
                   {f.label}
@@ -138,8 +139,8 @@ export function Biblioteca() {
                   onClick={() => setFilterObjetivo(obj as FilterObjetivo)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all capitalize ${
                     filterObjetivo === obj
-                      ? 'bg-[#C17C83] text-white'
-                      : 'bg-[#F3E8E5] text-[#2D1F22] hover:bg-[#E0D5D1]'
+                      ? 'bg-[#C1DBE8] text-[#2A1520]'
+                      : 'bg-[#F5F0EB] text-[#2A1520] hover:bg-[#E8DDD5]'
                   }`}
                 >
                   {obj || 'Todos'}
@@ -175,15 +176,15 @@ export function Biblioteca() {
                         </span>
                       )}
                     </div>
-                    <h4 className="font-semibold text-[#2D1F22] text-base truncate">{item.titulo}</h4>
+                    <h4 className="font-semibold text-[#2A1520] text-base truncate">{item.titulo}</h4>
                     <div className="flex gap-2 mt-2">
                       {item.servicio && (
-                        <Badge variant="secondary" className="bg-[#F3E8E5] text-[#2D1F22] text-xs">
+                        <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520] text-xs">
                           {item.servicio}
                         </Badge>
                       )}
                       {item.objetivo && (
-                        <Badge variant="secondary" className="bg-[#F3E8E5] text-[#2D1F22] text-xs capitalize">
+                        <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520] text-xs capitalize">
                           {item.objetivo}
                         </Badge>
                       )}
@@ -205,7 +206,7 @@ export function Biblioteca() {
                         setOpenItem(item)
                         setModalOpen(true)
                       }}
-                      className="text-[#7D2E42] hover:text-[#933A54] hover:bg-[#F3E8E5]"
+                      className="text-[#591427] hover:text-[#7A2A40] hover:bg-[#F5F0EB]"
                       title="Abrir contenido"
                     >
                       <Maximize2 className="w-4 h-4" />
@@ -215,7 +216,7 @@ export function Biblioteca() {
                         size="sm"
                         variant="ghost"
                         onClick={() => copyToClipboard([item.guion, item.copy, item.hashtags].filter(Boolean).join('\n\n'))}
-                        className="text-[#C17C83] hover:text-[#7D2E42] hover:bg-[#F3E8E5]"
+                        className="text-[#C1DBE8] hover:text-[#591427] hover:bg-[#F5F0EB]"
                         title="Copiar"
                       >
                         <Copy className="w-4 h-4" />

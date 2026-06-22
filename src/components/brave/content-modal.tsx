@@ -173,9 +173,9 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
 
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
-      case 'reel': return 'bg-[#C17C83]'
-      case 'carrusel': return 'bg-[#C9A96E]'
-      case 'story': return 'bg-[#7D2E42]'
+      case 'reel': return 'bg-[#C1DBE8]'
+      case 'carrusel': return 'bg-[#FFF1B5]'
+      case 'story': return 'bg-[#591427]'
       default: return 'bg-gray-500'
     }
   }
@@ -190,7 +190,7 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0">
+      <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto border-none shadow-2xl p-0 rounded-3xl">
         {/* Header */}
         <div className="brave-gradient p-5 text-white sticky top-0 z-10">
           <DialogHeader>
@@ -224,29 +224,29 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
         <div className="p-5 space-y-4">
           {/* Meta info */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-[#FBF7F5] p-3 rounded-xl">
+            <div className="bg-[#FFFBF0] p-3 rounded-xl">
               <p className="text-xs text-muted-foreground">Servicio</p>
-              <p className="text-sm font-medium text-[#2D1F22]">{item.servicio || '—'}</p>
+              <p className="text-sm font-medium text-[#2A1520]">{item.servicio || '—'}</p>
             </div>
-            <div className="bg-[#FBF7F5] p-3 rounded-xl">
+            <div className="bg-[#FFFBF0] p-3 rounded-xl">
               <p className="text-xs text-muted-foreground">Formato</p>
-              <p className="text-sm font-medium text-[#2D1F22] capitalize">{item.formato || '—'}</p>
+              <p className="text-sm font-medium text-[#2A1520] capitalize">{item.formato || '—'}</p>
             </div>
-            <div className="bg-[#FBF7F5] p-3 rounded-xl">
+            <div className="bg-[#FFFBF0] p-3 rounded-xl">
               <p className="text-xs text-muted-foreground">Objetivo</p>
-              <p className="text-sm font-medium text-[#2D1F22] capitalize">{item.objetivo || '—'}</p>
+              <p className="text-sm font-medium text-[#2A1520] capitalize">{item.objetivo || '—'}</p>
             </div>
-            <div className="bg-[#FBF7F5] p-3 rounded-xl">
+            <div className="bg-[#FFFBF0] p-3 rounded-xl">
               <p className="text-xs text-muted-foreground">Tipo</p>
-              <p className="text-sm font-medium text-[#2D1F22] capitalize">{item.tipo || '—'}</p>
+              <p className="text-sm font-medium text-[#2A1520] capitalize">{item.tipo || '—'}</p>
             </div>
           </div>
 
           {/* Descripción */}
           {item.descripcion && (
-            <div className="bg-[#FBF7F5] p-3 rounded-xl">
+            <div className="bg-[#FFFBF0] p-3 rounded-xl">
               <p className="text-xs text-muted-foreground mb-1">Descripción</p>
-              <p className="text-sm text-[#2D1F22]">{item.descripcion}</p>
+              <p className="text-sm text-[#2A1520]">{item.descripcion}</p>
             </div>
           )}
 
@@ -254,18 +254,18 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
           {item.guion && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-[#7D2E42]">Guión completo</label>
+                <label className="text-sm font-bold text-[#591427]">Guión completo</label>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => copyField('guion', item.guion)}
-                  className="text-[#C17C83] hover:text-[#7D2E42] hover:bg-[#F3E8E5] h-7"
+                  className="text-[#C1DBE8] hover:text-[#591427] hover:bg-[#F5F0EB] h-7"
                 >
                   {copiedField === 'guion' ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                   {copiedField === 'guion' ? 'Copiado' : 'Copiar guión'}
                 </Button>
               </div>
-              <div className="bg-[#FBF7F5] p-4 rounded-xl whitespace-pre-line text-sm text-[#2D1F22] max-h-[200px] overflow-y-auto">
+              <div className="bg-[#FFFBF0] p-4 rounded-xl whitespace-pre-line text-sm text-[#2A1520] max-h-[200px] overflow-y-auto">
                 {item.guion}
               </div>
             </div>
@@ -275,18 +275,18 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
           {item.copy && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-[#7D2E42]">Copy (descripción del post)</label>
+                <label className="text-sm font-bold text-[#591427]">Copy (descripción del post)</label>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => copyField('copy', item.copy)}
-                  className="text-[#C17C83] hover:text-[#7D2E42] hover:bg-[#F3E8E5] h-7"
+                  className="text-[#C1DBE8] hover:text-[#591427] hover:bg-[#F5F0EB] h-7"
                 >
                   {copiedField === 'copy' ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                   {copiedField === 'copy' ? 'Copiado' : 'Copiar copy'}
                 </Button>
               </div>
-              <div className="bg-[#FBF7F5] p-4 rounded-xl text-sm text-[#2D1F22]">
+              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#2A1520]">
                 {item.copy}
               </div>
             </div>
@@ -296,18 +296,18 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
           {item.hashtags && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-bold text-[#7D2E42]">Hashtags</label>
+                <label className="text-sm font-bold text-[#591427]">Hashtags</label>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => copyField('hashtags', item.hashtags)}
-                  className="text-[#C17C83] hover:text-[#7D2E42] hover:bg-[#F3E8E5] h-7"
+                  className="text-[#C1DBE8] hover:text-[#591427] hover:bg-[#F5F0EB] h-7"
                 >
                   {copiedField === 'hashtags' ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                   {copiedField === 'hashtags' ? 'Copiado' : 'Copiar hashtags'}
                 </Button>
               </div>
-              <div className="bg-[#FBF7F5] p-4 rounded-xl text-sm text-[#C17C83]">
+              <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#C1DBE8]">
                 {item.hashtags}
               </div>
             </div>
@@ -316,14 +316,14 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
           {/* Slides (for carrusel) */}
           {item.slides && item.slides.length > 0 && (
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#7D2E42]">Slides del carrusel</label>
+              <label className="text-sm font-bold text-[#591427]">Slides del carrusel</label>
               <div className="space-y-2">
                 {item.slides.map((slide, idx) => (
-                  <div key={idx} className="bg-[#FBF7F5] p-3 rounded-xl flex gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#C9A96E] flex items-center justify-center text-white font-bold text-xs shrink-0">
+                  <div key={idx} className="bg-[#FFFBF0] p-3 rounded-xl flex gap-3">
+                    <div className="w-7 h-7 rounded-full bg-[#FFF1B5] flex items-center justify-center text-white font-bold text-xs shrink-0">
                       {slide.numero}
                     </div>
-                    <p className="text-sm text-[#2D1F22] flex-1">{slide.texto}</p>
+                    <p className="text-sm text-[#2A1520] flex-1">{slide.texto}</p>
                   </div>
                 ))}
               </div>
@@ -331,18 +331,18 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
           )}
 
           {/* Action buttons */}
-          <div className="pt-3 border-t border-[#E0D5D1]">
+          <div className="pt-3 border-t border-[#E8DDD5]">
             <div className="grid grid-cols-2 gap-2 mb-2">
               <Button
                 onClick={copyAll}
-                className="bg-[#C17C83] hover:bg-[#B06B74] text-white"
+                className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520]"
               >
                 {copiedField === 'all' ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                 {copiedField === 'all' ? '¡Todo copiado!' : 'Copiar todo'}
               </Button>
               <Button
                 onClick={saveToLibrary}
-                className="bg-[#7D2E42] hover:bg-[#933A54] text-white"
+                className="bg-[#591427] hover:bg-[#7A2A40] text-white"
               >
                 <Save className="w-4 h-4 mr-2" />
                 Guardar en biblioteca
@@ -353,7 +353,7 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
                 onClick={regenerateContent}
                 disabled={isRegenerating}
                 variant="outline"
-                className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
               >
                 {isRegenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
                 Regenerar contenido
@@ -363,7 +363,7 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
                   onClick={convertContent}
                   disabled={isConverting}
                   variant="outline"
-                  className="border-[#C9A96E] text-[#C9A96E] hover:bg-[#FBF7F5]"
+                  className="border-[#FFF1B5] text-[#FFF1B5] hover:bg-[#FFFBF0]"
                 >
                   {isConverting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Repeat className="w-4 h-4 mr-2" />}
                   {isConverting ? 'Convirtiendo...' : `Convertir a ${item.tipo === 'reel' ? 'carrusel' : 'reel'}`}

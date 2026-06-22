@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Lightbulb, RefreshCw, Save, FileText, Sparkles, X } from 'lucide-react'
+import { BravyBot } from './bravy-bot'
+import { motion } from 'framer-motion'
 
 export function DameUnaIdea() {
   const { brandProfile, addLibraryItems, setIsLoading, isLoading } = useAppStore()
@@ -100,7 +102,7 @@ export function DameUnaIdea() {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[500px] border-none shadow-2xl p-0 overflow-hidden rounded-3xl">
         {/* Header with gradient */}
         <div className="brave-gradient p-6 text-white">
           <DialogHeader>
@@ -117,8 +119,8 @@ export function DameUnaIdea() {
         <div className="p-6 space-y-4">
           {!idea && !isLoading && (
             <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#F3E8E5] mb-4">
-                <Sparkles className="w-10 h-10 text-[#C17C83]" />
+              <div className="brave-float inline-block mb-4">
+                <BravyBot size={72} expression="excited" animate speechBubble="Pide una idea!" />
               </div>
               <p className="text-muted-foreground mb-6">
                 ¿No sabes qué publicar hoy? <br />
@@ -126,7 +128,7 @@ export function DameUnaIdea() {
               </p>
               <Button
                 onClick={generateIdea}
-                className="px-8 py-6 text-base font-bold rounded-xl shadow-lg bg-[#C17C83] hover:bg-[#B06B74] text-white"
+                className="px-8 py-6 text-base font-bold rounded-2xl shadow-lg brave-gradient hover:opacity-90 text-white"
               >
                 <Lightbulb className="w-5 h-5 mr-2" />
                 DAME UNA IDEA
@@ -136,26 +138,26 @@ export function DameUnaIdea() {
 
           {isLoading && (
             <div className="text-center py-12">
-              <RefreshCw className="w-12 h-12 text-[#C17C83] animate-spin mx-auto mb-4" />
+              <RefreshCw className="w-12 h-12 text-[#C1DBE8] animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Pensando la mejor idea para ti...</p>
             </div>
           )}
 
           {idea && !isLoading && (
             <div className="space-y-4">
-              <Card className="border-l-4 border-l-[#C9A96E] shadow-md bg-[#FBF7F5]">
+              <Card className="border-l-4 border-l-[#FFF1B5] shadow-md bg-[#FFFBF0]">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${
-                      idea.tipo === 'reel' ? 'bg-[#C17C83]' : idea.tipo === 'carrusel' ? 'bg-[#C9A96E]' : 'bg-[#7D2E42]'
+                      idea.tipo === 'reel' ? 'bg-[#C1DBE8]' : idea.tipo === 'carrusel' ? 'bg-[#FFF1B5]' : 'bg-[#591427]'
                     }`}>
                       {String(idea.tipo || 'REEL').toUpperCase()}
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-[#7D2E42] capitalize">
+                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-white text-[#591427] capitalize">
                       {idea.objetivo}
                     </span>
                   </div>
-                  <h3 className="text-lg font-bold text-[#2D1F22]">{idea.titulo}</h3>
+                  <h3 className="text-lg font-bold text-[#2A1520]">{idea.titulo}</h3>
                   {idea.descripcion && (
                     <p className="text-sm text-muted-foreground mt-1">{idea.descripcion}</p>
                   )}
@@ -165,11 +167,11 @@ export function DameUnaIdea() {
               {idea.guion && (
                 <Card className="border-none shadow-md">
                   <CardContent className="p-4">
-                    <label className="text-sm font-bold text-[#7D2E42] flex items-center gap-1 mb-2">
+                    <label className="text-sm font-bold text-[#591427] flex items-center gap-1 mb-2">
                       <FileText className="w-4 h-4" />
                       Guión rápido
                     </label>
-                    <div className="bg-[#FBF7F5] p-3 rounded-xl whitespace-pre-line text-sm text-[#2D1F22]">
+                    <div className="bg-[#FFFBF0] p-3 rounded-xl whitespace-pre-line text-sm text-[#2A1520]">
                       {idea.guion}
                     </div>
                   </CardContent>
@@ -180,14 +182,14 @@ export function DameUnaIdea() {
                 <Button
                   onClick={generateIdea}
                   variant="outline"
-                  className="flex-1 border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                  className="flex-1 border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Otra idea
                 </Button>
                 <Button
                   onClick={handleSave}
-                  className="flex-1 bg-[#7D2E42] hover:bg-[#933A54] text-white"
+                  className="flex-1 bg-[#591427] hover:bg-[#7A2A40] text-white"
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Guardar

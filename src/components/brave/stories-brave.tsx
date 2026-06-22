@@ -89,21 +89,21 @@ const VISTAS_TIPO_STORY = [
     n: 1,
     titulo: 'Problema, intriga o identificación',
     icon: <MessageCircle className="w-4 h-4" />,
-    color: 'bg-[#C17C83]',
+    color: 'bg-[#C1DBE8]',
     descripcion: 'Conseguir que la persona se quede viendo.',
   },
   {
     n: 2,
     titulo: 'Autoridad',
     icon: <Shield className="w-4 h-4" />,
-    color: 'bg-[#7D2E42]',
+    color: 'bg-[#591427]',
     descripcion: 'La más importante. Demuestra experiencia.',
   },
   {
     n: 3,
     titulo: 'Resultado + Acción',
     icon: <ArrowRight className="w-4 h-4" />,
-    color: 'bg-[#C9A96E]',
+    color: 'bg-[#FFF1B5]',
     descripcion: 'Mostrar beneficio y provocar conversación.',
   },
 ]
@@ -147,15 +147,15 @@ export function StoriesBrave() {
           onClick={() => setTab('secuencia')}
           className={`p-4 rounded-xl text-left transition-all border-2 ${
             tab === 'secuencia'
-              ? 'border-[#7D2E42] bg-[#FBF7F5] shadow-md'
-              : 'border-[#E0D5D1] bg-white hover:border-[#C17C83]'
+              ? 'border-[#591427] bg-[#FFFBF0] shadow-md'
+              : 'border-[#E8DDD5] bg-white hover:border-[#C1DBE8]'
           }`}
         >
           <div className="flex items-center gap-2 mb-1">
-            <Instagram className="w-4 h-4 text-[#7D2E42]" />
-            <p className="font-semibold text-[#2D1F22] text-sm">Secuencia de Stories</p>
+            <Instagram className="w-4 h-4 text-[#591427]" />
+            <p className="font-semibold text-[#2A1520] text-sm">Secuencia de Stories</p>
           </div>
-          <p className="text-xs text-[#2D1F22]/70">
+          <p className="text-xs text-[#2A1520]/70">
             Transforma un trabajo de hoy en una secuencia de Stories que vende.
           </p>
         </button>
@@ -163,15 +163,15 @@ export function StoriesBrave() {
           onClick={() => setTab('caja')}
           className={`p-4 rounded-xl text-left transition-all border-2 ${
             tab === 'caja'
-              ? 'border-[#7D2E42] bg-[#FBF7F5] shadow-md'
-              : 'border-[#E0D5D1] bg-white hover:border-[#C17C83]'
+              ? 'border-[#591427] bg-[#FFFBF0] shadow-md'
+              : 'border-[#E8DDD5] bg-white hover:border-[#C1DBE8]'
           }`}
         >
           <div className="flex items-center gap-2 mb-1">
-            <HelpCircle className="w-4 h-4 text-[#7D2E42]" />
-            <p className="font-semibold text-[#2D1F22] text-sm">Caja de Preguntas</p>
+            <HelpCircle className="w-4 h-4 text-[#591427]" />
+            <p className="font-semibold text-[#2A1520] text-sm">Caja de Preguntas</p>
           </div>
-          <p className="text-xs text-[#2D1F22]/70">
+          <p className="text-xs text-[#2A1520]/70">
             Genera preguntas de clientas y respuestas para tu caja de preguntas.
           </p>
         </button>
@@ -421,29 +421,29 @@ function SecuenciaStories() {
   return (
     <div className="space-y-6">
       {/* Methodology callout */}
-      <Card className="border-[#E0D5D1] bg-[#FBF7F5]">
+      <Card className="border-[#E8DDD5] bg-[#FFFBF0]">
         <CardContent className="p-5">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#C9A96E] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#FFF1B5] flex items-center justify-center shrink-0">
               <Lightbulb className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-[#7D2E42] mb-1">Metodología BRÄVE</p>
-              <p className="text-sm text-[#2D1F22]/80 mb-3">
+              <p className="text-sm font-bold text-[#591427] mb-1">Metodología BRÄVE</p>
+              <p className="text-sm text-[#2A1520]/80 mb-3">
                 Las Stories BRÄVE no se construyen alrededor del servicio. Se construyen alrededor de la clienta.
                 Las clientas no reservan porque vean un balayage bonito. Reservan porque se identifican con un problema
                 y entienden que existe una solución para ellas.
               </p>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 {VISTAS_TIPO_STORY.map(v => (
-                  <div key={v.n} className="bg-white rounded-lg p-2 border border-[#E0D5D1]">
+                  <div key={v.n} className="bg-white rounded-lg p-2 border border-[#E8DDD5]">
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className={`w-5 h-5 rounded-full ${v.color} text-white text-[10px] font-bold flex items-center justify-center`}>
                         {v.n}
                       </span>
-                      <span className="font-semibold text-[#2D1F22] truncate">{v.titulo}</span>
+                      <span className="font-semibold text-[#2A1520] truncate">{v.titulo}</span>
                     </div>
-                    <p className="text-[#2D1F22]/70 text-[11px] leading-tight">{v.descripcion}</p>
+                    <p className="text-[#2A1520]/70 text-[11px] leading-tight">{v.descripcion}</p>
                   </div>
                 ))}
               </div>
@@ -453,9 +453,9 @@ function SecuenciaStories() {
       </Card>
 
       {/* Input form */}
-      <Card className="border-[#E0D5D1]">
+      <Card className="border-[#E8DDD5]">
         <CardHeader>
-          <CardTitle className="text-[#7D2E42]">Cuéntanos qué hiciste hoy</CardTitle>
+          <CardTitle className="text-[#591427]">Cuéntanos qué hiciste hoy</CardTitle>
           <CardDescription>
             Solo necesitas decir lo que hiciste en el salón. BRÄVE se encarga del resto.
           </CardDescription>
@@ -463,7 +463,7 @@ function SecuenciaStories() {
         <CardContent className="space-y-5">
           {/* Service selector */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">¿Qué trabajo realizaste hoy?</label>
+            <label className="text-sm font-semibold text-[#2A1520]">¿Qué trabajo realizaste hoy?</label>
             <div className="flex flex-wrap gap-2">
               {SERVICIOS_PREDEFINIDOS.map(s => (
                 <button
@@ -474,8 +474,8 @@ function SecuenciaStories() {
                   }}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     servicio === s
-                      ? 'bg-[#7D2E42] text-white shadow-md'
-                      : 'bg-[#FBF7F5] text-[#2D1F22] border border-[#E0D5D1] hover:border-[#C17C83]'
+                      ? 'bg-[#591427] text-white shadow-md'
+                      : 'bg-[#FFFBF0] text-[#2A1520] border border-[#E8DDD5] hover:border-[#C1DBE8]'
                   }`}
                 >
                   {s}
@@ -486,24 +486,24 @@ function SecuenciaStories() {
 
           {/* Free text describing the work */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">Cuéntalo con tus palabras (opcional)</label>
+            <label className="text-sm font-semibold text-[#2A1520]">Cuéntalo con tus palabras (opcional)</label>
             <Textarea
               value={trabajoRealizado}
               onChange={e => setTrabajoRealizado(e.target.value)}
               placeholder="Ej: Hoy vino una clienta que llevaba meses sin tocar su color. Le hicimos un balayage suave para devolverle luz sin pasar por rubia."
-              className="min-h-[80px] resize-none border-[#E0D5D1] focus:border-[#C17C83]"
+              className="min-h-[80px] resize-none border-[#E8DDD5] focus:border-[#C1DBE8]"
             />
           </div>
 
           {/* Audio input */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">O cuéntalo en voz alta (opcional)</label>
-            <div className="bg-[#FBF7F5] border border-[#E0D5D1] rounded-xl p-4">
+            <label className="text-sm font-semibold text-[#2A1520]">O cuéntalo en voz alta (opcional)</label>
+            <div className="bg-[#FFFBF0] border border-[#E8DDD5] rounded-xl p-4">
               {!isRecording && !audioBlobUrl && (
                 <Button
                   onClick={startRecording}
                   variant="outline"
-                  className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                  className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
                 >
                   <Mic className="w-4 h-4 mr-2" />
                   Grabar audio
@@ -533,7 +533,7 @@ function SecuenciaStories() {
                       onClick={transcribeAudio}
                       disabled={isTranscribing}
                       size="sm"
-                      className="bg-[#7D2E42] hover:bg-[#933A54] text-white"
+                      className="bg-[#591427] hover:bg-[#7A2A40] text-white"
                     >
                       {isTranscribing ? (
                         <>
@@ -551,7 +551,7 @@ function SecuenciaStories() {
                       onClick={startRecording}
                       size="sm"
                       variant="outline"
-                      className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+                      className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
                     >
                       <Mic className="w-4 h-4 mr-2" />
                       Grabar de nuevo
@@ -576,20 +576,20 @@ function SecuenciaStories() {
 
           {/* Extra details */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">Algún detalle más (opcional)</label>
+            <label className="text-sm font-semibold text-[#2A1520]">Algún detalle más (opcional)</label>
             <Input
               value={descripcionExtra}
               onChange={e => setDescripcionExtra(e.target.value)}
               placeholder="Ej: la clienta quería poco mantenimiento / transición marcada / cabello dañado"
-              className="border-[#E0D5D1] focus:border-[#C17C83]"
+              className="border-[#E8DDD5] focus:border-[#C1DBE8]"
             />
           </div>
 
           {/* Number of stories */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22] flex items-center gap-2">
+            <label className="text-sm font-semibold text-[#2A1520] flex items-center gap-2">
               ¿Cuántas Stories quieres crear?
-              <Badge className="bg-[#C9A96E] hover:bg-[#C9A96E] text-white text-[10px]">
+              <Badge className="bg-[#FFF1B5] hover:bg-[#FFF1B5] text-white text-[10px]">
                 Recomendado: 3
               </Badge>
             </label>
@@ -600,7 +600,7 @@ function SecuenciaStories() {
                 max={10}
                 value={numStories}
                 onChange={e => setNumStories(Math.min(Math.max(parseInt(e.target.value) || 3, 1), 10))}
-                className="w-24 border-[#E0D5D1] focus:border-[#C17C83]"
+                className="w-24 border-[#E8DDD5] focus:border-[#C1DBE8]"
               />
               <div className="flex gap-1 flex-wrap">
                 {[2, 3, 4, 5, 6].map(n => (
@@ -609,8 +609,8 @@ function SecuenciaStories() {
                     onClick={() => setNumStories(n)}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                       numStories === n
-                        ? 'bg-[#7D2E42] text-white shadow-md'
-                        : 'bg-[#FBF7F5] text-[#2D1F22] border border-[#E0D5D1] hover:border-[#C17C83]'
+                        ? 'bg-[#591427] text-white shadow-md'
+                        : 'bg-[#FFFBF0] text-[#2A1520] border border-[#E8DDD5] hover:border-[#C1DBE8]'
                     }`}
                   >
                     {n}
@@ -625,39 +625,39 @@ function SecuenciaStories() {
 
           {/* Mode selector */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">Modo de creación</label>
+            <label className="text-sm font-semibold text-[#2A1520]">Modo de creación</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setModo('texto')}
                 className={`p-4 rounded-xl text-left transition-all border-2 ${
                   modo === 'texto'
-                    ? 'border-[#7D2E42] bg-[#FBF7F5] shadow-md'
-                    : 'border-[#E0D5D1] bg-white hover:border-[#C17C83]'
+                    ? 'border-[#591427] bg-[#FFFBF0] shadow-md'
+                    : 'border-[#E8DDD5] bg-white hover:border-[#C1DBE8]'
                 }`}
               >
-                <Type className="w-5 h-5 text-[#7D2E42] mb-2" />
-                <p className="font-semibold text-[#2D1F22] text-sm">Modo Texto</p>
-                <p className="text-xs text-[#2D1F22]/70 mt-1">Textos listos para copiar y pegar en la Story.</p>
+                <Type className="w-5 h-5 text-[#591427] mb-2" />
+                <p className="font-semibold text-[#2A1520] text-sm">Modo Texto</p>
+                <p className="text-xs text-[#2A1520]/70 mt-1">Textos listos para copiar y pegar en la Story.</p>
               </button>
               <button
                 onClick={() => setModo('camara')}
                 className={`p-4 rounded-xl text-left transition-all border-2 ${
                   modo === 'camara'
-                    ? 'border-[#7D2E42] bg-[#FBF7F5] shadow-md'
-                    : 'border-[#E0D5D1] bg-white hover:border-[#C17C83]'
+                    ? 'border-[#591427] bg-[#FFFBF0] shadow-md'
+                    : 'border-[#E8DDD5] bg-white hover:border-[#C1DBE8]'
                 }`}
               >
-                <Video className="w-5 h-5 text-[#7D2E42] mb-2" />
-                <p className="font-semibold text-[#2D1F22] text-sm">Hablando a cámara</p>
-                <p className="text-xs text-[#2D1F22]/70 mt-1">Guion conversacional listo para grabar.</p>
+                <Video className="w-5 h-5 text-[#591427] mb-2" />
+                <p className="font-semibold text-[#2A1520] text-sm">Hablando a cámara</p>
+                <p className="text-xs text-[#2A1520]/70 mt-1">Guion conversacional listo para grabar.</p>
               </button>
             </div>
           </div>
 
           {/* Brand profile soft banner */}
           {!brandProfile && (
-            <div className="bg-[#C9A96E]/10 border border-[#C9A96E]/30 rounded-xl p-3">
-              <p className="text-xs text-[#7D2E42]">
+            <div className="bg-[#FFF1B5]/10 border border-[#FFF1B5]/30 rounded-xl p-3">
+              <p className="text-xs text-[#591427]">
                 Sin perfil de marca las Stories serán genéricas. Configura tu marca en "Mi Marca" para personalizarlas.
               </p>
             </div>
@@ -695,23 +695,23 @@ function SecuenciaStories() {
       {resultado && (
         <div className="space-y-5">
           {/* Summary card */}
-          <Card className="border-[#C9A96E] bg-gradient-to-br from-[#FBF7F5] to-[#F3E8E5]">
+          <Card className="border-[#FFF1B5] bg-gradient-to-br from-[#FFFBF0] to-[#F5F0EB]">
             <CardContent className="p-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Trabajo realizado</p>
-                  <p className="text-sm font-medium text-[#2D1F22]">{resultado.trabajo || servicio || 'Trabajo de hoy'}</p>
+                  <p className="text-sm font-medium text-[#2A1520]">{resultado.trabajo || servicio || 'Trabajo de hoy'}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Problema de la clienta</p>
-                  <p className="text-sm font-medium text-[#2D1F22]">
+                  <p className="text-sm font-medium text-[#2A1520]">
                     {resultado.problemaCliente || 'Identificado en las Stories abajo'}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Palabra clave del CTA</p>
                   {resultado.palabraClave ? (
-                    <Badge className="bg-[#C9A96E] hover:bg-[#C9A96E] text-white text-sm">
+                    <Badge className="bg-[#FFF1B5] hover:bg-[#FFF1B5] text-white text-sm">
                       {resultado.palabraClave}
                     </Badge>
                   ) : (
@@ -726,9 +726,9 @@ function SecuenciaStories() {
           <div className="space-y-4">
             {resultado.stories.map((story) => {
               const vista = getStoryTipoVista(story, resultado.stories.length)
-              const colorClass = vista?.color || 'bg-[#7D2E42]'
+              const colorClass = vista?.color || 'bg-[#591427]'
               return (
-                <Card key={story.numero} className="border-[#E0D5D1] overflow-hidden">
+                <Card key={story.numero} className="border-[#E8DDD5] overflow-hidden">
                   <div className={`${colorClass} p-3 flex items-center gap-3`}>
                     <span className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center text-white font-bold text-sm">
                       {story.numero}
@@ -755,28 +755,28 @@ function SecuenciaStories() {
                       <p className="text-xs text-muted-foreground mb-1 font-semibold uppercase tracking-wide">
                         Texto de la Story {modo === 'camara' ? '(guion para grabar)' : '(listo para pegar)'}
                       </p>
-                      <div className="bg-[#FBF7F5] p-4 rounded-xl whitespace-pre-line text-sm text-[#2D1F22] leading-relaxed border border-[#E0D5D1]">
+                      <div className="bg-[#FFFBF0] p-4 rounded-xl whitespace-pre-line text-sm text-[#2A1520] leading-relaxed border border-[#E8DDD5]">
                         {story.texto}
                       </div>
                     </div>
 
                     {/* Encuesta / Poll */}
                     {story.encuesta && story.encuesta.pregunta && (
-                      <div className="bg-gradient-to-br from-[#C17C83]/10 to-[#C9A96E]/10 border border-[#C17C83]/30 rounded-xl p-4">
+                      <div className="bg-gradient-to-br from-[#C1DBE8]/10 to-[#FFF1B5]/10 border border-[#C1DBE8]/30 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-base">📊</span>
-                          <p className="text-xs font-bold text-[#7D2E42] uppercase tracking-wide">Encuesta propuesta</p>
+                          <p className="text-xs font-bold text-[#591427] uppercase tracking-wide">Encuesta propuesta</p>
                         </div>
-                        <p className="text-sm font-semibold text-[#2D1F22] mb-3">
+                        <p className="text-sm font-semibold text-[#2A1520] mb-3">
                           {story.encuesta.pregunta}
                         </p>
                         <div className="space-y-1.5">
                           {story.encuesta.respuestas.map((resp, idx) => (
                             <div key={idx} className="flex items-center gap-2 bg-white/80 rounded-lg px-3 py-2">
-                              <span className="w-5 h-5 rounded-full bg-[#C17C83] text-white text-[10px] font-bold flex items-center justify-center">
+                              <span className="w-5 h-5 rounded-full bg-[#C1DBE8] text-[#2A1520] text-[10px] font-bold flex items-center justify-center">
                                 {idx + 1}
                               </span>
-                              <span className="text-sm text-[#2D1F22]">{resp}</span>
+                              <span className="text-sm text-[#2A1520]">{resp}</span>
                             </div>
                           ))}
                         </div>
@@ -787,7 +787,7 @@ function SecuenciaStories() {
                             `encuesta-${story.numero}`,
                             `${story.encuesta!.pregunta}\n${story.encuesta!.respuestas.map((r, i) => `${i + 1}. ${r}`).join('\n')}`
                           )}
-                          className="mt-2 text-[#C17C83] hover:bg-white/50 h-7"
+                          className="mt-2 text-[#C1DBE8] hover:bg-white/50 h-7"
                         >
                           {copiedField === `encuesta-${story.numero}` ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                           Copiar encuesta
@@ -798,16 +798,16 @@ function SecuenciaStories() {
                     {/* Sticker recommendation */}
                     {story.sticker && (
                       <div className="flex items-start gap-2">
-                        <span className="text-xs font-semibold text-[#7D2E42] mt-0.5">Sticker:</span>
-                        <span className="text-sm text-[#2D1F22] flex-1">{story.sticker}</span>
+                        <span className="text-xs font-semibold text-[#591427] mt-0.5">Sticker:</span>
+                        <span className="text-sm text-[#2A1520] flex-1">{story.sticker}</span>
                       </div>
                     )}
 
                     {/* Visual idea */}
                     {story.ideaVisual && (
                       <div className="flex items-start gap-2">
-                        <span className="text-xs font-semibold text-[#7D2E42] mt-0.5">Visual:</span>
-                        <span className="text-sm text-[#2D1F22] flex-1">{story.ideaVisual}</span>
+                        <span className="text-xs font-semibold text-[#591427] mt-0.5">Visual:</span>
+                        <span className="text-sm text-[#2A1520] flex-1">{story.ideaVisual}</span>
                       </div>
                     )}
                   </CardContent>
@@ -818,21 +818,21 @@ function SecuenciaStories() {
 
           {/* Hashtags */}
           {resultado.hashtags && (
-            <Card className="border-[#E0D5D1]">
+            <Card className="border-[#E8DDD5]">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-[#7D2E42]">Hashtags</label>
+                  <label className="text-sm font-bold text-[#591427]">Hashtags</label>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => copyField('hashtags', resultado.hashtags)}
-                    className="text-[#C17C83] hover:bg-[#F3E8E5] h-7"
+                    className="text-[#C1DBE8] hover:bg-[#F5F0EB] h-7"
                   >
                     {copiedField === 'hashtags' ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                     Copiar
                   </Button>
                 </div>
-                <div className="bg-[#FBF7F5] p-3 rounded-xl text-sm text-[#C17C83] mt-2">
+                <div className="bg-[#FFFBF0] p-3 rounded-xl text-sm text-[#C1DBE8] mt-2">
                   {resultado.hashtags}
                 </div>
               </CardContent>
@@ -840,19 +840,19 @@ function SecuenciaStories() {
           )}
 
           {/* Action buttons */}
-          <Card className="border-[#E0D5D1]">
+          <Card className="border-[#E8DDD5]">
             <CardContent className="p-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <Button
                   onClick={handleCopyAll}
-                  className="bg-[#C17C83] hover:bg-[#B06B74] text-white h-11"
+                  className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] h-11"
                 >
                   {copiedField === 'all' ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                   {copiedField === 'all' ? '¡Todo copiado!' : 'Copiar todo'}
                 </Button>
                 <Button
                   onClick={handleSaveToLibrary}
-                  className="bg-[#7D2E42] hover:bg-[#933A54] text-white h-11"
+                  className="bg-[#591427] hover:bg-[#7A2A40] text-white h-11"
                 >
                   {savedToLibrary ? <Check className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   {savedToLibrary ? '¡Guardado!' : 'Guardar en biblioteca'}
@@ -861,7 +861,7 @@ function SecuenciaStories() {
                   onClick={handleGenerate}
                   disabled={isLoading}
                   variant="outline"
-                  className="border-[#C9A96E] text-[#C9A96E] hover:bg-[#FBF7F5] h-11"
+                  className="border-[#FFF1B5] text-[#FFF1B5] hover:bg-[#FFFBF0] h-11"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
                   Regenerar
@@ -1014,15 +1014,15 @@ function CajaDePreguntas() {
   return (
     <div className="space-y-6">
       {/* Explanation card */}
-      <Card className="border-[#E0D5D1] bg-[#FBF7F5]">
+      <Card className="border-[#E8DDD5] bg-[#FFFBF0]">
         <CardContent className="p-5">
           <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#C9A96E] flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full bg-[#FFF1B5] flex items-center justify-center shrink-0">
               <HelpCircle className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold text-[#7D2E42] mb-1">¿Cómo funciona la caja de preguntas?</p>
-              <p className="text-sm text-[#2D1F22]/80">
+              <p className="text-sm font-bold text-[#591427] mb-1">¿Cómo funciona la caja de preguntas?</p>
+              <p className="text-sm text-[#2A1520]/80">
                 Lanzas una caja de preguntas en tus Stories. Las clientas dejan preguntas sobre tus servicios.
                 Nosotros generamos preguntas ficticias pero realistas — como las que harían tus clientas — para que
                 practiques las respuestas. Cada pregunta viene con una posible respuesta, lista para responder en
@@ -1034,9 +1034,9 @@ function CajaDePreguntas() {
       </Card>
 
       {/* Input form */}
-      <Card className="border-[#E0D5D1]">
+      <Card className="border-[#E8DDD5]">
         <CardHeader>
-          <CardTitle className="text-[#7D2E42]">Configura tu caja de preguntas</CardTitle>
+          <CardTitle className="text-[#591427]">Configura tu caja de preguntas</CardTitle>
           <CardDescription>
             Selecciona sobre qué servicios quieres responder y BRÄVE generará preguntas realistas de clientas.
           </CardDescription>
@@ -1044,7 +1044,7 @@ function CajaDePreguntas() {
         <CardContent className="space-y-5">
           {/* Services multi-select */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">
+            <label className="text-sm font-semibold text-[#2A1520]">
               Servicios sobre los que quieres responder preguntas
             </label>
             <div className="flex flex-wrap gap-2">
@@ -1054,8 +1054,8 @@ function CajaDePreguntas() {
                   onClick={() => toggleServicio(s)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
                     serviciosSeleccionados.includes(s)
-                      ? 'bg-[#7D2E42] text-white shadow-md'
-                      : 'bg-[#FBF7F5] text-[#2D1F22] border border-[#E0D5D1] hover:border-[#C17C83]'
+                      ? 'bg-[#591427] text-white shadow-md'
+                      : 'bg-[#FFFBF0] text-[#2A1520] border border-[#E8DDD5] hover:border-[#C1DBE8]'
                   }`}
                 >
                   {serviciosSeleccionados.includes(s) && <Check className="w-3 h-3" />}
@@ -1064,12 +1064,12 @@ function CajaDePreguntas() {
               ))}
             </div>
             {serviciosSeleccionados.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-[#E0D5D1]">
+              <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-[#E8DDD5]">
                 {serviciosSeleccionados.map(s => (
                   <button
                     key={s}
                     onClick={() => toggleServicio(s)}
-                    className="px-2.5 py-1 rounded-full text-xs bg-[#C17C83]/10 text-[#7D2E42] flex items-center gap-1 hover:bg-[#C17C83]/20"
+                    className="px-2.5 py-1 rounded-full text-xs bg-[#C1DBE8]/10 text-[#591427] flex items-center gap-1 hover:bg-[#C1DBE8]/20"
                   >
                     {s}
                     <X className="w-3 h-3" />
@@ -1086,12 +1086,12 @@ function CajaDePreguntas() {
               onChange={e => setServicioCustom(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomServicio() } }}
               placeholder="Otro servicio (escribe y pulsa Enter)"
-              className="border-[#E0D5D1] focus:border-[#C17C83]"
+              className="border-[#E8DDD5] focus:border-[#C1DBE8]"
             />
             <Button
               onClick={addCustomServicio}
               variant="outline"
-              className="border-[#C17C83] text-[#C17C83] hover:bg-[#F3E8E5]"
+              className="border-[#C1DBE8] text-[#C1DBE8] hover:bg-[#F5F0EB]"
             >
               <Plus className="w-4 h-4" />
             </Button>
@@ -1099,7 +1099,7 @@ function CajaDePreguntas() {
 
           {/* Number of questions */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">¿Cuántas preguntas quieres generar?</label>
+            <label className="text-sm font-semibold text-[#2A1520]">¿Cuántas preguntas quieres generar?</label>
             <div className="flex items-center gap-3">
               <Input
                 type="number"
@@ -1107,7 +1107,7 @@ function CajaDePreguntas() {
                 max={20}
                 value={numPreguntas}
                 onChange={e => setNumPreguntas(Math.min(Math.max(parseInt(e.target.value) || 5, 1), 20))}
-                className="w-24 border-[#E0D5D1] focus:border-[#C17C83]"
+                className="w-24 border-[#E8DDD5] focus:border-[#C1DBE8]"
               />
               <div className="flex gap-1 flex-wrap">
                 {[3, 5, 8, 10, 15].map(n => (
@@ -1116,8 +1116,8 @@ function CajaDePreguntas() {
                     onClick={() => setNumPreguntas(n)}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                       numPreguntas === n
-                        ? 'bg-[#7D2E42] text-white shadow-md'
-                        : 'bg-[#FBF7F5] text-[#2D1F22] border border-[#E0D5D1] hover:border-[#C17C83]'
+                        ? 'bg-[#591427] text-white shadow-md'
+                        : 'bg-[#FFFBF0] text-[#2A1520] border border-[#E8DDD5] hover:border-[#C1DBE8]'
                     }`}
                   >
                     {n}
@@ -1129,39 +1129,39 @@ function CajaDePreguntas() {
 
           {/* Mode for answers */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#2D1F22]">¿Cómo quieres responderlas?</label>
+            <label className="text-sm font-semibold text-[#2A1520]">¿Cómo quieres responderlas?</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setModoRespuesta('texto')}
                 className={`p-4 rounded-xl text-left transition-all border-2 ${
                   modoRespuesta === 'texto'
-                    ? 'border-[#7D2E42] bg-[#FBF7F5] shadow-md'
-                    : 'border-[#E0D5D1] bg-white hover:border-[#C17C83]'
+                    ? 'border-[#591427] bg-[#FFFBF0] shadow-md'
+                    : 'border-[#E8DDD5] bg-white hover:border-[#C1DBE8]'
                 }`}
               >
-                <Type className="w-5 h-5 text-[#7D2E42] mb-2" />
-                <p className="font-semibold text-[#2D1F22] text-sm">Responder por texto</p>
-                <p className="text-xs text-[#2D1F22]/70 mt-1">Respuestas escritas listas para Instagram.</p>
+                <Type className="w-5 h-5 text-[#591427] mb-2" />
+                <p className="font-semibold text-[#2A1520] text-sm">Responder por texto</p>
+                <p className="text-xs text-[#2A1520]/70 mt-1">Respuestas escritas listas para Instagram.</p>
               </button>
               <button
                 onClick={() => setModoRespuesta('camara')}
                 className={`p-4 rounded-xl text-left transition-all border-2 ${
                   modoRespuesta === 'camara'
-                    ? 'border-[#7D2E42] bg-[#FBF7F5] shadow-md'
-                    : 'border-[#E0D5D1] bg-white hover:border-[#C17C83]'
+                    ? 'border-[#591427] bg-[#FFFBF0] shadow-md'
+                    : 'border-[#E8DDD5] bg-white hover:border-[#C1DBE8]'
                 }`}
               >
-                <Video className="w-5 h-5 text-[#7D2E42] mb-2" />
-                <p className="font-semibold text-[#2D1F22] text-sm">Hablando a cámara</p>
-                <p className="text-xs text-[#2D1F22]/70 mt-1">Guion para responder en vídeo.</p>
+                <Video className="w-5 h-5 text-[#591427] mb-2" />
+                <p className="font-semibold text-[#2A1520] text-sm">Hablando a cámara</p>
+                <p className="text-xs text-[#2A1520]/70 mt-1">Guion para responder en vídeo.</p>
               </button>
             </div>
           </div>
 
           {/* Brand profile soft banner */}
           {!brandProfile && (
-            <div className="bg-[#C9A96E]/10 border border-[#C9A96E]/30 rounded-xl p-3">
-              <p className="text-xs text-[#7D2E42]">
+            <div className="bg-[#FFF1B5]/10 border border-[#FFF1B5]/30 rounded-xl p-3">
+              <p className="text-xs text-[#591427]">
                 Sin perfil de marca las respuestas serán genéricas. Configura tu marca en "Mi Marca" para personalizarlas.
               </p>
             </div>
@@ -1199,14 +1199,14 @@ function CajaDePreguntas() {
       {resultado && (
         <div className="space-y-5">
           {/* Summary card */}
-          <Card className="border-[#C9A96E] bg-gradient-to-br from-[#FBF7F5] to-[#F3E8E5]">
+          <Card className="border-[#FFF1B5] bg-gradient-to-br from-[#FFFBF0] to-[#F5F0EB]">
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Servicios seleccionados</p>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {resultado.servicios.map((s, i) => (
-                      <Badge key={i} className="bg-[#7D2E42] hover:bg-[#7D2E42] text-white">
+                      <Badge key={i} className="bg-[#591427] hover:bg-[#591427] text-white">
                         {s}
                       </Badge>
                     ))}
@@ -1214,13 +1214,13 @@ function CajaDePreguntas() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Total preguntas</p>
-                  <Badge className="bg-[#C9A96E] hover:bg-[#C9A96E] text-white text-base">
+                  <Badge className="bg-[#FFF1B5] hover:bg-[#FFF1B5] text-white text-base">
                     {resultado.preguntas.length}
                   </Badge>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">Modo de respuesta</p>
-                  <Badge variant="outline" className="border-[#C17C83] text-[#C17C83]">
+                  <Badge variant="outline" className="border-[#C1DBE8] text-[#C1DBE8]">
                     {modoRespuesta === 'camara' ? '🎬 Hablando a cámara' : '📝 Texto'}
                   </Badge>
                 </div>
@@ -1231,8 +1231,8 @@ function CajaDePreguntas() {
           {/* Questions list */}
           <div className="space-y-4">
             {resultado.preguntas.map((p, idx) => (
-              <Card key={p.id || idx} className="border-[#E0D5D1] overflow-hidden">
-                <div className="bg-[#7D2E42] p-3 flex items-center gap-3">
+              <Card key={p.id || idx} className="border-[#E8DDD5] overflow-hidden">
+                <div className="bg-[#591427] p-3 flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center text-white font-bold text-sm">
                     {p.id || idx + 1}
                   </span>
@@ -1251,7 +1251,7 @@ function CajaDePreguntas() {
                     <p className="text-xs text-muted-foreground mb-1 font-semibold uppercase tracking-wide flex items-center gap-1">
                       <MessageCircle className="w-3 h-3" /> Pregunta de la clienta
                     </p>
-                    <div className="bg-[#FBF7F5] p-4 rounded-xl text-sm text-[#2D1F22] border border-[#E0D5D1] italic">
+                    <div className="bg-[#FFFBF0] p-4 rounded-xl text-sm text-[#2A1520] border border-[#E8DDD5] italic">
                       "{p.pregunta}"
                     </div>
                   </div>
@@ -1261,7 +1261,7 @@ function CajaDePreguntas() {
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide flex items-center gap-1">
                         <Shield className="w-3 h-3" /> Tu respuesta
-                        <Badge variant="outline" className="ml-1 text-[10px] py-0 border-[#C9A96E] text-[#C9A96E]">
+                        <Badge variant="outline" className="ml-1 text-[10px] py-0 border-[#FFF1B5] text-[#FFF1B5]">
                           {modoRespuesta === 'camara' ? '🎬 Cámara' : '📝 Texto'}
                         </Badge>
                       </p>
@@ -1269,13 +1269,13 @@ function CajaDePreguntas() {
                         size="sm"
                         variant="ghost"
                         onClick={() => copyField(`respuesta-${p.id || idx}`, p.respuesta)}
-                        className="text-[#C17C83] hover:bg-[#F3E8E5] h-7"
+                        className="text-[#C1DBE8] hover:bg-[#F5F0EB] h-7"
                       >
                         {copiedField === `respuesta-${p.id || idx}` ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                         {copiedField === `respuesta-${p.id || idx}` ? 'Copiado' : 'Copiar'}
                       </Button>
                     </div>
-                    <div className="bg-gradient-to-br from-[#FBF7F5] to-[#F3E8E5] p-4 rounded-xl text-sm text-[#2D1F22] leading-relaxed border border-[#E0D5D1]">
+                    <div className="bg-gradient-to-br from-[#FFFBF0] to-[#F5F0EB] p-4 rounded-xl text-sm text-[#2A1520] leading-relaxed border border-[#E8DDD5]">
                       {p.respuesta}
                     </div>
                   </div>
@@ -1288,7 +1288,7 @@ function CajaDePreguntas() {
                       `pair-${p.id || idx}`,
                       `P: ${p.pregunta}\n\nR: ${p.respuesta}`
                     )}
-                    className="text-[#7D2E42] hover:bg-[#FBF7F5] h-7"
+                    className="text-[#591427] hover:bg-[#FFFBF0] h-7"
                   >
                     {copiedField === `pair-${p.id || idx}` ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
                     Copiar pregunta + respuesta
@@ -1299,19 +1299,19 @@ function CajaDePreguntas() {
           </div>
 
           {/* Action buttons */}
-          <Card className="border-[#E0D5D1]">
+          <Card className="border-[#E8DDD5]">
             <CardContent className="p-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <Button
                   onClick={handleCopyAll}
-                  className="bg-[#C17C83] hover:bg-[#B06B74] text-white h-11"
+                  className="bg-[#C1DBE8] hover:bg-[#8BB8D0] text-[#2A1520] h-11"
                 >
                   {copiedField === 'all' ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                   {copiedField === 'all' ? '¡Todo copiado!' : 'Copiar todo'}
                 </Button>
                 <Button
                   onClick={handleSaveToLibrary}
-                  className="bg-[#7D2E42] hover:bg-[#933A54] text-white h-11"
+                  className="bg-[#591427] hover:bg-[#7A2A40] text-white h-11"
                 >
                   {savedToLibrary ? <Check className="w-4 h-4 mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                   {savedToLibrary ? '¡Guardado!' : 'Guardar en biblioteca'}
@@ -1320,7 +1320,7 @@ function CajaDePreguntas() {
                   onClick={handleGenerate}
                   disabled={isLoading}
                   variant="outline"
-                  className="border-[#C9A96E] text-[#C9A96E] hover:bg-[#FBF7F5] h-11"
+                  className="border-[#FFF1B5] text-[#FFF1B5] hover:bg-[#FFFBF0] h-11"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
                   Regenerar

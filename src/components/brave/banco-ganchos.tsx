@@ -46,16 +46,16 @@ import {
 type Vista = 'banco' | 'mis-ideas' | 'calendario'
 
 const ESTADO_LABELS: Record<SavedHookEstado, { label: string; color: string; icon: any }> = {
-  idea: { label: 'Idea guardada', color: 'bg-[#C9A96E]/20 text-[#7D2E42] border-[#C9A96E]/40', icon: Bookmark },
-  pendiente: { label: 'Pendiente de grabar', color: 'bg-[#C17C83]/15 text-[#7D2E42] border-[#C17C83]/30', icon: Clock },
-  grabado: { label: 'Grabado', color: 'bg-[#7D2E42]/15 text-[#7D2E42] border-[#7D2E42]/30', icon: Video },
+  idea: { label: 'Idea guardada', color: 'bg-[#FFF1B5]/20 text-[#591427] border-[#FFF1B5]/40', icon: Bookmark },
+  pendiente: { label: 'Pendiente de grabar', color: 'bg-[#C1DBE8]/15 text-[#591427] border-[#C1DBE8]/30', icon: Clock },
+  grabado: { label: 'Grabado', color: 'bg-[#591427]/15 text-[#591427] border-[#591427]/30', icon: Video },
   publicado: { label: 'Publicado', color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle2 },
 }
 
 const IMPACTO_COLOR: Record<string, string> = {
-  Alto: 'bg-[#7D2E42] text-white',
-  Medio: 'bg-[#C17C83] text-white',
-  Bajo: 'bg-[#C9A96E] text-[#2D1F22]',
+  Alto: 'bg-[#591427] text-white',
+  Medio: 'bg-[#C1DBE8] text-[#2A1520]',
+  Bajo: 'bg-[#FFF1B5] text-[#2A1520]',
 }
 
 const TIPO_COLOR: Record<string, string> = {
@@ -259,14 +259,14 @@ export function BancoGanchos() {
       {/* Cabecera */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#2D1F22] mb-1">Banco de Ganchos</h1>
-          <p className="text-[#7D2E42]/70">
+          <h1 className="text-3xl font-bold text-[#2A1520] mb-1">Banco de Ganchos</h1>
+          <p className="text-[#591427]/70">
             Ideas rápidas, llamativas y estratégicas para crear contenido sin quedarte en blanco.
           </p>
         </div>
         <Button
           onClick={() => setDialogoNuevoGancho(true)}
-          className="bg-[#7D2E42] hover:bg-[#5d2334] text-white"
+          className="bg-[#591427] hover:bg-[#3D0E1B] text-white"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           Crear gancho
@@ -274,7 +274,7 @@ export function BancoGanchos() {
       </div>
 
       {/* Selector de vista */}
-      <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm border border-[#F3E8E5] w-fit">
+      <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm border border-[#F5F0EB] w-fit">
         {[
           { key: 'banco' as Vista, label: 'Banco de Ganchos', icon: LayoutGrid },
           { key: 'mis-ideas' as Vista, label: 'Mis ideas guardadas', icon: Bookmark },
@@ -286,7 +286,7 @@ export function BancoGanchos() {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               vista === v.key
                 ? 'brave-gradient text-white shadow-md'
-                : 'text-[#7D2E42] hover:bg-[#FBF7F5]'
+                : 'text-[#591427] hover:bg-[#FFFBF0]'
             }`}
           >
             <v.icon className="w-4 h-4" />
@@ -299,19 +299,19 @@ export function BancoGanchos() {
       {vista === 'banco' && (
         <>
           {/* Filtros */}
-          <Card className="border-[#F3E8E5] shadow-sm">
+          <Card className="border-[#F5F0EB] shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7D2E42]/50" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#591427]/50" />
                 <Input
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar ganchos por título, servicio, categoría..."
-                  className="pl-10 bg-white border-[#F3E8E5]"
+                  className="pl-10 bg-white border-[#F5F0EB]"
                 />
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 flex items-center gap-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 flex items-center gap-1.5">
                   <Filter className="w-3 h-3" /> Categoría
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -319,8 +319,8 @@ export function BancoGanchos() {
                     onClick={() => setCategoriaFiltro('')}
                     className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                       !categoriaFiltro
-                        ? 'bg-[#7D2E42] text-white border-[#7D2E42]'
-                        : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                        ? 'bg-[#591427] text-white border-[#591427]'
+                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
                     }`}
                   >
                     Todas
@@ -331,8 +331,8 @@ export function BancoGanchos() {
                       onClick={() => setCategoriaFiltro(c === categoriaFiltro ? '' : c)}
                       className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                         c === categoriaFiltro
-                          ? 'bg-[#7D2E42] text-white border-[#7D2E42]'
-                          : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                          ? 'bg-[#591427] text-white border-[#591427]'
+                          : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
                       }`}
                     >
                       {c}
@@ -341,7 +341,7 @@ export function BancoGanchos() {
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 flex items-center gap-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 flex items-center gap-1.5">
                   <Zap className="w-3 h-3" /> Tipo de gancho
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -349,8 +349,8 @@ export function BancoGanchos() {
                     onClick={() => setTipoFiltro('')}
                     className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                       !tipoFiltro
-                        ? 'bg-[#C9A96E] text-[#2D1F22] border-[#C9A96E]'
-                        : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                        ? 'bg-[#FFF1B5] text-[#2A1520] border-[#FFF1B5]'
+                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
                     }`}
                   >
                     Todos
@@ -361,8 +361,8 @@ export function BancoGanchos() {
                       onClick={() => setTipoFiltro(t === tipoFiltro ? '' : t)}
                       className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                         t === tipoFiltro
-                          ? 'bg-[#C9A96E] text-[#2D1F22] border-[#C9A96E]'
-                          : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                          ? 'bg-[#FFF1B5] text-[#2A1520] border-[#FFF1B5]'
+                          : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
                       }`}
                     >
                       {t}
@@ -371,7 +371,7 @@ export function BancoGanchos() {
                 </div>
               </div>
               {(categoriaFiltro || tipoFiltro || searchTerm) && (
-                <div className="flex items-center gap-2 text-xs text-[#7D2E42]/70 pt-2 border-t border-[#F3E8E5]">
+                <div className="flex items-center gap-2 text-xs text-[#591427]/70 pt-2 border-t border-[#F5F0EB]">
                   <span>{ganchosFiltrados.length} ganchos encontrados</span>
                   <button
                     onClick={() => {
@@ -379,7 +379,7 @@ export function BancoGanchos() {
                       setTipoFiltro('')
                       setSearchTerm('')
                     }}
-                    className="text-[#C17C83] hover:underline ml-auto"
+                    className="text-[#C1DBE8] hover:underline ml-auto"
                   >
                     Limpiar filtros
                   </button>
@@ -395,7 +395,7 @@ export function BancoGanchos() {
               return (
                 <Card
                   key={gancho.id}
-                  className="border-[#F3E8E5] shadow-sm hover:shadow-md transition-all flex flex-col"
+                  className="border-[#F5F0EB] shadow-sm hover:shadow-md transition-all flex flex-col"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -406,23 +406,23 @@ export function BancoGanchos() {
                         {gancho.tipo}
                       </span>
                     </div>
-                    <CardTitle className="text-base text-[#2D1F22] leading-snug">
+                    <CardTitle className="text-base text-[#2A1520] leading-snug">
                       {gancho.titulo}
                     </CardTitle>
                     <CardDescription className="flex flex-wrap gap-1.5 mt-2">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FBF7F5] border border-[#F3E8E5] text-[#7D2E42]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
                         {gancho.categoria}
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FBF7F5] border border-[#F3E8E5] text-[#7D2E42]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
                         {gancho.servicio}
                       </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FBF7F5] border border-[#F3E8E5] text-[#7D2E42]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
                         Objetivo: {gancho.objetivo}
                       </span>
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0 flex-1 flex flex-col">
-                    <p className="text-xs text-[#2D1F22]/70 line-clamp-2 mb-3 flex-1">
+                    <p className="text-xs text-[#2A1520]/70 line-clamp-2 mb-3 flex-1">
                       {gancho.explicacion}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -438,7 +438,7 @@ export function BancoGanchos() {
                         size="sm"
                         variant="outline"
                         onClick={() => setGanchoSeleccionado(gancho)}
-                        className="h-8 text-xs border-[#F3E8E5] text-[#7D2E42] hover:bg-[#FBF7F5]"
+                        className="h-8 text-xs border-[#F5F0EB] text-[#591427] hover:bg-[#FFFBF0]"
                       >
                         Ver detalle
                       </Button>
@@ -449,7 +449,7 @@ export function BancoGanchos() {
                         variant="ghost"
                         onClick={() => handleGuardarIdea(gancho)}
                         disabled={guardado}
-                        className="flex-1 h-7 text-[11px] text-[#7D2E42] hover:bg-[#FBF7F5]"
+                        className="flex-1 h-7 text-[11px] text-[#591427] hover:bg-[#FFFBF0]"
                       >
                         {guardado ? (
                           <><Check className="w-3 h-3 mr-1" /> Guardado</>
@@ -463,7 +463,7 @@ export function BancoGanchos() {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleCopiar(gancho.id, gancho.titulo)}
-                        className="h-7 text-[11px] text-[#7D2E42] hover:bg-[#FBF7F5] px-2"
+                        className="h-7 text-[11px] text-[#591427] hover:bg-[#FFFBF0] px-2"
                       >
                         {copiado === gancho.id ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
                       </Button>
@@ -473,7 +473,7 @@ export function BancoGanchos() {
                             size="sm"
                             variant="ghost"
                             onClick={() => setDialogoEditar(gancho)}
-                            className="h-7 text-[11px] text-[#7D2E42] hover:bg-[#FBF7F5] px-2"
+                            className="h-7 text-[11px] text-[#591427] hover:bg-[#FFFBF0] px-2"
                           >
                             <Edit2 className="w-3 h-3" />
                           </Button>
@@ -485,7 +485,7 @@ export function BancoGanchos() {
                                 removeCustomHook(gancho.id)
                               }
                             }}
-                            className="h-7 text-[11px] text-[#C17C83] hover:bg-[#C17C83]/10 px-2"
+                            className="h-7 text-[11px] text-[#C1DBE8] hover:bg-[#C1DBE8]/10 px-2"
                           >
                             <Trash2 className="w-3 h-3" />
                           </Button>
@@ -499,11 +499,11 @@ export function BancoGanchos() {
           </div>
 
           {ganchosFiltrados.length === 0 && (
-            <Card className="border-[#F3E8E5]">
+            <Card className="border-[#F5F0EB]">
               <CardContent className="p-12 text-center">
-                <Lightbulb className="w-12 h-12 text-[#C9A96E] mx-auto mb-4" />
-                <p className="text-[#2D1F22] font-medium mb-1">No se encontraron ganchos</p>
-                <p className="text-sm text-[#7D2E42]/70">Prueba a cambiar los filtros o crea un gancho nuevo.</p>
+                <Lightbulb className="w-12 h-12 text-[#FFF1B5] mx-auto mb-4" />
+                <p className="text-[#2A1520] font-medium mb-1">No se encontraron ganchos</p>
+                <p className="text-sm text-[#591427]/70">Prueba a cambiar los filtros o crea un gancho nuevo.</p>
               </CardContent>
             </Card>
           )}
@@ -636,7 +636,7 @@ function DialogoDetalleGancho({
                   {gancho.tipo}
                 </span>
               </div>
-              <h2 className="text-xl font-bold text-[#2D1F22] leading-snug">{gancho.titulo}</h2>
+              <h2 className="text-xl font-bold text-[#2A1520] leading-snug">{gancho.titulo}</h2>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
               <X className="w-5 h-5" />
@@ -644,58 +644,58 @@ function DialogoDetalleGancho({
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-[#FBF7F5] rounded-xl p-3">
-              <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Categoría</p>
-              <p className="text-sm font-medium text-[#2D1F22]">{gancho.categoria}</p>
+            <div className="bg-[#FFFBF0] rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Categoría</p>
+              <p className="text-sm font-medium text-[#2A1520]">{gancho.categoria}</p>
             </div>
-            <div className="bg-[#FBF7F5] rounded-xl p-3">
-              <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Servicio</p>
-              <p className="text-sm font-medium text-[#2D1F22]">{gancho.servicio}</p>
+            <div className="bg-[#FFFBF0] rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Servicio</p>
+              <p className="text-sm font-medium text-[#2A1520]">{gancho.servicio}</p>
             </div>
-            <div className="bg-[#FBF7F5] rounded-xl p-3">
-              <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Objetivo</p>
-              <p className="text-sm font-medium text-[#2D1F22] capitalize">{gancho.objetivo}</p>
+            <div className="bg-[#FFFBF0] rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Objetivo</p>
+              <p className="text-sm font-medium text-[#2A1520] capitalize">{gancho.objetivo}</p>
             </div>
-            <div className="bg-[#FBF7F5] rounded-xl p-3">
-              <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Impacto</p>
-              <p className="text-sm font-medium text-[#2D1F22]">{gancho.impacto}</p>
+            <div className="bg-[#FFFBF0] rounded-xl p-3">
+              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Impacto</p>
+              <p className="text-sm font-medium text-[#2A1520]">{gancho.impacto}</p>
             </div>
           </div>
 
           <div className="space-y-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 flex items-center gap-1.5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
                 <Lightbulb className="w-3 h-3" /> Por qué funciona
               </p>
-              <p className="text-sm text-[#2D1F22] bg-[#FBF7F5] rounded-xl p-3">{gancho.explicacion}</p>
+              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.explicacion}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 flex items-center gap-1.5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
                 <AlertCircle className="w-3 h-3" /> Dolor que toca
               </p>
-              <p className="text-sm text-[#2D1F22] bg-[#FBF7F5] rounded-xl p-3">{gancho.dolor}</p>
+              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.dolor}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 flex items-center gap-1.5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
                 <Heart className="w-3 h-3" /> Deseo que activa
               </p>
-              <p className="text-sm text-[#2D1F22] bg-[#FBF7F5] rounded-xl p-3">{gancho.deseo}</p>
+              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.deseo}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 flex items-center gap-1.5">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
                 <Video className="w-3 h-3" /> Idea visual
               </p>
-              <p className="text-sm text-[#2D1F22] bg-[#FBF7F5] rounded-xl p-3">{gancho.ideaVisual}</p>
+              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.ideaVisual}</p>
             </div>
           </div>
         </div>
 
-        <div className="p-4 border-t border-[#F3E8E5] bg-[#FBF7F5] flex gap-2">
+        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
           <Button
             onClick={onGuardar}
             disabled={yaGuardado}
             variant="outline"
-            className="border-[#7D2E42] text-[#7D2E42] hover:bg-[#7D2E42] hover:text-white"
+            className="border-[#591427] text-[#591427] hover:bg-[#591427] hover:text-white"
           >
             {yaGuardado ? <><Check className="w-4 h-4 mr-1.5" /> Ya guardado</> : <><Bookmark className="w-4 h-4 mr-1.5" /> Guardar idea</>}
           </Button>
@@ -740,8 +740,8 @@ function DialogoGenerarContenido({
         <div className="p-6 overflow-y-auto flex-1">
           <div className="flex items-start justify-between gap-4 mb-5">
             <div className="flex-1">
-              <p className="text-xs uppercase tracking-wider text-[#7D2E42]/60 mb-1">Generar desde gancho</p>
-              <h2 className="text-lg font-bold text-[#2D1F22] leading-snug">{gancho.titulo}</h2>
+              <p className="text-xs uppercase tracking-wider text-[#591427]/60 mb-1">Generar desde gancho</p>
+              <h2 className="text-lg font-bold text-[#2A1520] leading-snug">{gancho.titulo}</h2>
             </div>
             <Button variant="ghost" size="icon" onClick={onCerrar} className="shrink-0">
               <X className="w-5 h-5" />
@@ -751,7 +751,7 @@ function DialogoGenerarContenido({
           {/* Opciones de generación */}
           <div className="space-y-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-2">¿Qué tipo de contenido quieres?</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">¿Qué tipo de contenido quieres?</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { key: 'reel', label: 'Reel', icon: Video },
@@ -763,8 +763,8 @@ function DialogoGenerarContenido({
                     onClick={() => onUpdate({ tipoContenido: t.key })}
                     className={`flex flex-col items-center gap-1 py-3 rounded-xl border transition-all ${
                       tipoContenido === t.key
-                        ? 'bg-[#7D2E42] text-white border-[#7D2E42]'
-                        : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                        ? 'bg-[#591427] text-white border-[#591427]'
+                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
                     }`}
                   >
                     <t.icon className="w-4 h-4" />
@@ -775,7 +775,7 @@ function DialogoGenerarContenido({
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-2">Tono</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">Tono</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { key: 'educativo', label: 'Educativo' },
@@ -787,8 +787,8 @@ function DialogoGenerarContenido({
                     onClick={() => onUpdate({ tono: t.key })}
                     className={`py-2 rounded-xl border text-xs font-medium transition-all ${
                       tono === t.key
-                        ? 'bg-[#C9A96E] text-[#2D1F22] border-[#C9A96E]'
-                        : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                        ? 'bg-[#FFF1B5] text-[#2A1520] border-[#FFF1B5]'
+                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
                     }`}
                   >
                     {t.label}
@@ -798,7 +798,7 @@ function DialogoGenerarContenido({
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-2">Modo</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">Modo</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { key: 'camara', label: 'Hablando a cámara', icon: Video },
@@ -809,8 +809,8 @@ function DialogoGenerarContenido({
                     onClick={() => onUpdate({ modo: t.key })}
                     className={`flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-medium transition-all ${
                       modo === t.key
-                        ? 'bg-[#7D2E42] text-white border-[#7D2E42]'
-                        : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                        ? 'bg-[#591427] text-white border-[#591427]'
+                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
                     }`}
                   >
                     <t.icon className="w-3 h-3" />
@@ -821,12 +821,12 @@ function DialogoGenerarContenido({
             </div>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-2">Servicio</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">Servicio</p>
               <Input
                 value={servicio}
                 onChange={(e) => onUpdate({ servicio: e.target.value })}
                 placeholder={gancho.servicio || 'Especifica el servicio'}
-                className="bg-white border-[#F3E8E5]"
+                className="bg-white border-[#F5F0EB]"
               />
             </div>
 
@@ -837,35 +837,35 @@ function DialogoGenerarContenido({
             )}
 
             {resultado && (
-              <div className="bg-[#FBF7F5] rounded-xl p-4 border border-[#F3E8E5]">
+              <div className="bg-[#FFFBF0] rounded-xl p-4 border border-[#F5F0EB]">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60">
                     Contenido generado
                   </p>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => onCopiar('generado', JSON.stringify(resultado, null, 2))}
-                    className="h-7 text-[11px] text-[#7D2E42]"
+                    className="h-7 text-[11px] text-[#591427]"
                   >
                     {copiado === 'generado' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
                   </Button>
                 </div>
                 {resultado.titulo && (
-                  <p className="text-sm font-bold text-[#2D1F22] mb-3">{resultado.titulo}</p>
+                  <p className="text-sm font-bold text-[#2A1520] mb-3">{resultado.titulo}</p>
                 )}
                 {resultado.guion && (
                   <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Guion</p>
-                    <p className="text-sm text-[#2D1F22] whitespace-pre-wrap bg-white rounded-lg p-3 border border-[#F3E8E5]">{resultado.guion}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Guion</p>
+                    <p className="text-sm text-[#2A1520] whitespace-pre-wrap bg-white rounded-lg p-3 border border-[#F5F0EB]">{resultado.guion}</p>
                   </div>
                 )}
                 {resultado.slides && resultado.slides.length > 0 && (
                   <div className="mb-3 space-y-2">
-                    <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Slides</p>
+                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Slides</p>
                     {resultado.slides.map((s: any, i: number) => (
-                      <div key={i} className="text-sm text-[#2D1F22] bg-white rounded-lg p-3 border border-[#F3E8E5]">
-                        <span className="text-[10px] font-bold text-[#7D2E42]/60 mr-2">{s.numero}.</span>
+                      <div key={i} className="text-sm text-[#2A1520] bg-white rounded-lg p-3 border border-[#F5F0EB]">
+                        <span className="text-[10px] font-bold text-[#591427]/60 mr-2">{s.numero}.</span>
                         {s.texto}
                       </div>
                     ))}
@@ -873,26 +873,26 @@ function DialogoGenerarContenido({
                 )}
                 {resultado.stories && resultado.stories.length > 0 && (
                   <div className="mb-3 space-y-2">
-                    <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Stories</p>
+                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Stories</p>
                     {resultado.stories.map((s: any, i: number) => (
-                      <div key={i} className="text-sm text-[#2D1F22] bg-white rounded-lg p-3 border border-[#F3E8E5]">
-                        <span className="text-[10px] font-bold text-[#7D2E42]/60 mr-2">Story {s.numero} ({s.tipo})</span>
+                      <div key={i} className="text-sm text-[#2A1520] bg-white rounded-lg p-3 border border-[#F5F0EB]">
+                        <span className="text-[10px] font-bold text-[#591427]/60 mr-2">Story {s.numero} ({s.tipo})</span>
                         <p>{s.texto}</p>
-                        {s.ideaVisual && <p className="text-[11px] text-[#7D2E42]/60 mt-1">Visual: {s.ideaVisual}</p>}
+                        {s.ideaVisual && <p className="text-[11px] text-[#591427]/60 mt-1">Visual: {s.ideaVisual}</p>}
                       </div>
                     ))}
                   </div>
                 )}
                 {resultado.copy && (
                   <div className="mb-3">
-                    <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Copy</p>
-                    <p className="text-sm text-[#2D1F22] whitespace-pre-wrap bg-white rounded-lg p-3 border border-[#F3E8E5]">{resultado.copy}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Copy</p>
+                    <p className="text-sm text-[#2A1520] whitespace-pre-wrap bg-white rounded-lg p-3 border border-[#F5F0EB]">{resultado.copy}</p>
                   </div>
                 )}
                 {resultado.hashtags && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-[#7D2E42]/60 mb-1">Hashtags</p>
-                    <p className="text-sm text-[#C17C83] bg-white rounded-lg p-3 border border-[#F3E8E5]">{resultado.hashtags}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Hashtags</p>
+                    <p className="text-sm text-[#C1DBE8] bg-white rounded-lg p-3 border border-[#F5F0EB]">{resultado.hashtags}</p>
                   </div>
                 )}
               </div>
@@ -900,8 +900,8 @@ function DialogoGenerarContenido({
           </div>
         </div>
 
-        <div className="p-4 border-t border-[#F3E8E5] bg-[#FBF7F5] flex gap-2">
-          <Button variant="outline" onClick={onCerrar} className="border-[#F3E8E5] text-[#7D2E42]">
+        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
+          <Button variant="outline" onClick={onCerrar} className="border-[#F5F0EB] text-[#591427]">
             Cancelar
           </Button>
           {!resultado ? (
@@ -922,14 +922,14 @@ function DialogoGenerarContenido({
                 onClick={onGenerar}
                 disabled={cargando}
                 variant="outline"
-                className="border-[#7D2E42] text-[#7D2E42]"
+                className="border-[#591427] text-[#591427]"
               >
                 {cargando ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
                 Regenerar
               </Button>
               <Button
                 onClick={onGuardar}
-                className="flex-1 bg-[#7D2E42] hover:bg-[#5d2334] text-white"
+                className="flex-1 bg-[#591427] hover:bg-[#3D0E1B] text-white"
               >
                 <Save className="w-4 h-4 mr-1.5" />
                 Guardar en mis ideas
@@ -983,7 +983,7 @@ function DialogoEditarGancho({
       >
         <div className="p-6 overflow-y-auto flex-1">
           <div className="flex items-start justify-between gap-4 mb-5">
-            <h2 className="text-lg font-bold text-[#2D1F22]">
+            <h2 className="text-lg font-bold text-[#2A1520]">
               {gancho ? 'Editar gancho' : 'Crear nuevo gancho'}
             </h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -993,41 +993,41 @@ function DialogoEditarGancho({
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Título *</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Título *</label>
               <Textarea
                 value={form.titulo}
                 onChange={(e) => setForm({ ...form, titulo: e.target.value })}
                 placeholder="Ej: El error que hace que tu color pierda brillo antes de tiempo"
-                className="bg-white border-[#F3E8E5] min-h-[60px]"
+                className="bg-white border-[#F5F0EB] min-h-[60px]"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Categoría</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Categoría</label>
                 <select
                   value={form.categoria}
                   onChange={(e) => setForm({ ...form, categoria: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-[#F3E8E5] bg-white text-sm"
+                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
                 >
                   {HOOK_CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Tipo</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Tipo</label>
                 <select
                   value={form.tipo}
                   onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-[#F3E8E5] bg-white text-sm"
+                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
                 >
                   {HOOK_TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Objetivo</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Objetivo</label>
                 <select
                   value={form.objetivo}
                   onChange={(e) => setForm({ ...form, objetivo: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-[#F3E8E5] bg-white text-sm"
+                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
                 >
                   <option value="autoridad">Autoridad</option>
                   <option value="reservas">Reservas</option>
@@ -1035,11 +1035,11 @@ function DialogoEditarGancho({
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Impacto</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Impacto</label>
                 <select
                   value={form.impacto}
                   onChange={(e) => setForm({ ...form, impacto: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-[#F3E8E5] bg-white text-sm"
+                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
                 >
                   <option value="Alto">Alto</option>
                   <option value="Medio">Medio</option>
@@ -1048,60 +1048,60 @@ function DialogoEditarGancho({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Servicio</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Servicio</label>
               <Input
                 value={form.servicio}
                 onChange={(e) => setForm({ ...form, servicio: e.target.value })}
                 placeholder="Ej: Balayage, Rubios, Cortes..."
-                className="bg-white border-[#F3E8E5]"
+                className="bg-white border-[#F5F0EB]"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Por qué funciona</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Por qué funciona</label>
               <Textarea
                 value={form.explicacion}
                 onChange={(e) => setForm({ ...form, explicacion: e.target.value })}
                 placeholder="Explica brevemente por qué este gancho funciona"
-                className="bg-white border-[#F3E8E5] min-h-[60px]"
+                className="bg-white border-[#F5F0EB] min-h-[60px]"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Dolor que toca</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Dolor que toca</label>
                 <Textarea
                   value={form.dolor}
                   onChange={(e) => setForm({ ...form, dolor: e.target.value })}
                   placeholder="Qué dolor de la clienta activa"
-                  className="bg-white border-[#F3E8E5] min-h-[60px]"
+                  className="bg-white border-[#F5F0EB] min-h-[60px]"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Deseo que activa</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Deseo que activa</label>
                 <Textarea
                   value={form.deseo}
                   onChange={(e) => setForm({ ...form, deseo: e.target.value })}
                   placeholder="Qué deseo despierta"
-                  className="bg-white border-[#F3E8E5] min-h-[60px]"
+                  className="bg-white border-[#F5F0EB] min-h-[60px]"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Idea visual</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Idea visual</label>
               <Textarea
                 value={form.ideaVisual}
                 onChange={(e) => setForm({ ...form, ideaVisual: e.target.value })}
                 placeholder="Describe la imagen o vídeo sugerido"
-                className="bg-white border-[#F3E8E5] min-h-[60px]"
+                className="bg-white border-[#F5F0EB] min-h-[60px]"
               />
             </div>
           </div>
         </div>
 
-        <div className="p-4 border-t border-[#F3E8E5] bg-[#FBF7F5] flex gap-2">
-          <Button variant="outline" onClick={onClose} className="border-[#F3E8E5] text-[#7D2E42]">
+        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
+          <Button variant="outline" onClick={onClose} className="border-[#F5F0EB] text-[#591427]">
             Cancelar
           </Button>
-          <Button onClick={handleSave} className="flex-1 bg-[#7D2E42] hover:bg-[#5d2334] text-white">
+          <Button onClick={handleSave} className="flex-1 bg-[#591427] hover:bg-[#3D0E1B] text-white">
             <Save className="w-4 h-4 mr-1.5" />
             {gancho ? 'Guardar cambios' : 'Crear gancho'}
           </Button>
@@ -1135,8 +1135,8 @@ function DialogoProgramar({
         <div className="p-6">
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
-              <p className="text-xs uppercase tracking-wider text-[#7D2E42]/60 mb-1">Programar contenido</p>
-              <h2 className="text-base font-bold text-[#2D1F22] leading-snug">{savedHook.titulo}</h2>
+              <p className="text-xs uppercase tracking-wider text-[#591427]/60 mb-1">Programar contenido</p>
+              <h2 className="text-base font-bold text-[#2A1520] leading-snug">{savedHook.titulo}</h2>
             </div>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5" />
@@ -1145,42 +1145,42 @@ function DialogoProgramar({
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Día de grabación (opcional)</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Día de grabación (opcional)</label>
               <Input
                 type="date"
                 value={fechaGrabacion}
                 onChange={(e) => setFechaGrabacion(e.target.value)}
-                className="bg-white border-[#F3E8E5]"
+                className="bg-white border-[#F5F0EB]"
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-[#7D2E42]/60 mb-1.5 block">Día de publicación (opcional)</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Día de publicación (opcional)</label>
               <Input
                 type="date"
                 value={fecha}
                 onChange={(e) => setFecha(e.target.value)}
-                className="bg-white border-[#F3E8E5]"
+                className="bg-white border-[#F5F0EB]"
               />
             </div>
-            <p className="text-xs text-[#7D2E42]/60">
+            <p className="text-xs text-[#591427]/60">
               No es obligatorio programar. Puedes dejar las fechas en blanco y simplemente tener la idea guardada.
             </p>
           </div>
         </div>
 
-        <div className="p-4 border-t border-[#F3E8E5] bg-[#FBF7F5] flex gap-2">
+        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
           <Button
             variant="outline"
             onClick={() => {
               onConfirm('', null)
             }}
-            className="border-[#F3E8E5] text-[#7D2E42]"
+            className="border-[#F5F0EB] text-[#591427]"
           >
             Quitar fechas
           </Button>
           <Button
             onClick={() => onConfirm(fecha, fechaGrabacion || null)}
-            className="flex-1 bg-[#7D2E42] hover:bg-[#5d2334] text-white"
+            className="flex-1 bg-[#591427] hover:bg-[#3D0E1B] text-white"
           >
             <Calendar className="w-4 h-4 mr-1.5" />
             Guardar
@@ -1215,11 +1215,11 @@ function MisIdeasGuardadas({
 
   if (savedHooks.length === 0) {
     return (
-      <Card className="border-[#F3E8E5]">
+      <Card className="border-[#F5F0EB]">
         <CardContent className="p-12 text-center">
-          <Bookmark className="w-12 h-12 text-[#C9A96E] mx-auto mb-4" />
-          <p className="text-[#2D1F22] font-medium mb-1">Aún no tienes ideas guardadas</p>
-          <p className="text-sm text-[#7D2E42]/70">
+          <Bookmark className="w-12 h-12 text-[#FFF1B5] mx-auto mb-4" />
+          <p className="text-[#2A1520] font-medium mb-1">Aún no tienes ideas guardadas</p>
+          <p className="text-sm text-[#591427]/70">
             Ve al Banco de Ganchos y guarda las ideas que más te gusten. También puedes generar contenido desde ellas.
           </p>
         </CardContent>
@@ -1240,8 +1240,8 @@ function MisIdeasGuardadas({
               onClick={() => setFiltroEstado(estado)}
               className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                 filtroEstado === estado
-                  ? 'bg-[#7D2E42] text-white border-[#7D2E42]'
-                  : 'bg-white text-[#7D2E42] border-[#F3E8E5] hover:bg-[#FBF7F5]'
+                  ? 'bg-[#591427] text-white border-[#591427]'
+                  : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
               }`}
             >
               {label} ({count})
@@ -1255,33 +1255,33 @@ function MisIdeasGuardadas({
         {filtrados.map(hook => {
           const EstadoIcon = ESTADO_LABELS[hook.estado].icon
           return (
-            <Card key={hook.id} className="border-[#F3E8E5] shadow-sm">
+            <Card key={hook.id} className="border-[#F5F0EB] shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-[#2D1F22] mb-1">{hook.titulo}</h3>
+                    <h3 className="text-sm font-bold text-[#2A1520] mb-1">{hook.titulo}</h3>
                     <div className="flex flex-wrap gap-1.5">
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${ESTADO_LABELS[hook.estado].color}`}>
                         <EstadoIcon className="w-2.5 h-2.5" />
                         {ESTADO_LABELS[hook.estado].label}
                       </span>
                       {hook.tipoContenido && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FBF7F5] border border-[#F3E8E5] text-[#7D2E42]">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
                           {hook.tipoContenido}
                         </span>
                       )}
                       {hook.servicio && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FBF7F5] border border-[#F3E8E5] text-[#7D2E42]">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
                           {hook.servicio}
                         </span>
                       )}
                       {hook.fechaProgramada && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C9A96E]/20 border border-[#C9A96E]/40 text-[#7D2E42]">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFF1B5]/20 border border-[#FFF1B5]/40 text-[#591427]">
                           Publicar: {new Date(hook.fechaProgramada).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                         </span>
                       )}
                       {hook.fechaGrabacion && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C17C83]/15 border border-[#C17C83]/30 text-[#7D2E42]">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C1DBE8]/15 border border-[#C1DBE8]/30 text-[#591427]">
                           Grabar: {new Date(hook.fechaGrabacion).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                         </span>
                       )}
@@ -1290,8 +1290,8 @@ function MisIdeasGuardadas({
                 </div>
 
                 {hook.guionGenerado && (
-                  <div className="bg-[#FBF7F5] rounded-xl p-3 mb-3 max-h-40 overflow-y-auto">
-                    <p className="text-xs text-[#2D1F22] whitespace-pre-wrap line-clamp-6">{hook.guionGenerado}</p>
+                  <div className="bg-[#FFFBF0] rounded-xl p-3 mb-3 max-h-40 overflow-y-auto">
+                    <p className="text-xs text-[#2A1520] whitespace-pre-wrap line-clamp-6">{hook.guionGenerado}</p>
                   </div>
                 )}
 
@@ -1300,7 +1300,7 @@ function MisIdeasGuardadas({
                   <select
                     value={hook.estado}
                     onChange={(e) => onUpdate(hook.id, { estado: e.target.value as SavedHookEstado })}
-                    className="text-xs px-2 py-1.5 rounded-lg border border-[#F3E8E5] bg-white text-[#7D2E42]"
+                    className="text-xs px-2 py-1.5 rounded-lg border border-[#F5F0EB] bg-white text-[#591427]"
                   >
                     <option value="idea">Idea guardada</option>
                     <option value="pendiente">Pendiente de grabar</option>
@@ -1311,7 +1311,7 @@ function MisIdeasGuardadas({
                     size="sm"
                     variant="outline"
                     onClick={() => onProgramar(hook)}
-                    className="h-8 text-xs border-[#F3E8E5] text-[#7D2E42]"
+                    className="h-8 text-xs border-[#F5F0EB] text-[#591427]"
                   >
                     <Calendar className="w-3 h-3 mr-1" />
                     Programar
@@ -1321,7 +1321,7 @@ function MisIdeasGuardadas({
                       size="sm"
                       variant="outline"
                       onClick={() => onCopiar(hook.id, hook.guionGenerado)}
-                      className="h-8 text-xs border-[#F3E8E5] text-[#7D2E42]"
+                      className="h-8 text-xs border-[#F5F0EB] text-[#591427]"
                     >
                       {copiado === hook.id ? <Check className="w-3 h-3 text-green-600" /> : <><Copy className="w-3 h-3 mr-1" /> Copiar</>}
                     </Button>
@@ -1332,7 +1332,7 @@ function MisIdeasGuardadas({
                     onClick={() => {
                       if (confirm('¿Eliminar esta idea guardada?')) onRemove(hook.id)
                     }}
-                    className="h-8 text-xs text-[#C17C83] hover:bg-[#C17C83]/10 ml-auto"
+                    className="h-8 text-xs text-[#C1DBE8] hover:bg-[#C1DBE8]/10 ml-auto"
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>
@@ -1390,16 +1390,16 @@ function CalendarioSimple({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-[#F3E8E5]">
+        <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-[#F5F0EB]">
           <button
             onClick={() => setVistaLista(false)}
-            className={`text-xs px-3 py-1.5 rounded-lg ${!vistaLista ? 'bg-[#7D2E42] text-white' : 'text-[#7D2E42]'}`}
+            className={`text-xs px-3 py-1.5 rounded-lg ${!vistaLista ? 'bg-[#591427] text-white' : 'text-[#591427]'}`}
           >
             Calendario
           </button>
           <button
             onClick={() => setVistaLista(true)}
-            className={`text-xs px-3 py-1.5 rounded-lg ${vistaLista ? 'bg-[#7D2E42] text-white' : 'text-[#7D2E42]'}`}
+            className={`text-xs px-3 py-1.5 rounded-lg ${vistaLista ? 'bg-[#591427] text-white' : 'text-[#591427]'}`}
           >
             Lista
           </button>
@@ -1410,16 +1410,16 @@ function CalendarioSimple({
               size="sm"
               variant="outline"
               onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() - 1, 1))}
-              className="border-[#F3E8E5] text-[#7D2E42]"
+              className="border-[#F5F0EB] text-[#591427]"
             >
               ←
             </Button>
-            <span className="text-sm font-semibold capitalize text-[#2D1F22] min-w-[140px] text-center">{monthName}</span>
+            <span className="text-sm font-semibold capitalize text-[#2A1520] min-w-[140px] text-center">{monthName}</span>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}
-              className="border-[#F3E8E5] text-[#7D2E42]"
+              className="border-[#F5F0EB] text-[#591427]"
             >
               →
             </Button>
@@ -1429,11 +1429,11 @@ function CalendarioSimple({
 
       {/* Vista Calendario */}
       {!vistaLista && (
-        <Card className="border-[#F3E8E5] shadow-sm">
+        <Card className="border-[#F5F0EB] shadow-sm">
           <CardContent className="p-4">
             <div className="grid grid-cols-7 gap-1 mb-2">
               {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map(d => (
-                <div key={d} className="text-center text-[10px] font-semibold uppercase text-[#7D2E42]/60 py-1">
+                <div key={d} className="text-center text-[10px] font-semibold uppercase text-[#591427]/60 py-1">
                   {d}
                 </div>
               ))}
@@ -1449,11 +1449,11 @@ function CalendarioSimple({
                     key={i}
                     className={`min-h-[68px] p-1.5 rounded-lg border ${
                       enMes
-                        ? 'bg-white border-[#F3E8E5]'
-                        : 'bg-[#FBF7F5] border-transparent text-[#7D2E42]/30'
-                    } ${esHoy ? 'ring-2 ring-[#C9A96E]' : ''}`}
+                        ? 'bg-white border-[#F5F0EB]'
+                        : 'bg-[#FFFBF0] border-transparent text-[#591427]/30'
+                    } ${esHoy ? 'ring-2 ring-[#FFF1B5]' : ''}`}
                   >
-                    <p className="text-[10px] font-medium text-[#2D1F22] mb-1">{dia.getDate()}</p>
+                    <p className="text-[10px] font-medium text-[#2A1520] mb-1">{dia.getDate()}</p>
                     <div className="space-y-0.5">
                       {hooksHoy.slice(0, 2).map(h => (
                         <div
@@ -1462,8 +1462,8 @@ function CalendarioSimple({
                             h.estado === 'publicado'
                               ? 'bg-green-100 text-green-800'
                               : h.estado === 'grabado'
-                              ? 'bg-[#7D2E42]/15 text-[#7D2E42]'
-                              : 'bg-[#C9A96E]/20 text-[#7D2E42]'
+                              ? 'bg-[#591427]/15 text-[#591427]'
+                              : 'bg-[#FFF1B5]/20 text-[#591427]'
                           }`}
                           title={h.titulo}
                         >
@@ -1471,7 +1471,7 @@ function CalendarioSimple({
                         </div>
                       ))}
                       {hooksHoy.length > 2 && (
-                        <p className="text-[9px] text-[#7D2E42]/60">+{hooksHoy.length - 2} más</p>
+                        <p className="text-[9px] text-[#591427]/60">+{hooksHoy.length - 2} más</p>
                       )}
                     </div>
                   </div>
@@ -1479,7 +1479,7 @@ function CalendarioSimple({
               })}
             </div>
             {programados.length === 0 && (
-              <p className="text-center text-xs text-[#7D2E42]/60 mt-4">
+              <p className="text-center text-xs text-[#591427]/60 mt-4">
                 No tienes contenidos programados todavía. Asigna fechas desde "Mis ideas guardadas".
               </p>
             )}
@@ -1495,10 +1495,10 @@ function CalendarioSimple({
             if (hooks.length === 0) return null
             const EstadoIcon = ESTADO_LABELS[estado].icon
             return (
-              <Card key={estado} className="border-[#F3E8E5] shadow-sm">
+              <Card key={estado} className="border-[#F5F0EB] shadow-sm">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2 text-[#2D1F22]">
-                    <EstadoIcon className="w-4 h-4 text-[#7D2E42]" />
+                  <CardTitle className="text-sm flex items-center gap-2 text-[#2A1520]">
+                    <EstadoIcon className="w-4 h-4 text-[#591427]" />
                     {ESTADO_LABELS[estado].label} ({hooks.length})
                   </CardTitle>
                 </CardHeader>
@@ -1506,23 +1506,23 @@ function CalendarioSimple({
                   {hooks.map(h => (
                     <div
                       key={h.id}
-                      className="flex items-start justify-between gap-3 p-2 rounded-lg hover:bg-[#FBF7F5]"
+                      className="flex items-start justify-between gap-3 p-2 rounded-lg hover:bg-[#FFFBF0]"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#2D1F22] truncate">{h.titulo}</p>
+                        <p className="text-sm font-medium text-[#2A1520] truncate">{h.titulo}</p>
                         <div className="flex flex-wrap gap-1.5 mt-0.5">
                           {h.tipoContenido && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FBF7F5] border border-[#F3E8E5] text-[#7D2E42]">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
                               {h.tipoContenido}
                             </span>
                           )}
                           {h.servicio && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FBF7F5] border border-[#F3E8E5] text-[#7D2E42]">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
                               {h.servicio}
                             </span>
                           )}
                           {h.fechaProgramada && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#C9A96E]/20 border border-[#C9A96E]/40 text-[#7D2E42]">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFF1B5]/20 border border-[#FFF1B5]/40 text-[#591427]">
                               {new Date(h.fechaProgramada).toLocaleDateString('es-ES')}
                             </span>
                           )}
@@ -1531,7 +1531,7 @@ function CalendarioSimple({
                       <select
                         value={h.estado}
                         onChange={(e) => onUpdate(h.id, { estado: e.target.value as SavedHookEstado })}
-                        className="text-xs px-2 py-1 rounded-lg border border-[#F3E8E5] bg-white text-[#7D2E42]"
+                        className="text-xs px-2 py-1 rounded-lg border border-[#F5F0EB] bg-white text-[#591427]"
                       >
                         <option value="idea">Idea</option>
                         <option value="pendiente">Pendiente</option>
@@ -1545,11 +1545,11 @@ function CalendarioSimple({
             )
           })}
           {savedHooks.filter(h => h.estado !== 'idea').length === 0 && (
-            <Card className="border-[#F3E8E5]">
+            <Card className="border-[#F5F0EB]">
               <CardContent className="p-8 text-center">
-                <Calendar className="w-10 h-10 text-[#C9A96E] mx-auto mb-3" />
-                <p className="text-sm text-[#2D1F22] font-medium">No hay contenidos en proceso</p>
-                <p className="text-xs text-[#7D2E42]/70 mt-1">
+                <Calendar className="w-10 h-10 text-[#FFF1B5] mx-auto mb-3" />
+                <p className="text-sm text-[#2A1520] font-medium">No hay contenidos en proceso</p>
+                <p className="text-xs text-[#591427]/70 mt-1">
                   Cambia el estado de tus ideas guardadas a "pendiente de grabar" para verlas aquí.
                 </p>
               </CardContent>
