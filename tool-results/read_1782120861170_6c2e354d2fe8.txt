@@ -1,0 +1,1563 @@
+     1→'use client'
+     2→
+     3→import { useState, useMemo, useEffect } from 'react'
+     4→import {
+     5→  useAppStore,
+     6→  HookCard,
+     7→  SavedHook,
+     8→  SavedHookEstado,
+     9→  generateId,
+    10→} from '@/lib/store'
+    11→import { HOOKS_SEED, HOOK_CATEGORIAS, HOOK_TIPOS } from '@/lib/hooks-data'
+    12→import { Button } from '@/components/ui/button'
+    13→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+    14→import { Input } from '@/components/ui/input'
+    15→import { Textarea } from '@/components/ui/textarea'
+    16→import { Badge } from '@/components/ui/badge'
+    17→import {
+    18→  Search,
+    19→  Filter,
+    20→  Sparkles,
+    21→  Save,
+    22→  Calendar,
+    23→  Edit2,
+    24→  Trash2,
+    25→  Plus,
+    26→  X,
+    27→  Copy,
+    28→  Check,
+    29→  Loader2,
+    30→  ChevronRight,
+    31→  Heart,
+    32→  Video,
+    33→  FileText,
+    34→  LayoutGrid,
+    35→  Bookmark,
+    36→  Clock,
+    37→  CheckCircle2,
+    38→  AlertCircle,
+    39→  Zap,
+    40→  Target,
+    41→  Lightbulb,
+    42→  ArrowRight,
+    43→  RefreshCw,
+    44→} from 'lucide-react'
+    45→
+    46→type Vista = 'banco' | 'mis-ideas' | 'calendario'
+    47→
+    48→const ESTADO_LABELS: Record<SavedHookEstado, { label: string; color: string; icon: any }> = {
+    49→  idea: { label: 'Idea guardada', color: 'bg-[#FFF1B5]/20 text-[#591427] border-[#FFF1B5]/40', icon: Bookmark },
+    50→  pendiente: { label: 'Pendiente de grabar', color: 'bg-[#C1DBE8]/15 text-[#591427] border-[#C1DBE8]/30', icon: Clock },
+    51→  grabado: { label: 'Grabado', color: 'bg-[#591427]/15 text-[#591427] border-[#591427]/30', icon: Video },
+    52→  publicado: { label: 'Publicado', color: 'bg-green-100 text-green-800 border-green-200', icon: CheckCircle2 },
+    53→}
+    54→
+    55→const IMPACTO_COLOR: Record<string, string> = {
+    56→  Alto: 'bg-[#591427] text-white',
+    57→  Medio: 'bg-[#C1DBE8] text-[#2A1520]',
+    58→  Bajo: 'bg-[#FFF1B5] text-[#2A1520]',
+    59→}
+    60→
+    61→const TIPO_COLOR: Record<string, string> = {
+    62→  Viral: 'bg-pink-100 text-pink-800 border-pink-200',
+    63→  Educativo: 'bg-blue-100 text-blue-800 border-blue-200',
+    64→  Autoridad: 'bg-purple-100 text-purple-800 border-purple-200',
+    65→  Venta: 'bg-orange-100 text-orange-800 border-orange-200',
+    66→  Engagement: 'bg-teal-100 text-teal-800 border-teal-200',
+    67→  Dolor: 'bg-red-100 text-red-800 border-red-200',
+    68→  Deseo: 'bg-amber-100 text-amber-800 border-amber-200',
+    69→  Objeción: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    70→  Tendencia: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    71→}
+    72→
+    73→function copyToClipboard(text: string) {
+    74→  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+    75→    navigator.clipboard.writeText(text)
+    76→  }
+    77→}
+    78→
+    79→export function BancoGanchos() {
+    80→  const {
+    81→    brandProfile,
+    82→    customHooks,
+    83→    addCustomHook,
+    84→    updateCustomHook,
+    85→    removeCustomHook,
+    86→    savedHooks,
+    87→    saveHook,
+    88→    updateSavedHook,
+    89→    removeSavedHook,
+    90→    addLibraryItem,
+    91→    setActiveModule,
+    92→  } = useAppStore()
+    93→
+    94→  const [vista, setVista] = useState<Vista>('banco')
+    95→  const [searchTerm, setSearchTerm] = useState('')
+    96→  const [categoriaFiltro, setCategoriaFiltro] = useState<string>('')
+    97→  const [tipoFiltro, setTipoFiltro] = useState<string>('')
+    98→  const [ganchoSeleccionado, setGanchoSeleccionado] = useState<HookCard | null>(null)
+    99→  const [generandoGancho, setGenerandoGancho] = useState<string | null>(null)
+   100→  const [dialogoGenerar, setDialogoGenerar] = useState<{
+   101→    gancho: HookCard
+   102→    tipoContenido: 'reel' | 'story' | 'carrusel'
+   103→    tono: 'educativo' | 'cercano' | 'vendedor'
+   104→    modo: 'texto' | 'camara'
+   105→    servicio: string
+   106→    resultado: any
+   107→    cargando: boolean
+   108→    error: string
+   109→  } | null>(null)
+   110→  const [dialogoEditar, setDialogoEditar] = useState<HookCard | null>(null)
+   111→  const [dialogoNuevoGancho, setDialogoNuevoGancho] = useState(false)
+   112→  const [copiado, setCopiado] = useState<string | null>(null)
+   113→  const [dialogoProgramar, setDialogoProgramar] = useState<SavedHook | null>(null)
+   114→
+   115→  // Combina ganchos seed + custom
+   116→  const todosGanchos = useMemo(() => {
+   117→    return [...customHooks, ...HOOKS_SEED]
+   118→  }, [customHooks])
+   119→
+   120→  // Filtrado
+   121→  const ganchosFiltrados = useMemo(() => {
+   122→    return todosGanchos.filter(g => {
+   123→      if (searchTerm) {
+   124→        const t = searchTerm.toLowerCase()
+   125→        const hit =
+   126→          g.titulo.toLowerCase().includes(t) ||
+   127→          g.servicio.toLowerCase().includes(t) ||
+   128→          g.categoria.toLowerCase().includes(t) ||
+   129→          g.explicacion.toLowerCase().includes(t)
+   130→        if (!hit) return false
+   131→      }
+   132→      if (categoriaFiltro && g.categoria !== categoriaFiltro) return false
+   133→      if (tipoFiltro && g.tipo !== tipoFiltro) return false
+   134→      return true
+   135→    })
+   136→  }, [todosGanchos, searchTerm, categoriaFiltro, tipoFiltro])
+   137→
+   138→  const handleCopiar = (id: string, texto: string) => {
+   139→    copyToClipboard(texto)
+   140→    setCopiado(id)
+   141→    setTimeout(() => setCopiado(null), 1500)
+   142→  }
+   143→
+   144→  const handleGuardarIdea = (gancho: HookCard) => {
+   145→    const nueva: SavedHook = {
+   146→      id: generateId(),
+   147→      hookId: gancho.id,
+   148→      titulo: gancho.titulo,
+   149→      tipoContenido: '',
+   150→      servicio: gancho.servicio,
+   151→      guionGenerado: '',
+   152→      estado: 'idea',
+   153→      fechaProgramada: null,
+   154→      fechaGrabacion: null,
+   155→      createdAt: new Date().toISOString(),
+   156→    }
+   157→    saveHook(nueva)
+   158→    // feedback visual breve
+   159→    setCopiado('saved-' + gancho.id)
+   160→    setTimeout(() => setCopiado(null), 1500)
+   161→  }
+   162→
+   163→  const yaGuardado = (ganchoId: string) => savedHooks.some(h => h.hookId === ganchoId)
+   164→
+   165→  const handleGenerar = async () => {
+   166→    if (!dialogoGenerar) return
+   167→    const { gancho, tipoContenido, tono, modo, servicio } = dialogoGenerar
+   168→    setDialogoGenerar({ ...dialogoGenerar, cargando: true, error: '', resultado: null })
+   169→    try {
+   170→      const res = await fetch('/api/ai', {
+   171→        method: 'POST',
+   172→        headers: { 'Content-Type': 'application/json' },
+   173→        body: JSON.stringify({
+   174→          type: 'generar-desde-gancho',
+   175→          brandProfile,
+   176→          context: {
+   177→            gancho: gancho.titulo,
+   178→            tipoContenido,
+   179→            tono,
+   180→            modo,
+   181→            servicio: servicio || gancho.servicio,
+   182→          },
+   183→        }),
+   184→      })
+   185→      if (!res.ok) throw new Error('Network error')
+   186→      const data = await res.json()
+   187→      setDialogoGenerar({ ...dialogoGenerar!, cargando: false, resultado: data.result })
+   188→    } catch (e: any) {
+   189→      setDialogoGenerar({ ...dialogoGenerar!, cargando: false, error: e.message || 'Error generando contenido' })
+   190→    }
+   191→  }
+   192→
+   193→  const handleGuardarGenerado = () => {
+   194→    if (!dialogoGenerar?.resultado) return
+   195→    const { gancho, tipoContenido, servicio, resultado } = dialogoGenerar
+   196→    const titulo = resultado.titulo || gancho.titulo
+   197→    const guionTexto = tipoContenido === 'carrusel'
+   198→      ? (resultado.slides || []).map((s: any) => `Slide ${s.numero}: ${s.texto}`).join('\n\n')
+   199→      : tipoContenido === 'story'
+   200→      ? (resultado.stories || []).map((s: any) => `Story ${s.numero} (${s.tipo}): ${s.texto}`).join('\n\n')
+   201→      : resultado.guion || ''
+   202→
+   203→    const nueva: SavedHook = {
+   204→      id: generateId(),
+   205→      hookId: gancho.id,
+   206→      titulo,
+   207→      tipoContenido,
+   208→      servicio: servicio || gancho.servicio,
+   209→      guionGenerado: guionTexto + (resultado.copy ? '\n\nCOPY:\n' + resultado.copy : '') + (resultado.hashtags ? '\n\n' + resultado.hashtags : ''),
+   210→      estado: 'pendiente',
+   211→      fechaProgramada: null,
+   212→      fechaGrabacion: null,
+   213→      createdAt: new Date().toISOString(),
+   214→    }
+   215→    saveHook(nueva)
+   216→
+   217→    // También lo guardamos en la biblioteca general como ContentItem
+   218→    addLibraryItem({
+   219→      id: generateId(),
+   220→      tipo: tipoContenido === 'carrusel' ? 'carrusel' : tipoContenido === 'story' ? 'story' : 'reel',
+   221→      titulo,
+   222→      objetivo: gancho.objetivo,
+   223→      servicio: servicio || gancho.servicio,
+   224→      guion: guionTexto,
+   225→      copy: resultado.copy || '',
+   226→      hashtags: resultado.hashtags || '',
+   227→      textoPortada: resultado.textoPortada || '',
+   228→      formato: dialogoGenerar.modo === 'camara' ? 'hablando a cámara' : 'texto en pantalla',
+   229→      estado: 'borrador',
+   230→      fecha: '',
+   231→      diaSemana: '',
+   232→      slides: resultado.slides || [],
+   233→      storiesData: resultado.stories || [],
+   234→      descripcion: gancho.titulo,
+   235→      planId: '',
+   236→      createdAt: new Date().toISOString(),
+   237→    })
+   238→
+   239→    setDialogoGenerar(null)
+   240→    setVista('mis-ideas')
+   241→  }
+   242→
+   243→  const abrirDialogoGenerar = (gancho: HookCard) => {
+   244→    setGanchoSeleccionado(null)
+   245→    setDialogoGenerar({
+   246→      gancho,
+   247→      tipoContenido: 'reel',
+   248→      tono: 'cercano',
+   249→      modo: 'camara',
+   250→      servicio: gancho.servicio,
+   251→      resultado: null,
+   252→      cargando: false,
+   253→      error: '',
+   254→    })
+   255→  }
+   256→
+   257→  return (
+   258→    <div className="space-y-6">
+   259→      {/* Cabecera */}
+   260→      <div className="flex items-start justify-between flex-wrap gap-4">
+   261→        <div>
+   262→          <h1 className="text-3xl font-bold text-[#2A1520] mb-1">Banco de Ganchos</h1>
+   263→          <p className="text-[#591427]/70">
+   264→            Ideas rápidas, llamativas y estratégicas para crear contenido sin quedarte en blanco.
+   265→          </p>
+   266→        </div>
+   267→        <Button
+   268→          onClick={() => setDialogoNuevoGancho(true)}
+   269→          className="bg-[#591427] hover:bg-[#3D0E1B] text-white"
+   270→        >
+   271→          <Plus className="w-4 h-4 mr-1.5" />
+   272→          Crear gancho
+   273→        </Button>
+   274→      </div>
+   275→
+   276→      {/* Selector de vista */}
+   277→      <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm border border-[#F5F0EB] w-fit">
+   278→        {[
+   279→          { key: 'banco' as Vista, label: 'Banco de Ganchos', icon: LayoutGrid },
+   280→          { key: 'mis-ideas' as Vista, label: 'Mis ideas guardadas', icon: Bookmark },
+   281→          { key: 'calendario' as Vista, label: 'Calendario / Lista', icon: Calendar },
+   282→        ].map(v => (
+   283→          <button
+   284→            key={v.key}
+   285→            onClick={() => setVista(v.key)}
+   286→            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+   287→              vista === v.key
+   288→                ? 'brave-gradient text-white shadow-md'
+   289→                : 'text-[#591427] hover:bg-[#FFFBF0]'
+   290→            }`}
+   291→          >
+   292→            <v.icon className="w-4 h-4" />
+   293→            {v.label}
+   294→          </button>
+   295→        ))}
+   296→      </div>
+   297→
+   298→      {/* VISTA: BANCO */}
+   299→      {vista === 'banco' && (
+   300→        <>
+   301→          {/* Filtros */}
+   302→          <Card className="border-[#F5F0EB] shadow-sm">
+   303→            <CardContent className="p-4 space-y-3">
+   304→              <div className="relative">
+   305→                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#591427]/50" />
+   306→                <Input
+   307→                  value={searchTerm}
+   308→                  onChange={(e) => setSearchTerm(e.target.value)}
+   309→                  placeholder="Buscar ganchos por título, servicio, categoría..."
+   310→                  className="pl-10 bg-white border-[#F5F0EB]"
+   311→                />
+   312→              </div>
+   313→              <div className="space-y-2">
+   314→                <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 flex items-center gap-1.5">
+   315→                  <Filter className="w-3 h-3" /> Categoría
+   316→                </p>
+   317→                <div className="flex flex-wrap gap-1.5">
+   318→                  <button
+   319→                    onClick={() => setCategoriaFiltro('')}
+   320→                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+   321→                      !categoriaFiltro
+   322→                        ? 'bg-[#591427] text-white border-[#591427]'
+   323→                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+   324→                    }`}
+   325→                  >
+   326→                    Todas
+   327→                  </button>
+   328→                  {HOOK_CATEGORIAS.map(c => (
+   329→                    <button
+   330→                      key={c}
+   331→                      onClick={() => setCategoriaFiltro(c === categoriaFiltro ? '' : c)}
+   332→                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+   333→                        c === categoriaFiltro
+   334→                          ? 'bg-[#591427] text-white border-[#591427]'
+   335→                          : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+   336→                      }`}
+   337→                    >
+   338→                      {c}
+   339→                    </button>
+   340→                  ))}
+   341→                </div>
+   342→              </div>
+   343→              <div className="space-y-2">
+   344→                <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 flex items-center gap-1.5">
+   345→                  <Zap className="w-3 h-3" /> Tipo de gancho
+   346→                </p>
+   347→                <div className="flex flex-wrap gap-1.5">
+   348→                  <button
+   349→                    onClick={() => setTipoFiltro('')}
+   350→                    className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+   351→                      !tipoFiltro
+   352→                        ? 'bg-[#FFF1B5] text-[#2A1520] border-[#FFF1B5]'
+   353→                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+   354→                    }`}
+   355→                  >
+   356→                    Todos
+   357→                  </button>
+   358→                  {HOOK_TIPOS.map(t => (
+   359→                    <button
+   360→                      key={t}
+   361→                      onClick={() => setTipoFiltro(t === tipoFiltro ? '' : t)}
+   362→                      className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+   363→                        t === tipoFiltro
+   364→                          ? 'bg-[#FFF1B5] text-[#2A1520] border-[#FFF1B5]'
+   365→                          : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+   366→                      }`}
+   367→                    >
+   368→                      {t}
+   369→                    </button>
+   370→                  ))}
+   371→                </div>
+   372→              </div>
+   373→              {(categoriaFiltro || tipoFiltro || searchTerm) && (
+   374→                <div className="flex items-center gap-2 text-xs text-[#591427]/70 pt-2 border-t border-[#F5F0EB]">
+   375→                  <span>{ganchosFiltrados.length} ganchos encontrados</span>
+   376→                  <button
+   377→                    onClick={() => {
+   378→                      setCategoriaFiltro('')
+   379→                      setTipoFiltro('')
+   380→                      setSearchTerm('')
+   381→                    }}
+   382→                    className="text-[#C1DBE8] hover:underline ml-auto"
+   383→                  >
+   384→                    Limpiar filtros
+   385→                  </button>
+   386→                </div>
+   387→              )}
+   388→            </CardContent>
+   389→          </Card>
+   390→
+   391→          {/* Grid de ganchos */}
+   392→          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+   393→            {ganchosFiltrados.map(gancho => {
+   394→              const guardado = yaGuardado(gancho.id)
+   395→              return (
+   396→                <Card
+   397→                  key={gancho.id}
+   398→                  className="border-[#F5F0EB] shadow-sm hover:shadow-md transition-all flex flex-col"
+   399→                >
+   400→                  <CardHeader className="pb-3">
+   401→                    <div className="flex items-start justify-between gap-2 mb-2">
+   402→                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${IMPACTO_COLOR[gancho.impacto] || IMPACTO_COLOR.Medio}`}>
+   403→                        {gancho.impacto}
+   404→                      </span>
+   405→                      <span className={`text-[10px] px-2 py-0.5 rounded border ${TIPO_COLOR[gancho.tipo] || 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+   406→                        {gancho.tipo}
+   407→                      </span>
+   408→                    </div>
+   409→                    <CardTitle className="text-base text-[#2A1520] leading-snug">
+   410→                      {gancho.titulo}
+   411→                    </CardTitle>
+   412→                    <CardDescription className="flex flex-wrap gap-1.5 mt-2">
+   413→                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
+   414→                        {gancho.categoria}
+   415→                      </span>
+   416→                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
+   417→                        {gancho.servicio}
+   418→                      </span>
+   419→                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
+   420→                        Objetivo: {gancho.objetivo}
+   421→                      </span>
+   422→                    </CardDescription>
+   423→                  </CardHeader>
+   424→                  <CardContent className="pt-0 flex-1 flex flex-col">
+   425→                    <p className="text-xs text-[#2A1520]/70 line-clamp-2 mb-3 flex-1">
+   426→                      {gancho.explicacion}
+   427→                    </p>
+   428→                    <div className="flex flex-wrap gap-1.5">
+   429→                      <Button
+   430→                        size="sm"
+   431→                        onClick={() => abrirDialogoGenerar(gancho)}
+   432→                        className="flex-1 h-8 text-xs brave-gradient hover:opacity-90"
+   433→                      >
+   434→                        <Sparkles className="w-3 h-3 mr-1" />
+   435→                        Generar guion
+   436→                      </Button>
+   437→                      <Button
+   438→                        size="sm"
+   439→                        variant="outline"
+   440→                        onClick={() => setGanchoSeleccionado(gancho)}
+   441→                        className="h-8 text-xs border-[#F5F0EB] text-[#591427] hover:bg-[#FFFBF0]"
+   442→                      >
+   443→                        Ver detalle
+   444→                      </Button>
+   445→                    </div>
+   446→                    <div className="flex items-center gap-1.5 mt-2">
+   447→                      <Button
+   448→                        size="sm"
+   449→                        variant="ghost"
+   450→                        onClick={() => handleGuardarIdea(gancho)}
+   451→                        disabled={guardado}
+   452→                        className="flex-1 h-7 text-[11px] text-[#591427] hover:bg-[#FFFBF0]"
+   453→                      >
+   454→                        {guardado ? (
+   455→                          <><Check className="w-3 h-3 mr-1" /> Guardado</>
+   456→                        ) : copiado === 'saved-' + gancho.id ? (
+   457→                          <><Check className="w-3 h-3 mr-1 text-green-600" /> Guardado</>
+   458→                        ) : (
+   459→                          <><Bookmark className="w-3 h-3 mr-1" /> Guardar idea</>
+   460→                        )}
+   461→                      </Button>
+   462→                      <Button
+   463→                        size="sm"
+   464→                        variant="ghost"
+   465→                        onClick={() => handleCopiar(gancho.id, gancho.titulo)}
+   466→                        className="h-7 text-[11px] text-[#591427] hover:bg-[#FFFBF0] px-2"
+   467→                      >
+   468→                        {copiado === gancho.id ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+   469→                      </Button>
+   470→                      {gancho.esCustom && (
+   471→                        <>
+   472→                          <Button
+   473→                            size="sm"
+   474→                            variant="ghost"
+   475→                            onClick={() => setDialogoEditar(gancho)}
+   476→                            className="h-7 text-[11px] text-[#591427] hover:bg-[#FFFBF0] px-2"
+   477→                          >
+   478→                            <Edit2 className="w-3 h-3" />
+   479→                          </Button>
+   480→                          <Button
+   481→                            size="sm"
+   482→                            variant="ghost"
+   483→                            onClick={() => {
+   484→                              if (confirm('¿Eliminar este gancho personalizado?')) {
+   485→                                removeCustomHook(gancho.id)
+   486→                              }
+   487→                            }}
+   488→                            className="h-7 text-[11px] text-[#C1DBE8] hover:bg-[#C1DBE8]/10 px-2"
+   489→                          >
+   490→                            <Trash2 className="w-3 h-3" />
+   491→                          </Button>
+   492→                        </>
+   493→                      )}
+   494→                    </div>
+   495→                  </CardContent>
+   496→                </Card>
+   497→              )
+   498→            })}
+   499→          </div>
+   500→
+   501→          {ganchosFiltrados.length === 0 && (
+   502→            <Card className="border-[#F5F0EB]">
+   503→              <CardContent className="p-12 text-center">
+   504→                <Lightbulb className="w-12 h-12 text-[#FFF1B5] mx-auto mb-4" />
+   505→                <p className="text-[#2A1520] font-medium mb-1">No se encontraron ganchos</p>
+   506→                <p className="text-sm text-[#591427]/70">Prueba a cambiar los filtros o crea un gancho nuevo.</p>
+   507→              </CardContent>
+   508→            </Card>
+   509→          )}
+   510→        </>
+   511→      )}
+   512→
+   513→      {/* VISTA: MIS IDEAS GUARDADAS */}
+   514→      {vista === 'mis-ideas' && (
+   515→        <MisIdeasGuardadas
+   516→          savedHooks={savedHooks}
+   517→          onUpdate={updateSavedHook}
+   518→          onRemove={removeSavedHook}
+   519→          onProgramar={(sh) => setDialogoProgramar(sh)}
+   520→          onCopiar={handleCopiar}
+   521→          copiado={copiado}
+   522→        />
+   523→      )}
+   524→
+   525→      {/* VISTA: CALENDARIO/LISTA */}
+   526→      {vista === 'calendario' && (
+   527→        <CalendarioSimple
+   528→          savedHooks={savedHooks}
+   529→          onUpdate={updateSavedHook}
+   530→        />
+   531→      )}
+   532→
+   533→      {/* DIÁLOGO: Ver detalle del gancho */}
+   534→      {ganchoSeleccionado && (
+   535→        <DialogoDetalleGancho
+   536→          gancho={ganchoSeleccionado}
+   537→          onClose={() => setGanchoSeleccionado(null)}
+   538→          onGenerar={() => {
+   539→            const g = ganchoSeleccionado
+   540→            setGanchoSeleccionado(null)
+   541→            abrirDialogoGenerar(g)
+   542→          }}
+   543→          onGuardar={() => {
+   544→            handleGuardarIdea(ganchoSeleccionado)
+   545→          }}
+   546→          yaGuardado={yaGuardado(ganchoSeleccionado.id)}
+   547→        />
+   548→      )}
+   549→
+   550→      {/* DIÁLOGO: Generar contenido */}
+   551→      {dialogoGenerar && (
+   552→        <DialogoGenerarContenido
+   553→          estado={dialogoGenerar}
+   554→          onUpdate={(updates) => setDialogoGenerar({ ...dialogoGenerar, ...updates })}
+   555→          onCerrar={() => setDialogoGenerar(null)}
+   556→          onGenerar={handleGenerar}
+   557→          onGuardar={handleGuardarGenerado}
+   558→          onCopiar={handleCopiar}
+   559→          copiado={copiado}
+   560→        />
+   561→      )}
+   562→
+   563→      {/* DIÁLOGO: Editar/Crear gancho */}
+   564→      {(dialogoEditar || dialogoNuevoGancho) && (
+   565→        <DialogoEditarGancho
+   566→          gancho={dialogoEditar}
+   567→          onClose={() => {
+   568→            setDialogoEditar(null)
+   569→            setDialogoNuevoGancho(false)
+   570→          }}
+   571→          onSave={(ganchoData) => {
+   572→            if (dialogoEditar) {
+   573→              updateCustomHook(dialogoEditar.id, ganchoData)
+   574→            } else {
+   575→              addCustomHook({
+   576→                ...ganchoData,
+   577→                id: 'custom-' + generateId(),
+   578→                esCustom: true,
+   579→              } as HookCard)
+   580→            }
+   581→            setDialogoEditar(null)
+   582→            setDialogoNuevoGancho(false)
+   583→          }}
+   584→        />
+   585→      )}
+   586→
+   587→      {/* DIÁLOGO: Programar fecha */}
+   588→      {dialogoProgramar && (
+   589→        <DialogoProgramar
+   590→          savedHook={dialogoProgramar}
+   591→          onClose={() => setDialogoProgramar(null)}
+   592→          onConfirm={(fecha, fechaGrabacion) => {
+   593→            updateSavedHook(dialogoProgramar.id, {
+   594→              fechaProgramada: fecha,
+   595→              fechaGrabacion,
+   596→              estado: dialogoProgramar.estado === 'idea' ? 'pendiente' : dialogoProgramar.estado,
+   597→            })
+   598→            setDialogoProgramar(null)
+   599→          }}
+   600→        />
+   601→      )}
+   602→    </div>
+   603→  )
+   604→}
+   605→
+   606→// ============================================================
+   607→// SUBCOMPONENTE: Detalle del gancho
+   608→// ============================================================
+   609→function DialogoDetalleGancho({
+   610→  gancho,
+   611→  onClose,
+   612→  onGenerar,
+   613→  onGuardar,
+   614→  yaGuardado,
+   615→}: {
+   616→  gancho: HookCard
+   617→  onClose: () => void
+   618→  onGenerar: () => void
+   619→  onGuardar: () => void
+   620→  yaGuardado: boolean
+   621→}) {
+   622→  return (
+   623→    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4" onClick={onClose}>
+   624→      <div
+   625→        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col"
+   626→        onClick={(e) => e.stopPropagation()}
+   627→      >
+   628→        <div className="p-6 overflow-y-auto">
+   629→          <div className="flex items-start justify-between gap-4 mb-4">
+   630→            <div className="flex-1">
+   631→              <div className="flex items-center gap-2 mb-2">
+   632→                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${IMPACTO_COLOR[gancho.impacto]}`}>
+   633→                  {gancho.impacto} impacto
+   634→                </span>
+   635→                <span className={`text-[10px] px-2 py-0.5 rounded border ${TIPO_COLOR[gancho.tipo]}`}>
+   636→                  {gancho.tipo}
+   637→                </span>
+   638→              </div>
+   639→              <h2 className="text-xl font-bold text-[#2A1520] leading-snug">{gancho.titulo}</h2>
+   640→            </div>
+   641→            <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
+   642→              <X className="w-5 h-5" />
+   643→            </Button>
+   644→          </div>
+   645→
+   646→          <div className="grid grid-cols-2 gap-3 mb-4">
+   647→            <div className="bg-[#FFFBF0] rounded-xl p-3">
+   648→              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Categoría</p>
+   649→              <p className="text-sm font-medium text-[#2A1520]">{gancho.categoria}</p>
+   650→            </div>
+   651→            <div className="bg-[#FFFBF0] rounded-xl p-3">
+   652→              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Servicio</p>
+   653→              <p className="text-sm font-medium text-[#2A1520]">{gancho.servicio}</p>
+   654→            </div>
+   655→            <div className="bg-[#FFFBF0] rounded-xl p-3">
+   656→              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Objetivo</p>
+   657→              <p className="text-sm font-medium text-[#2A1520] capitalize">{gancho.objetivo}</p>
+   658→            </div>
+   659→            <div className="bg-[#FFFBF0] rounded-xl p-3">
+   660→              <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Impacto</p>
+   661→              <p className="text-sm font-medium text-[#2A1520]">{gancho.impacto}</p>
+   662→            </div>
+   663→          </div>
+   664→
+   665→          <div className="space-y-3">
+   666→            <div>
+   667→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
+   668→                <Lightbulb className="w-3 h-3" /> Por qué funciona
+   669→              </p>
+   670→              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.explicacion}</p>
+   671→            </div>
+   672→            <div>
+   673→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
+   674→                <AlertCircle className="w-3 h-3" /> Dolor que toca
+   675→              </p>
+   676→              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.dolor}</p>
+   677→            </div>
+   678→            <div>
+   679→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
+   680→                <Heart className="w-3 h-3" /> Deseo que activa
+   681→              </p>
+   682→              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.deseo}</p>
+   683→            </div>
+   684→            <div>
+   685→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 flex items-center gap-1.5">
+   686→                <Video className="w-3 h-3" /> Idea visual
+   687→              </p>
+   688→              <p className="text-sm text-[#2A1520] bg-[#FFFBF0] rounded-xl p-3">{gancho.ideaVisual}</p>
+   689→            </div>
+   690→          </div>
+   691→        </div>
+   692→
+   693→        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
+   694→          <Button
+   695→            onClick={onGuardar}
+   696→            disabled={yaGuardado}
+   697→            variant="outline"
+   698→            className="border-[#591427] text-[#591427] hover:bg-[#591427] hover:text-white"
+   699→          >
+   700→            {yaGuardado ? <><Check className="w-4 h-4 mr-1.5" /> Ya guardado</> : <><Bookmark className="w-4 h-4 mr-1.5" /> Guardar idea</>}
+   701→          </Button>
+   702→          <Button onClick={onGenerar} className="flex-1 brave-gradient hover:opacity-90">
+   703→            <Sparkles className="w-4 h-4 mr-1.5" />
+   704→            Generar contenido
+   705→          </Button>
+   706→        </div>
+   707→      </div>
+   708→    </div>
+   709→  )
+   710→}
+   711→
+   712→// ============================================================
+   713→// SUBCOMPONENTE: Generar contenido desde gancho
+   714→// ============================================================
+   715→function DialogoGenerarContenido({
+   716→  estado,
+   717→  onUpdate,
+   718→  onCerrar,
+   719→  onGenerar,
+   720→  onGuardar,
+   721→  onCopiar,
+   722→  copiado,
+   723→}: {
+   724→  estado: any
+   725→  onUpdate: (updates: any) => void
+   726→  onCerrar: () => void
+   727→  onGenerar: () => void
+   728→  onGuardar: () => void
+   729→  onCopiar: (id: string, texto: string) => void
+   730→  copiado: string | null
+   731→}) {
+   732→  const { gancho, tipoContenido, tono, modo, servicio, resultado, cargando, error } = estado
+   733→
+   734→  return (
+   735→    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onCerrar}>
+   736→      <div
+   737→        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl max-h-[92vh] overflow-hidden flex flex-col"
+   738→        onClick={(e) => e.stopPropagation()}
+   739→      >
+   740→        <div className="p-6 overflow-y-auto flex-1">
+   741→          <div className="flex items-start justify-between gap-4 mb-5">
+   742→            <div className="flex-1">
+   743→              <p className="text-xs uppercase tracking-wider text-[#591427]/60 mb-1">Generar desde gancho</p>
+   744→              <h2 className="text-lg font-bold text-[#2A1520] leading-snug">{gancho.titulo}</h2>
+   745→            </div>
+   746→            <Button variant="ghost" size="icon" onClick={onCerrar} className="shrink-0">
+   747→              <X className="w-5 h-5" />
+   748→            </Button>
+   749→          </div>
+   750→
+   751→          {/* Opciones de generación */}
+   752→          <div className="space-y-4">
+   753→            <div>
+   754→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">¿Qué tipo de contenido quieres?</p>
+   755→              <div className="grid grid-cols-3 gap-2">
+   756→                {[
+   757→                  { key: 'reel', label: 'Reel', icon: Video },
+   758→                  { key: 'story', label: 'Story', icon: FileText },
+   759→                  { key: 'carrusel', label: 'Carrusel', icon: LayoutGrid },
+   760→                ].map(t => (
+   761→                  <button
+   762→                    key={t.key}
+   763→                    onClick={() => onUpdate({ tipoContenido: t.key })}
+   764→                    className={`flex flex-col items-center gap-1 py-3 rounded-xl border transition-all ${
+   765→                      tipoContenido === t.key
+   766→                        ? 'bg-[#591427] text-white border-[#591427]'
+   767→                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+   768→                    }`}
+   769→                  >
+   770→                    <t.icon className="w-4 h-4" />
+   771→                    <span className="text-xs font-medium">{t.label}</span>
+   772→                  </button>
+   773→                ))}
+   774→              </div>
+   775→            </div>
+   776→
+   777→            <div>
+   778→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">Tono</p>
+   779→              <div className="grid grid-cols-3 gap-2">
+   780→                {[
+   781→                  { key: 'educativo', label: 'Educativo' },
+   782→                  { key: 'cercano', label: 'Cercano' },
+   783→                  { key: 'vendedor', label: 'Vendedor' },
+   784→                ].map(t => (
+   785→                  <button
+   786→                    key={t.key}
+   787→                    onClick={() => onUpdate({ tono: t.key })}
+   788→                    className={`py-2 rounded-xl border text-xs font-medium transition-all ${
+   789→                      tono === t.key
+   790→                        ? 'bg-[#FFF1B5] text-[#2A1520] border-[#FFF1B5]'
+   791→                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+   792→                    }`}
+   793→                  >
+   794→                    {t.label}
+   795→                  </button>
+   796→                ))}
+   797→              </div>
+   798→            </div>
+   799→
+   800→            <div>
+   801→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">Modo</p>
+   802→              <div className="grid grid-cols-2 gap-2">
+   803→                {[
+   804→                  { key: 'camara', label: 'Hablando a cámara', icon: Video },
+   805→                  { key: 'texto', label: 'Texto en pantalla', icon: FileText },
+   806→                ].map(t => (
+   807→                  <button
+   808→                    key={t.key}
+   809→                    onClick={() => onUpdate({ modo: t.key })}
+   810→                    className={`flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-medium transition-all ${
+   811→                      modo === t.key
+   812→                        ? 'bg-[#591427] text-white border-[#591427]'
+   813→                        : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+   814→                    }`}
+   815→                  >
+   816→                    <t.icon className="w-3 h-3" />
+   817→                    {t.label}
+   818→                  </button>
+   819→                ))}
+   820→              </div>
+   821→            </div>
+   822→
+   823→            <div>
+   824→              <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-2">Servicio</p>
+   825→              <Input
+   826→                value={servicio}
+   827→                onChange={(e) => onUpdate({ servicio: e.target.value })}
+   828→                placeholder={gancho.servicio || 'Especifica el servicio'}
+   829→                className="bg-white border-[#F5F0EB]"
+   830→              />
+   831→            </div>
+   832→
+   833→            {error && (
+   834→              <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700">
+   835→                {error}
+   836→              </div>
+   837→            )}
+   838→
+   839→            {resultado && (
+   840→              <div className="bg-[#FFFBF0] rounded-xl p-4 border border-[#F5F0EB]">
+   841→                <div className="flex items-center justify-between mb-3">
+   842→                  <p className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60">
+   843→                    Contenido generado
+   844→                  </p>
+   845→                  <Button
+   846→                    size="sm"
+   847→                    variant="ghost"
+   848→                    onClick={() => onCopiar('generado', JSON.stringify(resultado, null, 2))}
+   849→                    className="h-7 text-[11px] text-[#591427]"
+   850→                  >
+   851→                    {copiado === 'generado' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+   852→                  </Button>
+   853→                </div>
+   854→                {resultado.titulo && (
+   855→                  <p className="text-sm font-bold text-[#2A1520] mb-3">{resultado.titulo}</p>
+   856→                )}
+   857→                {resultado.guion && (
+   858→                  <div className="mb-3">
+   859→                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Guion</p>
+   860→                    <p className="text-sm text-[#2A1520] whitespace-pre-wrap bg-white rounded-lg p-3 border border-[#F5F0EB]">{resultado.guion}</p>
+   861→                  </div>
+   862→                )}
+   863→                {resultado.slides && resultado.slides.length > 0 && (
+   864→                  <div className="mb-3 space-y-2">
+   865→                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Slides</p>
+   866→                    {resultado.slides.map((s: any, i: number) => (
+   867→                      <div key={i} className="text-sm text-[#2A1520] bg-white rounded-lg p-3 border border-[#F5F0EB]">
+   868→                        <span className="text-[10px] font-bold text-[#591427]/60 mr-2">{s.numero}.</span>
+   869→                        {s.texto}
+   870→                      </div>
+   871→                    ))}
+   872→                  </div>
+   873→                )}
+   874→                {resultado.stories && resultado.stories.length > 0 && (
+   875→                  <div className="mb-3 space-y-2">
+   876→                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Stories</p>
+   877→                    {resultado.stories.map((s: any, i: number) => (
+   878→                      <div key={i} className="text-sm text-[#2A1520] bg-white rounded-lg p-3 border border-[#F5F0EB]">
+   879→                        <span className="text-[10px] font-bold text-[#591427]/60 mr-2">Story {s.numero} ({s.tipo})</span>
+   880→                        <p>{s.texto}</p>
+   881→                        {s.ideaVisual && <p className="text-[11px] text-[#591427]/60 mt-1">Visual: {s.ideaVisual}</p>}
+   882→                      </div>
+   883→                    ))}
+   884→                  </div>
+   885→                )}
+   886→                {resultado.copy && (
+   887→                  <div className="mb-3">
+   888→                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Copy</p>
+   889→                    <p className="text-sm text-[#2A1520] whitespace-pre-wrap bg-white rounded-lg p-3 border border-[#F5F0EB]">{resultado.copy}</p>
+   890→                  </div>
+   891→                )}
+   892→                {resultado.hashtags && (
+   893→                  <div>
+   894→                    <p className="text-[10px] uppercase tracking-wider text-[#591427]/60 mb-1">Hashtags</p>
+   895→                    <p className="text-sm text-[#C1DBE8] bg-white rounded-lg p-3 border border-[#F5F0EB]">{resultado.hashtags}</p>
+   896→                  </div>
+   897→                )}
+   898→              </div>
+   899→            )}
+   900→          </div>
+   901→        </div>
+   902→
+   903→        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
+   904→          <Button variant="outline" onClick={onCerrar} className="border-[#F5F0EB] text-[#591427]">
+   905→            Cancelar
+   906→          </Button>
+   907→          {!resultado ? (
+   908→            <Button
+   909→              onClick={onGenerar}
+   910→              disabled={cargando}
+   911→              className="flex-1 brave-gradient hover:opacity-90"
+   912→            >
+   913→              {cargando ? (
+   914→                <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Generando...</>
+   915→              ) : (
+   916→                <><Sparkles className="w-4 h-4 mr-1.5" /> Generar contenido</>
+   917→              )}
+   918→            </Button>
+   919→          ) : (
+   920→            <>
+   921→              <Button
+   922→                onClick={onGenerar}
+   923→                disabled={cargando}
+   924→                variant="outline"
+   925→                className="border-[#591427] text-[#591427]"
+   926→              >
+   927→                {cargando ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+   928→                Regenerar
+   929→              </Button>
+   930→              <Button
+   931→                onClick={onGuardar}
+   932→                className="flex-1 bg-[#591427] hover:bg-[#3D0E1B] text-white"
+   933→              >
+   934→                <Save className="w-4 h-4 mr-1.5" />
+   935→                Guardar en mis ideas
+   936→              </Button>
+   937→            </>
+   938→          )}
+   939→        </div>
+   940→      </div>
+   941→    </div>
+   942→  )
+   943→}
+   944→
+   945→// ============================================================
+   946→// SUBCOMPONENTE: Editar/Crear gancho
+   947→// ============================================================
+   948→function DialogoEditarGancho({
+   949→  gancho,
+   950→  onClose,
+   951→  onSave,
+   952→}: {
+   953→  gancho: HookCard | null
+   954→  onClose: () => void
+   955→  onSave: (gancho: Omit<HookCard, 'id' | 'esCustom'>) => void
+   956→}) {
+   957→  const [form, setForm] = useState({
+   958→    titulo: gancho?.titulo || '',
+   959→    categoria: gancho?.categoria || 'Cortes',
+   960→    tipo: gancho?.tipo || ('Educativo' as any),
+   961→    objetivo: gancho?.objetivo || 'autoridad',
+   962→    servicio: gancho?.servicio || '',
+   963→    impacto: gancho?.impacto || ('Medio' as any),
+   964→    explicacion: gancho?.explicacion || '',
+   965→    dolor: gancho?.dolor || '',
+   966→    deseo: gancho?.deseo || '',
+   967→    ideaVisual: gancho?.ideaVisual || '',
+   968→  })
+   969→
+   970→  const handleSave = () => {
+   971→    if (!form.titulo.trim()) {
+   972→      alert('El título es obligatorio')
+   973→      return
+   974→    }
+   975→    onSave(form)
+   976→  }
+   977→
+   978→  return (
+   979→    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+   980→      <div
+   981→        className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl max-h-[92vh] overflow-hidden flex flex-col"
+   982→        onClick={(e) => e.stopPropagation()}
+   983→      >
+   984→        <div className="p-6 overflow-y-auto flex-1">
+   985→          <div className="flex items-start justify-between gap-4 mb-5">
+   986→            <h2 className="text-lg font-bold text-[#2A1520]">
+   987→              {gancho ? 'Editar gancho' : 'Crear nuevo gancho'}
+   988→            </h2>
+   989→            <Button variant="ghost" size="icon" onClick={onClose}>
+   990→              <X className="w-5 h-5" />
+   991→            </Button>
+   992→          </div>
+   993→
+   994→          <div className="space-y-3">
+   995→            <div>
+   996→              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Título *</label>
+   997→              <Textarea
+   998→                value={form.titulo}
+   999→                onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+  1000→                placeholder="Ej: El error que hace que tu color pierda brillo antes de tiempo"
+  1001→                className="bg-white border-[#F5F0EB] min-h-[60px]"
+  1002→              />
+  1003→            </div>
+  1004→            <div className="grid grid-cols-2 gap-3">
+  1005→              <div>
+  1006→                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Categoría</label>
+  1007→                <select
+  1008→                  value={form.categoria}
+  1009→                  onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+  1010→                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
+  1011→                >
+  1012→                  {HOOK_CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+  1013→                </select>
+  1014→              </div>
+  1015→              <div>
+  1016→                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Tipo</label>
+  1017→                <select
+  1018→                  value={form.tipo}
+  1019→                  onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+  1020→                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
+  1021→                >
+  1022→                  {HOOK_TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+  1023→                </select>
+  1024→              </div>
+  1025→              <div>
+  1026→                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Objetivo</label>
+  1027→                <select
+  1028→                  value={form.objetivo}
+  1029→                  onChange={(e) => setForm({ ...form, objetivo: e.target.value })}
+  1030→                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
+  1031→                >
+  1032→                  <option value="autoridad">Autoridad</option>
+  1033→                  <option value="reservas">Reservas</option>
+  1034→                  <option value="visibilidad">Visibilidad</option>
+  1035→                </select>
+  1036→              </div>
+  1037→              <div>
+  1038→                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Impacto</label>
+  1039→                <select
+  1040→                  value={form.impacto}
+  1041→                  onChange={(e) => setForm({ ...form, impacto: e.target.value })}
+  1042→                  className="w-full px-3 py-2 rounded-xl border border-[#F5F0EB] bg-white text-sm"
+  1043→                >
+  1044→                  <option value="Alto">Alto</option>
+  1045→                  <option value="Medio">Medio</option>
+  1046→                  <option value="Bajo">Bajo</option>
+  1047→                </select>
+  1048→              </div>
+  1049→            </div>
+  1050→            <div>
+  1051→              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Servicio</label>
+  1052→              <Input
+  1053→                value={form.servicio}
+  1054→                onChange={(e) => setForm({ ...form, servicio: e.target.value })}
+  1055→                placeholder="Ej: Balayage, Rubios, Cortes..."
+  1056→                className="bg-white border-[#F5F0EB]"
+  1057→              />
+  1058→            </div>
+  1059→            <div>
+  1060→              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Por qué funciona</label>
+  1061→              <Textarea
+  1062→                value={form.explicacion}
+  1063→                onChange={(e) => setForm({ ...form, explicacion: e.target.value })}
+  1064→                placeholder="Explica brevemente por qué este gancho funciona"
+  1065→                className="bg-white border-[#F5F0EB] min-h-[60px]"
+  1066→              />
+  1067→            </div>
+  1068→            <div className="grid grid-cols-2 gap-3">
+  1069→              <div>
+  1070→                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Dolor que toca</label>
+  1071→                <Textarea
+  1072→                  value={form.dolor}
+  1073→                  onChange={(e) => setForm({ ...form, dolor: e.target.value })}
+  1074→                  placeholder="Qué dolor de la clienta activa"
+  1075→                  className="bg-white border-[#F5F0EB] min-h-[60px]"
+  1076→                />
+  1077→              </div>
+  1078→              <div>
+  1079→                <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Deseo que activa</label>
+  1080→                <Textarea
+  1081→                  value={form.deseo}
+  1082→                  onChange={(e) => setForm({ ...form, deseo: e.target.value })}
+  1083→                  placeholder="Qué deseo despierta"
+  1084→                  className="bg-white border-[#F5F0EB] min-h-[60px]"
+  1085→                />
+  1086→              </div>
+  1087→            </div>
+  1088→            <div>
+  1089→              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Idea visual</label>
+  1090→              <Textarea
+  1091→                value={form.ideaVisual}
+  1092→                onChange={(e) => setForm({ ...form, ideaVisual: e.target.value })}
+  1093→                placeholder="Describe la imagen o vídeo sugerido"
+  1094→                className="bg-white border-[#F5F0EB] min-h-[60px]"
+  1095→              />
+  1096→            </div>
+  1097→          </div>
+  1098→        </div>
+  1099→
+  1100→        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
+  1101→          <Button variant="outline" onClick={onClose} className="border-[#F5F0EB] text-[#591427]">
+  1102→            Cancelar
+  1103→          </Button>
+  1104→          <Button onClick={handleSave} className="flex-1 bg-[#591427] hover:bg-[#3D0E1B] text-white">
+  1105→            <Save className="w-4 h-4 mr-1.5" />
+  1106→            {gancho ? 'Guardar cambios' : 'Crear gancho'}
+  1107→          </Button>
+  1108→        </div>
+  1109→      </div>
+  1110→    </div>
+  1111→  )
+  1112→}
+  1113→
+  1114→// ============================================================
+  1115→// SUBCOMPONENTE: Programar fecha
+  1116→// ============================================================
+  1117→function DialogoProgramar({
+  1118→  savedHook,
+  1119→  onClose,
+  1120→  onConfirm,
+  1121→}: {
+  1122→  savedHook: SavedHook
+  1123→  onClose: () => void
+  1124→  onConfirm: (fecha: string, fechaGrabacion: string | null) => void
+  1125→}) {
+  1126→  const [fecha, setFecha] = useState(savedHook.fechaProgramada || '')
+  1127→  const [fechaGrabacion, setFechaGrabacion] = useState(savedHook.fechaGrabacion || '')
+  1128→
+  1129→  return (
+  1130→    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+  1131→      <div
+  1132→        className="bg-white w-full max-w-md rounded-3xl shadow-2xl"
+  1133→        onClick={(e) => e.stopPropagation()}
+  1134→      >
+  1135→        <div className="p-6">
+  1136→          <div className="flex items-start justify-between gap-4 mb-5">
+  1137→            <div>
+  1138→              <p className="text-xs uppercase tracking-wider text-[#591427]/60 mb-1">Programar contenido</p>
+  1139→              <h2 className="text-base font-bold text-[#2A1520] leading-snug">{savedHook.titulo}</h2>
+  1140→            </div>
+  1141→            <Button variant="ghost" size="icon" onClick={onClose}>
+  1142→              <X className="w-5 h-5" />
+  1143→            </Button>
+  1144→          </div>
+  1145→
+  1146→          <div className="space-y-4">
+  1147→            <div>
+  1148→              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Día de grabación (opcional)</label>
+  1149→              <Input
+  1150→                type="date"
+  1151→                value={fechaGrabacion}
+  1152→                onChange={(e) => setFechaGrabacion(e.target.value)}
+  1153→                className="bg-white border-[#F5F0EB]"
+  1154→              />
+  1155→            </div>
+  1156→            <div>
+  1157→              <label className="text-xs font-semibold uppercase tracking-wider text-[#591427]/60 mb-1.5 block">Día de publicación (opcional)</label>
+  1158→              <Input
+  1159→                type="date"
+  1160→                value={fecha}
+  1161→                onChange={(e) => setFecha(e.target.value)}
+  1162→                className="bg-white border-[#F5F0EB]"
+  1163→              />
+  1164→            </div>
+  1165→            <p className="text-xs text-[#591427]/60">
+  1166→              No es obligatorio programar. Puedes dejar las fechas en blanco y simplemente tener la idea guardada.
+  1167→            </p>
+  1168→          </div>
+  1169→        </div>
+  1170→
+  1171→        <div className="p-4 border-t border-[#F5F0EB] bg-[#FFFBF0] flex gap-2">
+  1172→          <Button
+  1173→            variant="outline"
+  1174→            onClick={() => {
+  1175→              onConfirm('', null)
+  1176→            }}
+  1177→            className="border-[#F5F0EB] text-[#591427]"
+  1178→          >
+  1179→            Quitar fechas
+  1180→          </Button>
+  1181→          <Button
+  1182→            onClick={() => onConfirm(fecha, fechaGrabacion || null)}
+  1183→            className="flex-1 bg-[#591427] hover:bg-[#3D0E1B] text-white"
+  1184→          >
+  1185→            <Calendar className="w-4 h-4 mr-1.5" />
+  1186→            Guardar
+  1187→          </Button>
+  1188→        </div>
+  1189→      </div>
+  1190→    </div>
+  1191→  )
+  1192→}
+  1193→
+  1194→// ============================================================
+  1195→// SUBCOMPONENTE: Mis ideas guardadas
+  1196→// ============================================================
+  1197→function MisIdeasGuardadas({
+  1198→  savedHooks,
+  1199→  onUpdate,
+  1200→  onRemove,
+  1201→  onProgramar,
+  1202→  onCopiar,
+  1203→  copiado,
+  1204→}: {
+  1205→  savedHooks: SavedHook[]
+  1206→  onUpdate: (id: string, updates: Partial<SavedHook>) => void
+  1207→  onRemove: (id: string) => void
+  1208→  onProgramar: (sh: SavedHook) => void
+  1209→  onCopiar: (id: string, texto: string) => void
+  1210→  copiado: string | null
+  1211→}) {
+  1212→  const [filtroEstado, setFiltroEstado] = useState<SavedHookEstado | 'todos'>('todos')
+  1213→
+  1214→  const filtrados = savedHooks.filter(h => filtroEstado === 'todos' || h.estado === filtroEstado)
+  1215→
+  1216→  if (savedHooks.length === 0) {
+  1217→    return (
+  1218→      <Card className="border-[#F5F0EB]">
+  1219→        <CardContent className="p-12 text-center">
+  1220→          <Bookmark className="w-12 h-12 text-[#FFF1B5] mx-auto mb-4" />
+  1221→          <p className="text-[#2A1520] font-medium mb-1">Aún no tienes ideas guardadas</p>
+  1222→          <p className="text-sm text-[#591427]/70">
+  1223→            Ve al Banco de Ganchos y guarda las ideas que más te gusten. También puedes generar contenido desde ellas.
+  1224→          </p>
+  1225→        </CardContent>
+  1226→      </Card>
+  1227→    )
+  1228→  }
+  1229→
+  1230→  return (
+  1231→    <div className="space-y-4">
+  1232→      {/* Filtro por estado */}
+  1233→      <div className="flex flex-wrap gap-2">
+  1234→        {(['todos', 'idea', 'pendiente', 'grabado', 'publicado'] as const).map(estado => {
+  1235→          const count = estado === 'todos' ? savedHooks.length : savedHooks.filter(h => h.estado === estado).length
+  1236→          const label = estado === 'todos' ? 'Todos' : ESTADO_LABELS[estado].label
+  1237→          return (
+  1238→            <button
+  1239→              key={estado}
+  1240→              onClick={() => setFiltroEstado(estado)}
+  1241→              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+  1242→                filtroEstado === estado
+  1243→                  ? 'bg-[#591427] text-white border-[#591427]'
+  1244→                  : 'bg-white text-[#591427] border-[#F5F0EB] hover:bg-[#FFFBF0]'
+  1245→              }`}
+  1246→            >
+  1247→              {label} ({count})
+  1248→            </button>
+  1249→          )
+  1250→        })}
+  1251→      </div>
+  1252→
+  1253→      {/* Lista de ideas guardadas */}
+  1254→      <div className="space-y-3">
+  1255→        {filtrados.map(hook => {
+  1256→          const EstadoIcon = ESTADO_LABELS[hook.estado].icon
+  1257→          return (
+  1258→            <Card key={hook.id} className="border-[#F5F0EB] shadow-sm">
+  1259→              <CardContent className="p-4">
+  1260→                <div className="flex items-start justify-between gap-3 mb-3">
+  1261→                  <div className="flex-1 min-w-0">
+  1262→                    <h3 className="text-sm font-bold text-[#2A1520] mb-1">{hook.titulo}</h3>
+  1263→                    <div className="flex flex-wrap gap-1.5">
+  1264→                      <span className={`text-[10px] px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${ESTADO_LABELS[hook.estado].color}`}>
+  1265→                        <EstadoIcon className="w-2.5 h-2.5" />
+  1266→                        {ESTADO_LABELS[hook.estado].label}
+  1267→                      </span>
+  1268→                      {hook.tipoContenido && (
+  1269→                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
+  1270→                          {hook.tipoContenido}
+  1271→                        </span>
+  1272→                      )}
+  1273→                      {hook.servicio && (
+  1274→                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
+  1275→                          {hook.servicio}
+  1276→                        </span>
+  1277→                      )}
+  1278→                      {hook.fechaProgramada && (
+  1279→                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#FFF1B5]/20 border border-[#FFF1B5]/40 text-[#591427]">
+  1280→                          Publicar: {new Date(hook.fechaProgramada).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+  1281→                        </span>
+  1282→                      )}
+  1283→                      {hook.fechaGrabacion && (
+  1284→                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C1DBE8]/15 border border-[#C1DBE8]/30 text-[#591427]">
+  1285→                          Grabar: {new Date(hook.fechaGrabacion).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+  1286→                        </span>
+  1287→                      )}
+  1288→                    </div>
+  1289→                  </div>
+  1290→                </div>
+  1291→
+  1292→                {hook.guionGenerado && (
+  1293→                  <div className="bg-[#FFFBF0] rounded-xl p-3 mb-3 max-h-40 overflow-y-auto">
+  1294→                    <p className="text-xs text-[#2A1520] whitespace-pre-wrap line-clamp-6">{hook.guionGenerado}</p>
+  1295→                  </div>
+  1296→                )}
+  1297→
+  1298→                <div className="flex flex-wrap gap-1.5">
+  1299→                  {/* Cambiar estado */}
+  1300→                  <select
+  1301→                    value={hook.estado}
+  1302→                    onChange={(e) => onUpdate(hook.id, { estado: e.target.value as SavedHookEstado })}
+  1303→                    className="text-xs px-2 py-1.5 rounded-lg border border-[#F5F0EB] bg-white text-[#591427]"
+  1304→                  >
+  1305→                    <option value="idea">Idea guardada</option>
+  1306→                    <option value="pendiente">Pendiente de grabar</option>
+  1307→                    <option value="grabado">Grabado</option>
+  1308→                    <option value="publicado">Publicado</option>
+  1309→                  </select>
+  1310→                  <Button
+  1311→                    size="sm"
+  1312→                    variant="outline"
+  1313→                    onClick={() => onProgramar(hook)}
+  1314→                    className="h-8 text-xs border-[#F5F0EB] text-[#591427]"
+  1315→                  >
+  1316→                    <Calendar className="w-3 h-3 mr-1" />
+  1317→                    Programar
+  1318→                  </Button>
+  1319→                  {hook.guionGenerado && (
+  1320→                    <Button
+  1321→                      size="sm"
+  1322→                      variant="outline"
+  1323→                      onClick={() => onCopiar(hook.id, hook.guionGenerado)}
+  1324→                      className="h-8 text-xs border-[#F5F0EB] text-[#591427]"
+  1325→                    >
+  1326→                      {copiado === hook.id ? <Check className="w-3 h-3 text-green-600" /> : <><Copy className="w-3 h-3 mr-1" /> Copiar</>}
+  1327→                    </Button>
+  1328→                  )}
+  1329→                  <Button
+  1330→                    size="sm"
+  1331→                    variant="ghost"
+  1332→                    onClick={() => {
+  1333→                      if (confirm('¿Eliminar esta idea guardada?')) onRemove(hook.id)
+  1334→                    }}
+  1335→                    className="h-8 text-xs text-[#C1DBE8] hover:bg-[#C1DBE8]/10 ml-auto"
+  1336→                  >
+  1337→                    <Trash2 className="w-3 h-3" />
+  1338→                  </Button>
+  1339→                </div>
+  1340→              </CardContent>
+  1341→            </Card>
+  1342→          )
+  1343→        })}
+  1344→      </div>
+  1345→    </div>
+  1346→  )
+  1347→}
+  1348→
+  1349→// ============================================================
+  1350→// SUBCOMPONENTE: Calendario simple
+  1351→// ============================================================
+  1352→function CalendarioSimple({
+  1353→  savedHooks,
+  1354→  onUpdate,
+  1355→}: {
+  1356→  savedHooks: SavedHook[]
+  1357→  onUpdate: (id: string, updates: Partial<SavedHook>) => void
+  1358→}) {
+  1359→  const [mes, setMes] = useState(() => {
+  1360→    const d = new Date()
+  1361→    return new Date(d.getFullYear(), d.getMonth(), 1)
+  1362→  })
+  1363→  const [vistaLista, setVistaLista] = useState(false)
+  1364→
+  1365→  // Hooks con fecha programada
+  1366→  const programados = savedHooks.filter(h => h.fechaProgramada)
+  1367→  const porFecha = new Map<string, SavedHook[]>()
+  1368→  programados.forEach(h => {
+  1369→    if (!h.fechaProgramada) return
+  1370→    const arr = porFecha.get(h.fechaProgramada) || []
+  1371→    arr.push(h)
+  1372→    porFecha.set(h.fechaProgramada, arr)
+  1373→  })
+  1374→
+  1375→  // Generar días del mes
+  1376→  const inicioMes = new Date(mes.getFullYear(), mes.getMonth(), 1)
+  1377→  const finMes = new Date(mes.getFullYear(), mes.getMonth() + 1, 0)
+  1378→  const inicioGrid = new Date(inicioMes)
+  1379→  inicioGrid.setDate(inicioGrid.getDate() - inicioGrid.getDay()) // Domingo = 0
+  1380→  const dias: Date[] = []
+  1381→  const cursor = new Date(inicioGrid)
+  1382→  while (cursor <= finMes || dias.length % 7 !== 0) {
+  1383→    dias.push(new Date(cursor))
+  1384→    cursor.setDate(cursor.getDate() + 1)
+  1385→    if (dias.length > 42) break
+  1386→  }
+  1387→
+  1388→  const monthName = mes.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+  1389→
+  1390→  return (
+  1391→    <div className="space-y-4">
+  1392→      <div className="flex items-center justify-between flex-wrap gap-3">
+  1393→        <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-[#F5F0EB]">
+  1394→          <button
+  1395→            onClick={() => setVistaLista(false)}
+  1396→            className={`text-xs px-3 py-1.5 rounded-lg ${!vistaLista ? 'bg-[#591427] text-white' : 'text-[#591427]'}`}
+  1397→          >
+  1398→            Calendario
+  1399→          </button>
+  1400→          <button
+  1401→            onClick={() => setVistaLista(true)}
+  1402→            className={`text-xs px-3 py-1.5 rounded-lg ${vistaLista ? 'bg-[#591427] text-white' : 'text-[#591427]'}`}
+  1403→          >
+  1404→            Lista
+  1405→          </button>
+  1406→        </div>
+  1407→        {!vistaLista && (
+  1408→          <div className="flex items-center gap-2">
+  1409→            <Button
+  1410→              size="sm"
+  1411→              variant="outline"
+  1412→              onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() - 1, 1))}
+  1413→              className="border-[#F5F0EB] text-[#591427]"
+  1414→            >
+  1415→              ←
+  1416→            </Button>
+  1417→            <span className="text-sm font-semibold capitalize text-[#2A1520] min-w-[140px] text-center">{monthName}</span>
+  1418→            <Button
+  1419→              size="sm"
+  1420→              variant="outline"
+  1421→              onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}
+  1422→              className="border-[#F5F0EB] text-[#591427]"
+  1423→            >
+  1424→              →
+  1425→            </Button>
+  1426→          </div>
+  1427→        )}
+  1428→      </div>
+  1429→
+  1430→      {/* Vista Calendario */}
+  1431→      {!vistaLista && (
+  1432→        <Card className="border-[#F5F0EB] shadow-sm">
+  1433→          <CardContent className="p-4">
+  1434→            <div className="grid grid-cols-7 gap-1 mb-2">
+  1435→              {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map(d => (
+  1436→                <div key={d} className="text-center text-[10px] font-semibold uppercase text-[#591427]/60 py-1">
+  1437→                  {d}
+  1438→                </div>
+  1439→              ))}
+  1440→            </div>
+  1441→            <div className="grid grid-cols-7 gap-1">
+  1442→              {dias.map((dia, i) => {
+  1443→                const fechaStr = dia.toISOString().split('T')[0]
+  1444→                const enMes = dia.getMonth() === mes.getMonth()
+  1445→                const hooksHoy = porFecha.get(fechaStr) || []
+  1446→                const esHoy = new Date().toDateString() === dia.toDateString()
+  1447→                return (
+  1448→                  <div
+  1449→                    key={i}
+  1450→                    className={`min-h-[68px] p-1.5 rounded-lg border ${
+  1451→                      enMes
+  1452→                        ? 'bg-white border-[#F5F0EB]'
+  1453→                        : 'bg-[#FFFBF0] border-transparent text-[#591427]/30'
+  1454→                    } ${esHoy ? 'ring-2 ring-[#FFF1B5]' : ''}`}
+  1455→                  >
+  1456→                    <p className="text-[10px] font-medium text-[#2A1520] mb-1">{dia.getDate()}</p>
+  1457→                    <div className="space-y-0.5">
+  1458→                      {hooksHoy.slice(0, 2).map(h => (
+  1459→                        <div
+  1460→                          key={h.id}
+  1461→                          className={`text-[9px] px-1 py-0.5 rounded truncate ${
+  1462→                            h.estado === 'publicado'
+  1463→                              ? 'bg-green-100 text-green-800'
+  1464→                              : h.estado === 'grabado'
+  1465→                              ? 'bg-[#591427]/15 text-[#591427]'
+  1466→                              : 'bg-[#FFF1B5]/20 text-[#591427]'
+  1467→                          }`}
+  1468→                          title={h.titulo}
+  1469→                        >
+  1470→                          {h.titulo}
+  1471→                        </div>
+  1472→                      ))}
+  1473→                      {hooksHoy.length > 2 && (
+  1474→                        <p className="text-[9px] text-[#591427]/60">+{hooksHoy.length - 2} más</p>
+  1475→                      )}
+  1476→                    </div>
+  1477→                  </div>
+  1478→                )
+  1479→              })}
+  1480→            </div>
+  1481→            {programados.length === 0 && (
+  1482→              <p className="text-center text-xs text-[#591427]/60 mt-4">
+  1483→                No tienes contenidos programados todavía. Asigna fechas desde "Mis ideas guardadas".
+  1484→              </p>
+  1485→            )}
+  1486→          </CardContent>
+  1487→        </Card>
+  1488→      )}
+  1489→
+  1490→      {/* Vista Lista */}
+  1491→      {vistaLista && (
+  1492→        <div className="space-y-4">
+  1493→          {(['pendiente', 'grabado', 'publicado'] as SavedHookEstado[]).map(estado => {
+  1494→            const hooks = savedHooks.filter(h => h.estado === estado)
+  1495→            if (hooks.length === 0) return null
+  1496→            const EstadoIcon = ESTADO_LABELS[estado].icon
+  1497→            return (
+  1498→              <Card key={estado} className="border-[#F5F0EB] shadow-sm">
+  1499→                <CardHeader className="pb-2">
+  1500→                  <CardTitle className="text-sm flex items-center gap-2 text-[#2A1520]">
+  1501→                    <EstadoIcon className="w-4 h-4 text-[#591427]" />
+  1502→                    {ESTADO_LABELS[estado].label} ({hooks.length})
+  1503→                  </CardTitle>
+  1504→                </CardHeader>
+  1505→                <CardContent className="pt-0 space-y-2">
+  1506→                  {hooks.map(h => (
+  1507→                    <div
+  1508→                      key={h.id}
+  1509→                      className="flex items-start justify-between gap-3 p-2 rounded-lg hover:bg-[#FFFBF0]"
+  1510→                    >
+  1511→                      <div className="flex-1 min-w-0">
+  1512→                        <p className="text-sm font-medium text-[#2A1520] truncate">{h.titulo}</p>
+  1513→                        <div className="flex flex-wrap gap-1.5 mt-0.5">
+  1514→                          {h.tipoContenido && (
+  1515→                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
+  1516→                              {h.tipoContenido}
+  1517→                            </span>
+  1518→                          )}
+  1519→                          {h.servicio && (
+  1520→                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFFBF0] border border-[#F5F0EB] text-[#591427]">
+  1521→                              {h.servicio}
+  1522→                            </span>
+  1523→                          )}
+  1524→                          {h.fechaProgramada && (
+  1525→                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FFF1B5]/20 border border-[#FFF1B5]/40 text-[#591427]">
+  1526→                              {new Date(h.fechaProgramada).toLocaleDateString('es-ES')}
+  1527→                            </span>
+  1528→                          )}
+  1529→                        </div>
+  1530→                      </div>
+  1531→                      <select
+  1532→                        value={h.estado}
+  1533→                        onChange={(e) => onUpdate(h.id, { estado: e.target.value as SavedHookEstado })}
+  1534→                        className="text-xs px-2 py-1 rounded-lg border border-[#F5F0EB] bg-white text-[#591427]"
+  1535→                      >
+  1536→                        <option value="idea">Idea</option>
+  1537→                        <option value="pendiente">Pendiente</option>
+  1538→                        <option value="grabado">Grabado</option>
+  1539→                        <option value="publicado">Publicado</option>
+  1540→                      </select>
+  1541→                    </div>
+  1542→                  ))}
+  1543→                </CardContent>
+  1544→              </Card>
+  1545→            )
+  1546→          })}
+  1547→          {savedHooks.filter(h => h.estado !== 'idea').length === 0 && (
+  1548→            <Card className="border-[#F5F0EB]">
+  1549→              <CardContent className="p-8 text-center">
+  1550→                <Calendar className="w-10 h-10 text-[#FFF1B5] mx-auto mb-3" />
+  1551→                <p className="text-sm text-[#2A1520] font-medium">No hay contenidos en proceso</p>
+  1552→                <p className="text-xs text-[#591427]/70 mt-1">
+  1553→                  Cambia el estado de tus ideas guardadas a "pendiente de grabar" para verlas aquí.
+  1554→                </p>
+  1555→              </CardContent>
+  1556→            </Card>
+  1557→          )}
+  1558→        </div>
+  1559→      )}
+  1560→    </div>
+  1561→  )
+  1562→}
+  1563→
