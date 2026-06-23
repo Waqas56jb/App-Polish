@@ -107,7 +107,9 @@ export default function Home() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="p-6 md:p-8 max-w-[1200px] mx-auto"
+          // En móvil: padding superior para top bar (h-14 ≈ 56px) e inferior para bottom bar (h-16 ≈ 64px)
+          // safe-area para iPhones con notch
+          className="p-4 pt-16 pb-20 md:p-8 md:pt-8 md:pb-8 max-w-[1200px] mx-auto safe-area-pt safe-area-pb"
         >
           {moduleElement}
         </motion.div>

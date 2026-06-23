@@ -373,3 +373,15 @@
   );
   border: 1px solid rgba(193, 219, 232, 0.3);
 }
+/* ─── Safe area para móviles (notch, home indicator) ─── */
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* La barra inferior necesita padding inferior extra en iPhones con home indicator */
+.safe-area-pb-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}

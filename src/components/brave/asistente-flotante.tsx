@@ -26,7 +26,9 @@ export function AsistenteFlotante() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             onClick={() => setAsistenteAbierto(true)}
-            className="fixed bottom-6 right-6 z-40 group flex items-center gap-2.5 pl-2 pr-4 py-2 rounded-full brave-gradient shadow-xl text-white hover:scale-105 transition-transform brave-glow"
+            // En móvil: subimos el botón para que no se solape con la bottom bar (h-16 ≈ 64px)
+            // En desktop: bottom-6 right-6 normal
+            className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 group flex items-center gap-2.5 pl-2 pr-4 py-2 rounded-full brave-gradient shadow-xl text-white hover:scale-105 transition-transform brave-glow"
             title="Abrir Asistente BRÄVE"
           >
             <div className="brave-float">
@@ -53,7 +55,7 @@ export function AsistenteFlotante() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-[#FFFBF0] w-full sm:max-w-2xl sm:rounded-3xl shadow-2xl max-h-[95vh] overflow-hidden flex flex-col brave-glass-strong"
+              className="bg-[#FFFBF0] w-full sm:max-w-2xl sm:rounded-3xl shadow-2xl max-h-[95vh] overflow-hidden flex flex-col brave-glass-strong pt-14 sm:pt-0"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-4 sm:p-6 overflow-y-auto">

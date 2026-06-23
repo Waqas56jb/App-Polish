@@ -218,3 +218,42 @@ Stage Summary:
 - Días de publicación repartidos estratégicamente (Mar/Jue/Dom preferidos, evita Lun/Vie/Sáb)
 - Calendario ahora totalmente interactivo: drag en vista calendario + drag en vista lista
 - Modularidad mejorada: evento 'module-reactivate' permite reset desde sidebar
+
+---
+Task ID: 6
+Agent: main
+Task: Adaptar a formato móvil - navegación clara y usable
+
+Work Log:
+- Sidebar rediseñado responsive:
+  - Desktop (md+): sidebar vertical expandible a la izquierda (sin cambios)
+  - Móvil (< md): bottom navigation bar con 5 módulos principales + botón "Más"
+    - 5 principales: Inicio, Planificar, Crear, Biblioteca, Calendario
+    - Botón "Más" abre sheet con grid 3x3 de todos los módulos
+    - Cada item muestra icono + label corto (Inicio, Marca, Plan, Crear, Stories, Ganchos, Asist., Biblio., Calend.)
+    - Item activo se resalta con su color de marca + scale 1.1
+    - Labels siempre visibles (no solo iconos) - mejor entendimiento para usuaria no técnica
+- Top bar móvil: logo BRAVE Studio + botón "Dame una idea" (siempre accesible)
+- Sheet "Más" en móvil:
+  - Animación spring desde abajo
+  - Overlay con blur backdrop
+  - Grid 3x3 de módulos con icono + label completo
+  - Botón "Dame una idea" al final
+  - Cierre con X, overlay, o Escape
+- Layout ajustado en page.tsx:
+  - Móvil: pt-16 pb-20 (espacio para top bar 56px + bottom nav 64px)
+  - Desktop: p-8 normal
+  - Safe-area CSS para iPhones con notch (env safe-area-inset-top/bottom)
+- Asistente flotante ajustado:
+  - En móvil: bottom-20 (sube para no solapar con bottom nav)
+  - En desktop: bottom-6 (sin cambios)
+  - Modal en móvil: pt-14 (espacio para top bar)
+- CSS añadido: .safe-area-pt, .safe-area-pb, .safe-area-pb-nav
+- Verificado: lint limpio, build exitoso, dev server 200 OK
+
+Stage Summary:
+- Móvil: navegación inferior clara con labels visibles, sheet expandible para módulos secundarios
+- Desktop: sidebar expandible igual que antes (sin regresiones)
+- Top bar móvil siempre visible con logo y acceso rápido a "Dame una idea"
+- Safe areas para iPhones con notch/home indicator
+- Asistente flotante reposicionado en móvil para no solapar con bottom nav
