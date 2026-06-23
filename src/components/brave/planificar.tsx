@@ -163,19 +163,36 @@ export function Planificar() {
   const calendarioItems = libraryItems.filter(i => i.estado === 'programado')
   const hasCalendarioContent = calendarioItems.length > 0
 
-  // ─── Escuchar evento: clic en módulo activo → reset a config ───
+  // ─── Estado: diálogo de confirmación al reactivar módulo ───
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+
+  // ─── Escuchar evento: clic en módulo activo → preguntar antes de reset ───
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail
       if (detail?.module === 'planificar') {
-        setView('config')
-        setItems([])
-        setExpandedIdx(null)
+        // Si hay items generados y estamos en vista resultado, preguntar antes de borrar
+        if (view === 'resultado' && items.length > 0) {
+          setShowResetConfirm(true)
+        } else {
+          // Si no hay nada que perder, reset directo
+          setView('config')
+          setItems([])
+          setExpandedIdx(null)
+        }
       }
     }
     window.addEventListener('module-reactivate', handler)
     return () => window.removeEventListener('module-reactivate', handler)
-  }, [])
+  }, [view, items])
+
+  // ─── Confirmar reset: sí, perder el avance ───
+  const confirmReset = () => {
+    setShowResetConfirm(false)
+    setView('config')
+    setItems([])
+    setExpandedIdx(null)
+  }
 
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
 
@@ -318,9 +335,11 @@ export function Planificar() {
     const item = items[index]
     if (!item) return
     addLibraryItems([{ ...item, id: generateId(), estado: 'aprobado' as const }])
-    toast.success(`"${item.titulo}" guardada en tu Biblioteca`)
-    // Navegación automática para que la usuaria vea el resultado
-    setTimeout(() => setActiveModule('biblioteca'), 800)
+    // Permanecemos en Planificar para que la usuaria siga revisando las demás ideas
+    toast.success(`"${item.titulo}" guardada en tu Biblioteca`, {
+      description: 'Puedes seguir revisando las demás ideas',
+      duration: 3500,
+    })
   }
 
   // ─── Guardar UNA idea en calendario ───
@@ -328,16 +347,18 @@ export function Planificar() {
     const item = items[index]
     if (!item) return
     addLibraryItems([{ ...item, id: generateId(), estado: 'programado' as const }])
-    toast.success(`"${item.titulo}" agendada para ${item.diaSemana} ${item.fecha}`)
-    // Navegación automática para que la usuaria vea el resultado
-    setTimeout(() => setActiveModule('calendario'), 800)
+    toast.success(`"${item.titulo}" añadida al calendario`, {
+      description: `${item.diaSemana} ${item.fecha} · sigue revisando las demás`,
+      duration: 3500,
+    })
   }
 
   // ─── Guardar TODO en Biblioteca ───
   const saveAllToBiblioteca = () => {
     addLibraryItems(items.map(item => ({ ...item, id: generateId(), estado: 'aprobado' as const })))
-    toast.success(`${items.length} ideas guardadas en tu Biblioteca`)
-    setActiveModule('biblioteca')
+    toast.success(`${items.length} ideas guardadas en tu Biblioteca`, {
+      duration: 3500,
+    })
   }
 
   // ─── Mover TODO al Calendario ───
@@ -377,9 +398,9 @@ export function Planificar() {
         return { ...item, id: generateId(), estado: 'programado' as const, fecha }
       })
       addLibraryItems(shifted)
-      toast.success('Plan añadido a tu Calendario')
+      toast.success('Plan añadido a tu Calendario', { duration: 3500 })
     }
-    setActiveModule('calendario')
+    // Permanecemos en Planificar — la usuaria puede seguir revisando
   }
 
   // ─── Abrir ficha completa (genera guion bajo demanda) ───
@@ -649,7 +670,7 @@ export function Planificar() {
             </p>
           </div>
           <button
-            onClick={() => { setView('config'); setItems([]) }}
+            onClick={() => setShowResetConfirm(true)}
             className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -714,14 +735,14 @@ export function Planificar() {
                   className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  Biblioteca
+                  Guardar en biblioteca
                 </button>
                 <button
                   onClick={() => saveItemToCalendario(idx)}
                   className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-medium border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors"
                 >
                   <CalendarPlus className="w-3.5 h-3.5" />
-                  Calendario
+                  Añadir en calendario
                 </button>
               </div>
             </motion.div>
@@ -735,16 +756,70 @@ export function Planificar() {
             className="py-3.5 rounded-2xl bg-white border-2 border-[#C1DBE8] text-[#591427] font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#C1DBE8]/10 transition-all"
           >
             <BookOpen className="w-4 h-4" />
-            Todo a Biblioteca
+            Guardar todo en biblioteca
           </button>
           <button
             onClick={sendAllToCalendario}
             className="py-3.5 rounded-2xl brave-gradient text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:opacity-90 transition-all"
           >
             <CalendarPlus className="w-4 h-4" />
-            Todo al Calendario
+            Añadir todo al calendario
           </button>
         </div>
+
+        {/* ─── Diálogo de confirmación: perder avance ─── */}
+        <AnimatePresence>
+          {showResetConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4"
+              onClick={() => setShowResetConfirm(false)}
+            >
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="brave-glass-strong rounded-3xl shadow-2xl p-6 max-w-sm w-full"
+              >
+                <div className="text-center mb-4">
+                  <div className="brave-float inline-block mb-2">
+                    <BravyBot size={48} expression="thinking" animate />
+                  </div>
+                  <h3 className="font-bold text-foreground text-base">
+                    ¿Volver a empezar?
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Tienes {items.length} ideas generadas. Si vuelves a la configuración, perderás este plan (a menos que ya lo hayas guardado en tu Biblioteca o Calendario).
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    onClick={confirmReset}
+                    className="w-full p-3.5 rounded-2xl border-2 border-red-300 text-red-700 text-left hover:bg-red-50 transition-colors"
+                  >
+                    <p className="font-bold text-sm">Sí, volver a empezar</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Pierdo las ideas no guardadas
+                    </p>
+                  </button>
+                  <button
+                    onClick={() => setShowResetConfirm(false)}
+                    className="w-full p-3.5 rounded-2xl border-2 border-[#C1DBE8] text-[#591427] text-left hover:bg-[#C1DBE8]/10 transition-colors"
+                  >
+                    <p className="font-bold text-sm">No, seguir aquí</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Continúo revisando mis ideas
+                    </p>
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ─── Diálogo de conflicto de calendario ─── */}
         <AnimatePresence>
@@ -951,14 +1026,14 @@ function FichaCompletaModal({
                 className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                Guardar en Biblioteca
+                Guardar en biblioteca
               </button>
               <button
                 onClick={onSaveToCalendario}
                 className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
               >
                 <CalendarPlus className="w-3.5 h-3.5" />
-                Agendar
+                Añadir en calendario
               </button>
             </div>
           )}

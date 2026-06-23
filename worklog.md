@@ -294,3 +294,38 @@ Stage Summary:
 - Copy con estructura visual (emojis 🔥📝💡💬) + máximo 4 hashtags
 - Biblioteca: ficha muestra guion + copy completos, con opción de generar si no existen
 - Biblioteca: botón "Agendar en calendario" siempre visible (borrador o aprobado)
+
+---
+Task ID: 8
+Agent: main
+Task: Planificar - labels botones claros, no navegar al guardar, confirmar antes de reset
+
+Work Log:
+- Labels de botones cambiados:
+  - Individual: "Biblioteca" → "Guardar en biblioteca", "Calendario" → "Añadir en calendario"
+  - Globales: "Todo a Biblioteca" → "Guardar todo en biblioteca", "Todo al Calendario" → "Añadir todo al calendario"
+  - Modal ficha: "Guardar en Biblioteca" → "Guardar en biblioteca", "Agendar" → "Añadir en calendario"
+- Comportamiento al guardar:
+  - Eliminada navegación automática a biblioteca/calendario tras guardar individualmente
+  - Toast success con description y duration 3500ms para feedback claro
+  - saveItemToBiblioteca: toast "guardada en tu Biblioteca" + description "Puedes seguir revisando las demás ideas"
+  - saveItemToCalendario: toast "añadida al calendario" + description con fecha + "sigue revisando las demás"
+  - saveAllToBiblioteca: eliminada navegación, toast con duration 3500ms
+  - confirmSendAllToCalendar: eliminada navegación a calendario
+- Confirmación antes de perder avance:
+  - Nuevo estado showResetConfirm
+  - Evento module-reactivate (clic en sidebar planificar) ya NO resetea directamente
+  - Si view === 'resultado' && items.length > 0 → muestra diálogo de confirmación
+  - Si no hay items → reset directo
+  - Botón "Empezar de nuevo" también usa el diálogo
+  - Diálogo con 2 opciones:
+    - "Sí, volver a empezar" (rojo) → pierde ideas no guardadas
+    - "No, seguir aquí" (azul) → continúa revisando
+  - Mensaje claro: "Tienes X ideas generadas. Si vuelves a la configuración, perderás este plan (a menos que ya lo hayas guardado)"
+- Verificado: lint limpio, build exitoso, dev server 200 OK
+
+Stage Summary:
+- Botones con labels claros y descriptivos (Guardar en biblioteca / Añadir en calendario)
+- Al guardar, permanece en Planificar con toast claro
+- Al pulsar Planificar en sidebar con ideas generadas, pregunta antes de borrar
+- UX coherente: la usuaria no pierde su trabajo por accidente
