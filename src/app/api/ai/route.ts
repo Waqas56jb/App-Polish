@@ -110,7 +110,7 @@ Responde SOLO con un JSON array de 10 elementos, sin texto adicional.`
       case 'script': {
         const { titulo, tipo, objetivo, servicio, formato } = context
         const objetivoDesc = getObjetivoDescription(objetivo)
-        systemPrompt = `Eres una guionista experta en contenido para Instagram de salones de belleza. Creas guiones claros y efectivos. Siempre respondes en español. El formato de salida debe ser JSON válido.`
+        systemPrompt = `Eres una guionista experta en contenido para Instagram de salones de belleza. Creas guiones prácticos que aportan VALOR REAL: trucos, información útil, datos que la audiencia no conoce. Evitas relleno y frases vacías. Siempre respondes en español. El formato de salida debe ser JSON válido.`
         userPrompt = `${brandContext}
 
 Crea un guión completo para un ${tipo} con estas especificaciones:
@@ -126,37 +126,54 @@ ${objetivoDesc}
 - Si es VENTA: el CTA debe invitar a reservar cita, escribir por DM, con urgencia
 - Si es VIRALIDAD: el CTA debe invitar a comentar, etiquetar amigas, compartir
 
-El guión debe seguir esta estructura, SEPARADA EN PÁRRAFOS CLAROS (cada parte con su etiqueta en mayúsculas en una línea propia, seguida del texto en la siguiente línea y una línea en blanco entre secciones):
+REGLAS PARA EL GUION:
+- Aporta VALOR REAL: un truco concreto, un dato que la audiencia no sabe, un consejo accionable
+- Sé específica (NO "cuida tu pelo" → SÍ "usa agua tibia, no caliente, para no abrir la cutícula")
+- Lenguaje claro y cercano, fácil de entender
+- Estructura en 4 partes, CADA UNA con su etiqueta en mayúsculas en una línea propia
+- Una línea en blanco entre cada sección
+- La SOLUCIÓN debe tener 2-3 trucos/puntos concretos, no un bloque genérico
 
-1. GANCHO - Primera frase que captura la atención (3-5 segundos)
-2. CONTEXTO - Desarrolla el tema (15-25 segundos)
-3. SOLUCIÓN - Presenta la solución o valor (10-15 segundos)
-4. LLAMADA A LA ACCIÓN - CTA claro alineado al objetivo (3-5 segundos)
+Formato EXACTO del guion (copia esta estructura):
 
-Formato EXACTO del guion (cada etiqueta en su propia línea, separadas por líneas en blanco):
 GANCHO
-"[frase de gancho aquí]"
+"[frase de gancho aquí, máxima 15 palabras]"
 
 CONTEXTO
-[párrafo de contexto aquí]
+[1-2 frases que expliquen por qué este tema importa]
 
 SOLUCIÓN
-[párrafo de solución aquí]
+[2-3 trucos o puntos concretos y accionables, separados por líneas o numerados]
 
 LLAMADA A LA ACCIÓN
-[frase de CTA aquí]
+[frase de CTA clara, máxima 10 palabras]
 
 Duración total del reel: 40-50 segundos.
 
-IMPORTANTE SOBRE EL COPY:
-- El copy debe INCLUIR los hashtags al final, en el mismo texto
-- NO generes un campo "hashtags" separado
-- Pon 5-8 hashtags relevantes al final del copy
+REGLAS PARA EL COPY (descripción del post):
+- Estructurado en 4 partes con emojis que las separan visualmente
+- Cada parte en una línea propia, separadas por línea en blanco
+- MÁXIMO 4 hashtags al final (no más)
+- El copy NO debe ser demasiado largo: 4-6 líneas + hashtags
+
+Formato EXACTO del copy (copia esta estructura):
+
+🔥 [gancho corto, 1 línea]
+
+📝 [contexto breve, 1-2 líneas]
+
+💡 [solución o truco principal, 1-2 líneas]
+
+💬 [CTA claro, 1 línea]
+
+#hashtag1 #hashtag2 #hashtag3 #hashtag4
+
+IMPORTANTE: NO generes un campo "hashtags" separado. Los hashtags van INCLUIDOS al final del copy.
 
 Responde SOLO con un JSON con esta estructura:
 {
-  "guion": "guión con la estructura GANCHO/CONTEXTO/SOLUCIÓN/LLAMADA A LA ACCIÓN separada por párrafos como se indicó",
-  "copy": "texto para la descripción del post INCLUYENDO los hashtags al final en el mismo texto",
+  "guion": "guion con la estructura GANCHO/CONTEXTO/SOLUCIÓN/LLAMADA A LA ACCIÓN separada por párrafos como se indicó",
+  "copy": "copy del post con la estructura de 4 partes con emojis + 4 hashtags al final",
   "textoPortada": "texto corto para la portada del reel/carrusel"
 }`
         break

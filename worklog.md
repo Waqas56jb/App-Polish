@@ -257,3 +257,40 @@ Stage Summary:
 - Top bar móvil siempre visible con logo y acceso rápido a "Dame una idea"
 - Safe areas para iPhones con notch/home indicator
 - Asistente flotante reposicionado en móvil para no solapar con bottom nav
+
+---
+Task ID: 7
+Agent: main
+Task: Fix botones planificar + guion con valor/estructura + copy con emojis y 4 hashtags + modal biblioteca
+
+Work Log:
+- Investigación: botones SÍ funcionaban (verificado con agent-browser), pero no había feedback claro
+  - El item SÍ se guardaba en biblioteca/calendario, pero la usuaria no veía el resultado
+  - Solución: navegación automática al módulo correspondiente tras guardar individualmente
+  - saveItemToBiblioteca: setTimeout → setActiveModule('biblioteca') tras 800ms
+  - saveItemToCalendario: setTimeout → setActiveModule('calendario') tras 800ms
+  - Toast permanece 2s para confirmar acción antes de navegar
+- API script rediseñado completamente:
+  - System prompt: "guionista que aporta VALOR REAL: trucos, información útil, datos que la audiencia no conoce"
+  - Reglas explícitas: sé específica (NO "cuida tu pelo" → SÍ "usa agua tibia, no caliente")
+  - Solución debe tener 2-3 trucos/puntos concretos accionables
+  - Estructura guion: GANCHO / CONTEXTO / SOLUCIÓN / LLAMADA A LA ACCIÓN en párrafos separados
+  - Copy con estructura de 4 partes con emojis (🔥 📝 💡 💬) + MÁXIMO 4 hashtags
+  - Copy no demasiado largo (4-6 líneas + hashtags)
+  - Formato EXACTO especificado en el prompt para que la IA lo siga
+- Probado con curl: guion viene con 3 trucos concretos (48h sin lavar, champú sin sulfatos, etc.)
+- Probado con curl: copy viene con emojis y 4 hashtags exactos
+- Content Modal mejorado:
+  - Botón "Generar guion completo" aparece si el item no tiene guion (visible en biblioteca)
+  - Botón "Agendar en calendario" ahora visible para items 'aprobado' Y 'borrador' (no solo borrador)
+  - Esto permite agendar ideas guardadas desde Planificar (que vienen con estado 'aprobado')
+- Import añadido: Sparkles en content-modal.tsx
+- Verificado: lint limpio, build exitoso, dev server 200 OK, API devuelve guion con valor real
+
+Stage Summary:
+- Botones de Planificar ahora navegan automáticamente a Biblioteca/Calendario tras guardar
+- Guiones con valor real: trucos concretos, específicos, accionables (no relleno)
+- Guiones con estructura clara en 4 párrafos etiquetados
+- Copy con estructura visual (emojis 🔥📝💡💬) + máximo 4 hashtags
+- Biblioteca: ficha muestra guion + copy completos, con opción de generar si no existen
+- Biblioteca: botón "Agendar en calendario" siempre visible (borrador o aprobado)

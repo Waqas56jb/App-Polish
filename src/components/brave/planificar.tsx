@@ -318,7 +318,9 @@ export function Planificar() {
     const item = items[index]
     if (!item) return
     addLibraryItems([{ ...item, id: generateId(), estado: 'aprobado' as const }])
-    toast.success(`"${item.titulo}" guardada en Biblioteca`)
+    toast.success(`"${item.titulo}" guardada en tu Biblioteca`)
+    // Navegación automática para que la usuaria vea el resultado
+    setTimeout(() => setActiveModule('biblioteca'), 800)
   }
 
   // ─── Guardar UNA idea en calendario ───
@@ -327,6 +329,8 @@ export function Planificar() {
     if (!item) return
     addLibraryItems([{ ...item, id: generateId(), estado: 'programado' as const }])
     toast.success(`"${item.titulo}" agendada para ${item.diaSemana} ${item.fecha}`)
+    // Navegación automática para que la usuaria vea el resultado
+    setTimeout(() => setActiveModule('calendario'), 800)
   }
 
   // ─── Guardar TODO en Biblioteca ───

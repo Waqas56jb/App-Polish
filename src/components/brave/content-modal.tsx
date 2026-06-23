@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import {
   Copy, Save, RefreshCw, Trash2, FileText, Film,
-  LayoutGrid, Repeat, Check, Loader2, Calendar, ChevronDown
+  LayoutGrid, Repeat, Check, Loader2, Calendar, ChevronDown, Sparkles
 } from 'lucide-react'
 import { fetchJSON } from '@/lib/fetch-safe'
 import { toast } from 'sonner'
@@ -284,6 +284,21 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
             </div>
           )}
 
+          {/* ── Generar guion si no existe ── */}
+          {!item.guion && (
+            <Button
+              onClick={regenerateContent}
+              disabled={isRegenerating}
+              className="w-full h-12 rounded-2xl brave-gradient text-white font-semibold text-sm gap-2 shadow-lg"
+            >
+              {isRegenerating ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Generando guion completo...</>
+              ) : (
+                <><Sparkles className="w-4 h-4" /> Generar guion completo</>
+              )}
+            </Button>
+          )}
+
           {/* ── Guión ── */}
           {item.guion && (
             <div className="space-y-2">
@@ -428,8 +443,8 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
             </div>
           )}
 
-          {/* ── CTA principal: Agendar ── */}
-          {item.estado === 'borrador' && !showSchedule && (
+          {/* ── CTA principal: Agendar (visible para borrador Y aprobado) ── */}
+          {(item.estado === 'borrador' || item.estado === 'aprobado') && !showSchedule && (
             <Button
               onClick={() => {
                 setSelectedDate(suggestedDate)
