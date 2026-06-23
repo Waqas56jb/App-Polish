@@ -476,16 +476,36 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
             </div>
           )}
 
-          {/* ── Si ya está agendado, ir al calendario ── */}
-          {item.estado === 'programado' && (
-            <Button
-              onClick={handleGoToCalendar}
-              variant="outline"
-              className="w-full h-11 rounded-2xl text-sm gap-2"
-            >
-              <Calendar className="w-4 h-4" />
-              Ver en el Calendario
-            </Button>
+          {/* ── Si ya está agendado, permitir cambiar fecha ── */}
+          {item.estado === 'programado' && !showSchedule && (
+            <div className="space-y-2">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-emerald-700">Agendado para</p>
+                  <p className="text-sm font-bold text-emerald-900">{item.fecha}</p>
+                </div>
+                <Button
+                  onClick={() => {
+                    setSelectedDate(item.fecha || suggestedDate)
+                    setShowSchedule(true)
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="h-9 rounded-xl text-xs gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Cambiar fecha
+                </Button>
+              </div>
+              <Button
+                onClick={handleGoToCalendar}
+                variant="outline"
+                className="w-full h-11 rounded-2xl text-sm gap-2"
+              >
+                <Calendar className="w-4 h-4" />
+                Ver en el Calendario
+              </Button>
+            </div>
           )}
 
           {/* ── Acciones secundarias ── */}

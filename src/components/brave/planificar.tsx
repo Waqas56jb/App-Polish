@@ -1,27 +1,35 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAppStore, ContentItem, generateId } from '@/lib/store'
 import { fetchJSON } from '@/lib/fetch-safe'
 import { BravyBot } from './bravy-bot'
 import {
   Calendar, Sparkles, Loader2, BookOpen, CalendarPlus,
   RefreshCw, Film, LayoutGrid, ChevronDown, ChevronUp,
+  Save, Copy, Check,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { format, addDays, nextMonday } from 'date-fns'
+import { format, addDays, addWeeks, nextMonday, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { toast } from 'sonner'
 
 type PlanTipo = 'semanal' | 'mensual'
 type PlanView = 'config' | 'resultado'
+type TipoContenido = 'reels' | 'carruseles' | 'mezcla'
 
 // ============================================================
-// PLANIFICAR — Versión simplificada
-// 1. Configura: duración + frecuencia (hasta 5) + objetivo + temáticas
-// 2. Ve las ideas propuestas (solo títulos + info esencial)
-// 3. Acciones globales: regenerar todas / guardar en biblioteca / mover al calendario
-// 4. Opcional: desplegar cada idea para ver detalle
+// PLANIFICAR — Versión mejorada
+// Config:
+//   1. Duración (semanal/mensual)
+//   2. Frecuencia (2, 3, 4, 5)
+//   3. Objetivo (Autoridad / Venta / Viralidad)
+//   4. Tipo de contenido (Reels / Carruseles / Mixto — mayoría reels)
+//   5. Temáticas (máximo 3)
+// Resultado:
+//   - Lista de ideas con botones visibles (Regenerar / Biblioteca / Calendario)
+//   - Clic en idea → modal con ficha COMPLETA (genera guion bajo demanda)
+//   - Días repartidos proporcionalmente (Mar, Jue, Dom preferidos)
 // ============================================================
 
 const OBJETIVOS = [
@@ -37,7 +45,12 @@ const FRECUENCIAS = [
   { value: 5, label: '5', desc: 'Muy intenso' },
 ]
 
-// Temáticas comunes en salones de belleza (además de los servicios del perfil)
+const TIPOS_CONTENIDO = [
+  { value: 'reels' as TipoContenido, label: 'Solo Reels', desc: 'Todos los contenidos serán Reels' },
+  { value: 'carruseles' as TipoContenido, label: 'Solo Carruseles', desc: 'Todos los contenidos serán Carruseles' },
+  { value: 'mezcla' as TipoContenido, label: 'Mixto', desc: 'Mayoría Reels (70%) + algunos Carruseles' },
+]
+
 const TEMATICAS_BASE = [
   'Balayage', 'Rubios', 'Coloración', 'Cortes', 'Peinado',
   'Alisados', 'Permanente', 'Tratamientos', 'Keratina',
@@ -48,6 +61,71 @@ const TEMATICAS_BASE = [
   'Antes y después', 'Casos reales', 'Día a día en el salón',
 ]
 
+// ─── Días preferidos para publicar (en orden de prioridad) ──────
+// Basado en engagement típico: martes, jueves y domingo son los mejores.
+// Lunes, viernes y sábado son menos exitosos.
+const DIAS_PREFERIDOS = [
+  2,  // Martes
+  4,  // Jueves
+  0,  // Domingo
+  3,  // Miércoles
+  6,  // Sábado (mejor que lunes/viernes)
+  1,  // Lunes
+  5,  // Viernes
+]
+
+// Devuelve N fechas repartidas proporcionalmente en una semana
+// empezando desde fechaInicio. Evita lunes/viernes si es posible.
+function repartirFechasSemana(fechaInicio: Date, numPublicaciones: number): { fecha: string; diaSemana: string }[] {
+  const diasSemanaNombres = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+  const resultados: { fecha: string; diaSemana: string }[] = []
+
+  // Si hay más publicaciones que días preferidos, ampliamos el reparto a varias semanas
+  // pero dentro de una semana de planificación, repartimos lo mejor posible.
+  const diasAUsar = DIAS_PREFERIDOS.slice(0, Math.max(numPublicaciones, 3))
+
+  // Encontrar el domingo más cercano antes de fechaInicio + 7 días
+  // para asegurarnos de cubrir una semana completa
+  const semanaInicio = new Date(fechaInicio)
+
+  // Para cada publicación, encontrar el próximo día preferido disponible
+  const fechasUsadas = new Set<string>()
+  let cursorFecha = new Date(semanaInicio)
+
+  for (let i = 0; i < numPublicaciones; i++) {
+    const diaObjetivo = diasAUsar[i % diasAUsar.length]
+
+    // Avanzar hasta encontrar ese día de la semana
+    let intentos = 0
+    while (cursorFecha.getDay() !== diaObjetivo && intentos < 14) {
+      cursorFecha = addDays(cursorFecha, 1)
+      intentos++
+    }
+
+    // Si ya está usada esta fecha, buscar el próximo día con mismo weekday (semana siguiente)
+    let fechaStr = format(cursorFecha, 'yyyy-MM-dd')
+    let contadorSemanas = 0
+    while (fechasUsadas.has(fechaStr) && contadorSemanas < 5) {
+      cursorFecha = addWeeks(cursorFecha, 1)
+      fechaStr = format(cursorFecha, 'yyyy-MM-dd')
+      contadorSemanas++
+    }
+
+    fechasUsadas.add(fechaStr)
+    resultados.push({
+      fecha: fechaStr,
+      diaSemana: diasSemanaNombres[cursorFecha.getDay()],
+    })
+
+    // Avanzar al menos 1 día para la siguiente búsqueda
+    cursorFecha = addDays(cursorFecha, 1)
+  }
+
+  // Ordenar por fecha
+  resultados.sort((a, b) => a.fecha.localeCompare(b.fecha))
+  return resultados
+}
+
 export function Planificar() {
   const { brandProfile, libraryItems, addLibraryItems, setIsLoading, setActiveModule } = useAppStore()
 
@@ -55,6 +133,7 @@ export function Planificar() {
   const [planTipo, setPlanTipo] = useState<PlanTipo>('semanal')
   const [frecuencia, setFrecuencia] = useState(3)
   const [objetivo, setObjetivo] = useState('autoridad')
+  const [tipoContenido, setTipoContenido] = useState<TipoContenido>('mezcla')
   const [tematicas, setTematicas] = useState<string[]>(
     brandProfile?.serviciosPrioritarios?.length
       ? brandProfile.serviciosPrioritarios.slice(0, 3)
@@ -68,12 +147,12 @@ export function Planificar() {
   const [items, setItems] = useState<ContentItem[]>([])
   const [generando, setGenerando] = useState(false)
   const [regenerandoIdx, setRegenerandoIdx] = useState<number | null>(null)
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
-  const [planError, setPlanError] = useState('')
 
-  // ─── Modal ───
+  // ─── Modal de ficha completa ───
   const [openItem, setOpenItem] = useState<ContentItem | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [generandoScript, setGenerandoScript] = useState(false)
+  const [scriptModal, setScriptModal] = useState<any>(null)
 
   // ─── Conflict dialog ───
   const [showCalendarDialog, setShowCalendarDialog] = useState(false)
@@ -84,16 +163,39 @@ export function Planificar() {
   const calendarioItems = libraryItems.filter(i => i.estado === 'programado')
   const hasCalendarioContent = calendarioItems.length > 0
 
-  // Temáticas disponibles = combinación de servicios del perfil + temáticas base, sin duplicados
+  // ─── Escuchar evento: clic en módulo activo → reset a config ───
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.module === 'planificar') {
+        setView('config')
+        setItems([])
+        setExpandedIdx(null)
+      }
+    }
+    window.addEventListener('module-reactivate', handler)
+    return () => window.removeEventListener('module-reactivate', handler)
+  }, [])
+
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
+
   const tematicasDisponibles = Array.from(new Set([
     ...(brandProfile?.servicios || []),
     ...TEMATICAS_BASE,
   ]))
 
   const toggleTematica = (t: string) => {
-    setTematicas(prev =>
-      prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
-    )
+    setTematicas(prev => {
+      if (prev.includes(t)) {
+        return prev.filter(x => x !== t)
+      }
+      // Máximo 3 temáticas
+      if (prev.length >= 3) {
+        toast.info('Máximo 3 temáticas. Quita una para añadir otra.')
+        return prev
+      }
+      return [...prev, t]
+    })
   }
 
   // ─── Generar plan ───
@@ -103,10 +205,9 @@ export function Planificar() {
       return
     }
     setGenerando(true)
-    setPlanError('')
     setIsLoading(true, 'Creando tu plan con las mejores ideas...')
     try {
-      const fechaInicio = format(nextMonday(new Date()), 'yyyy-MM-dd')
+      const fechaInicio = nextMonday(new Date())
       const { data, error } = await fetchJSON('/api/ai', {
         method: 'POST',
         body: JSON.stringify({
@@ -117,17 +218,21 @@ export function Planificar() {
             servicios: tematicas,
             frecuencia,
             objetivo,
-            fechaInicio,
+            tipoContenido,
+            fechaInicio: format(fechaInicio, 'yyyy-MM-dd'),
           },
         }),
         timeoutMs: 120000,
       })
-      if (error) { setPlanError(error); toast.error(error); return }
+      if (error) { toast.error(error); return }
       let raw = data?.result
       if (typeof raw === 'string') {
         try { raw = JSON.parse(raw) } catch { raw = [] }
       }
       if (Array.isArray(raw) && raw.length > 0) {
+        // Repartir fechas proporcionalmente según frecuencia
+        const fechasRepartidas = repartirFechasSemana(fechaInicio, raw.length)
+
         const parsed: ContentItem[] = raw.map((r: any, i: number) => ({
           id: `plan-${Date.now()}-${i}`,
           tipo: r.tipo || 'reel',
@@ -140,8 +245,8 @@ export function Planificar() {
           textoPortada: r.titulo || '',
           formato: r.tipo === 'carrusel' ? 'carrusel' : 'hablando a cámara',
           estado: 'aprobado' as const,
-          fecha: r.fecha || '',
-          diaSemana: r.diaSemana || '',
+          fecha: fechasRepartidas[i]?.fecha || r.fecha || '',
+          diaSemana: fechasRepartidas[i]?.diaSemana || r.diaSemana || '',
           slides: [],
           storiesData: [],
           descripcion: r.descripcion || '',
@@ -153,18 +258,16 @@ export function Planificar() {
         setExpandedIdx(null)
         toast.success(`¡${parsed.length} ideas listas!`)
       } else {
-        setPlanError('No se pudo generar el plan. Intenta de nuevo.')
         toast.error('No se pudo generar el plan')
       }
     } catch (e) {
       console.error('Plan generation error:', e)
-      setPlanError('Error inesperado. Intenta de nuevo.')
       toast.error('Error inesperado')
     } finally {
       setGenerando(false)
       setIsLoading(false)
     }
-  }, [planTipo, frecuencia, objetivo, tematicas, brandProfile, setIsLoading])
+  }, [planTipo, frecuencia, objetivo, tipoContenido, tematicas, brandProfile, setIsLoading])
 
   // ─── Regenerar idea individual ───
   const regenerateItem = async (index: number) => {
@@ -186,10 +289,7 @@ export function Planificar() {
         }),
         timeoutMs: 60000,
       })
-      if (error) {
-        toast.error('No se pudo regenerar')
-        return
-      }
+      if (error) { toast.error('No se pudo regenerar'); return }
       let raw = data?.result
       if (typeof raw === 'string') {
         try { raw = JSON.parse(raw) } catch { raw = [] }
@@ -213,25 +313,40 @@ export function Planificar() {
     }
   }
 
-  // ─── Guardar en Biblioteca ───
-  const saveToBiblioteca = () => {
+  // ─── Guardar UNA idea en biblioteca ───
+  const saveItemToBiblioteca = (index: number) => {
+    const item = items[index]
+    if (!item) return
+    addLibraryItems([{ ...item, id: generateId(), estado: 'aprobado' as const }])
+    toast.success(`"${item.titulo}" guardada en Biblioteca`)
+  }
+
+  // ─── Guardar UNA idea en calendario ───
+  const saveItemToCalendario = (index: number) => {
+    const item = items[index]
+    if (!item) return
+    addLibraryItems([{ ...item, id: generateId(), estado: 'programado' as const }])
+    toast.success(`"${item.titulo}" agendada para ${item.diaSemana} ${item.fecha}`)
+  }
+
+  // ─── Guardar TODO en Biblioteca ───
+  const saveAllToBiblioteca = () => {
     addLibraryItems(items.map(item => ({ ...item, id: generateId(), estado: 'aprobado' as const })))
     toast.success(`${items.length} ideas guardadas en tu Biblioteca`)
     setActiveModule('biblioteca')
   }
 
-  // ─── Mover al Calendario ───
-  const sendToCalendario = () => {
+  // ─── Mover TODO al Calendario ───
+  const sendAllToCalendario = () => {
     if (hasCalendarioContent) {
       setShowCalendarDialog(true)
     } else {
-      confirmSendToCalendar('add')
+      confirmSendAllToCalendar('add')
     }
   }
 
-  const confirmSendToCalendar = (action: 'replace' | 'add') => {
+  const confirmSendAllToCalendar = (action: 'replace' | 'add') => {
     setShowCalendarDialog(false)
-
     if (action === 'replace') {
       const oldIds = libraryItems.filter(i => i.estado === 'programado').map(i => i.id)
       oldIds.forEach(id => useAppStore.getState().removeLibraryItem(id))
@@ -260,8 +375,59 @@ export function Planificar() {
       addLibraryItems(shifted)
       toast.success('Plan añadido a tu Calendario')
     }
-
     setActiveModule('calendario')
+  }
+
+  // ─── Abrir ficha completa (genera guion bajo demanda) ───
+  const openFicha = async (item: ContentItem) => {
+    setOpenItem(item)
+    setScriptModal(null)
+    setModalOpen(true)
+
+    // Si ya tiene guion, mostrarlo
+    if (item.guion) {
+      setScriptModal({ guion: item.guion, copy: item.copy, textoPortada: item.textoPortada })
+      return
+    }
+
+    // Generar guion bajo demanda
+    setGenerandoScript(true)
+    setIsLoading(true, 'Generando guion completo...')
+    try {
+      const { data, error } = await fetchJSON('/api/ai', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'script',
+          brandProfile,
+          context: {
+            titulo: item.titulo,
+            tipo: item.tipo,
+            objetivo: item.objetivo,
+            servicio: item.servicio,
+            formato: item.formato,
+          },
+        }),
+        timeoutMs: 60000,
+      })
+      if (!error && data?.result && !data.result.raw) {
+        setScriptModal(data.result)
+        // Actualizar el item en la lista para que no se regenere si se vuelve a abrir
+        setItems(prev => prev.map(it => it.id === item.id ? {
+          ...it,
+          guion: data.result.guion || '',
+          copy: data.result.copy || '',
+          textoPortada: data.result.textoPortada || it.textoPortada,
+        } : it))
+      } else {
+        toast.error('No se pudo generar el guion')
+      }
+    } catch (e) {
+      console.error('Script error:', e)
+      toast.error('Error al generar guion')
+    } finally {
+      setGenerandoScript(false)
+      setIsLoading(false)
+    }
   }
 
   // ─── Helpers ───
@@ -272,7 +438,7 @@ export function Planificar() {
   const formatDate = (fecha: string) => {
     if (!fecha) return ''
     try {
-      return format(new Date(fecha + 'T12:00:00'), 'd MMM', { locale: es })
+      return format(parseISO(fecha + 'T12:00:00'), 'd MMM', { locale: es })
     } catch {
       return fecha
     }
@@ -292,7 +458,7 @@ export function Planificar() {
             </div>
             <h2 className="text-2xl font-bold text-foreground">Planificar contenido</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              En 4 clics te doy las mejores ideas para tu salón
+              En 5 pasos te doy las mejores ideas para tu salón
             </p>
           </div>
 
@@ -382,37 +548,66 @@ export function Planificar() {
             </div>
           </div>
 
-          {/* ─── 4. Temáticas de servicios ─── */}
+          {/* ─── 4. Tipo de contenido ─── */}
+          <div className="mb-4">
+            <label className="text-sm font-semibold text-foreground mb-2 block">
+              4. ¿Qué tipo de contenido?
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {TIPOS_CONTENIDO.map(t => (
+                <button
+                  key={t.value}
+                  onClick={() => setTipoContenido(t.value)}
+                  className={`p-3 rounded-2xl border-2 text-center transition-all ${
+                    tipoContenido === t.value
+                      ? 'border-[#591427] bg-[#591427]/5 shadow-md'
+                      : 'border-border bg-card hover:border-[#591427]/30'
+                  }`}
+                >
+                  <p className={`font-bold text-xs ${tipoContenido === t.value ? 'text-[#591427]' : 'text-foreground'}`}>
+                    {t.label}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ─── 5. Temáticas (máximo 3) ─── */}
           <div className="mb-5">
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-semibold text-foreground">
-                4. ¿De qué temáticas quieres hablar?
+                5. ¿De qué temáticas quieres hablar?
               </label>
-              <span className="text-xs text-muted-foreground">
-                {tematicas.length} seleccionada{tematicas.length === 1 ? '' : 's'}
+              <span className={`text-xs font-medium ${tematicas.length === 3 ? 'text-[#591427]' : 'text-muted-foreground'}`}>
+                {tematicas.length}/3
               </span>
             </div>
+            <p className="text-xs text-muted-foreground mb-2">
+              Recomendado: elige máximo 3 temáticas para enfocar bien tu contenido
+            </p>
             <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto p-1">
               {tematicasDisponibles.map(t => {
                 const sel = tematicas.includes(t)
+                const disabled = !sel && tematicas.length >= 3
                 return (
                   <button
                     key={t}
                     onClick={() => toggleTematica(t)}
+                    disabled={disabled}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                       sel
                         ? 'brave-gradient text-white shadow-sm'
-                        : 'bg-white border border-border text-muted-foreground hover:bg-muted'
+                        : disabled
+                          ? 'bg-muted/30 text-muted-foreground/40 cursor-not-allowed'
+                          : 'bg-white border border-border text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    {t}
+                    {sel && '✓ '}{t}
                   </button>
                 )
               })}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Selecciona los servicios o temas sobre los que quieres crear contenido
-            </p>
           </div>
 
           {/* ─── Botón principal ─── */}
@@ -428,19 +623,13 @@ export function Planificar() {
             )}
             {generando ? 'Generando...' : `Crear plan de ${totalItems} ideas`}
           </button>
-
-          {planError && (
-            <p className="text-xs text-center text-red-500 mt-3">{planError}</p>
-          )}
         </motion.div>
       </div>
     )
   }
 
   // ════════════════════════════════════════════════════════════
-  // VISTA DE RESULTADO — Simplificada
-  // Lista simple de ideas, cada una con acciones inline.
-  // Expandir opcional para ver descripción.
+  // VISTA DE RESULTADO — botones visibles en cada ficha
   // ════════════════════════════════════════════════════════════
   return (
     <div className="max-w-2xl mx-auto">
@@ -452,7 +641,7 @@ export function Planificar() {
               Tu plan {planTipo === 'semanal' ? 'semanal' : 'mensual'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {items.length} ideas · revisa y elige qué hacer
+              {items.length} ideas · toca cualquier idea para ver el guion completo
             </p>
           </div>
           <button
@@ -464,114 +653,94 @@ export function Planificar() {
           </button>
         </div>
 
-        {/* ─── Lista simple de ideas ─── */}
+        {/* ─── Lista de ideas con botones visibles ─── */}
         <div className="space-y-2">
-          {items.map((item, idx) => {
-            const isExpanded = expandedIdx === idx
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.03, 0.3) }}
-                className="brave-glass rounded-2xl border border-border/50"
+          {items.map((item, idx) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(idx * 0.03, 0.3) }}
+              className="brave-glass rounded-2xl border border-border/50 p-3"
+            >
+              {/* Fila principal clicable */}
+              <button
+                onClick={() => openFicha(item)}
+                className="w-full flex items-center gap-3 text-left mb-2"
               >
-                {/* Fila principal clicable */}
-                <div className="p-3 flex items-center gap-3">
-                  {/* Tipo badge */}
-                  <span className={`shrink-0 ${getTipoColor(item.tipo)} rounded-lg px-2 py-1 text-[10px] font-bold flex items-center gap-1`}>
-                    {getTipoIcon(item.tipo)}
-                    {getTipoLabel(item.tipo)}
-                  </span>
+                {/* Tipo badge */}
+                <span className={`shrink-0 ${getTipoColor(item.tipo)} rounded-lg px-2 py-1 text-[10px] font-bold flex items-center gap-1`}>
+                  {getTipoIcon(item.tipo)}
+                  {getTipoLabel(item.tipo)}
+                </span>
 
-                  {/* Info principal */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      {item.fecha && (
-                        <span className="text-[10px] font-semibold text-[#591427] bg-[#FFF1B5]/60 px-2 py-0.5 rounded-full">
-                          {item.diaSemana} {formatDate(item.fecha)}
-                        </span>
-                      )}
-                      {item.servicio && (
-                        <span className="text-[10px] text-muted-foreground">{item.servicio}</span>
-                      )}
-                    </div>
-                    <h3 className="font-semibold text-sm text-foreground leading-snug line-clamp-1">
-                      {item.titulo}
-                    </h3>
+                {/* Info principal */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    {item.fecha && (
+                      <span className="text-[10px] font-semibold text-[#591427] bg-[#FFF1B5]/60 px-2 py-0.5 rounded-full">
+                        {item.diaSemana} {formatDate(item.fecha)}
+                      </span>
+                    )}
+                    {item.servicio && (
+                      <span className="text-[10px] text-muted-foreground">{item.servicio}</span>
+                    )}
                   </div>
-
-                  {/* Botón expandir */}
-                  <button
-                    onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-                    className="shrink-0 p-1.5 text-muted-foreground hover:text-foreground"
-                    aria-label="Ver detalle"
-                  >
-                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                {/* Descripción (expandible) */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-3 pb-3 space-y-3 border-t border-border/30 pt-3">
-                        {item.descripcion && (
-                          <p className="text-xs text-foreground/70 leading-relaxed">{item.descripcion}</p>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => regenerateItem(idx)}
-                            disabled={regenerandoIdx === idx}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
-                          >
-                            {regenerandoIdx === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                            Regenerar
-                          </button>
-                          <button
-                            onClick={() => { setOpenItem(item); setModalOpen(true) }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
-                          >
-                            Ver ficha
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
+                  <h3 className="font-semibold text-sm text-foreground leading-snug line-clamp-1">
+                    {item.titulo}
+                  </h3>
+                  {item.descripcion && (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.descripcion}</p>
                   )}
-                </AnimatePresence>
-              </motion.div>
-            )
-          })}
+                </div>
+              </button>
+
+              {/* Botones visibles (siempre) */}
+              <div className="flex items-center gap-1.5 pt-2 border-t border-border/30">
+                <button
+                  onClick={() => regenerateItem(idx)}
+                  disabled={regenerandoIdx === idx}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-medium border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
+                >
+                  {regenerandoIdx === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Regenerar
+                </button>
+                <button
+                  onClick={() => saveItemToBiblioteca(idx)}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Biblioteca
+                </button>
+                <button
+                  onClick={() => saveItemToCalendario(idx)}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-xl text-xs font-medium border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition-colors"
+                >
+                  <CalendarPlus className="w-3.5 h-3.5" />
+                  Calendario
+                </button>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* ─── CTA final fijo abajo ─── */}
+        {/* ─── CTA final: guardar todo ─── */}
         <div className="mt-5 grid grid-cols-2 gap-2 sticky bottom-4 z-10">
           <button
-            onClick={saveToBiblioteca}
+            onClick={saveAllToBiblioteca}
             className="py-3.5 rounded-2xl bg-white border-2 border-[#C1DBE8] text-[#591427] font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#C1DBE8]/10 transition-all"
           >
             <BookOpen className="w-4 h-4" />
-            Guardar en Biblioteca
+            Todo a Biblioteca
           </button>
           <button
-            onClick={sendToCalendario}
+            onClick={sendAllToCalendario}
             className="py-3.5 rounded-2xl brave-gradient text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:opacity-90 transition-all"
           >
             <CalendarPlus className="w-4 h-4" />
-            Mover al Calendario
+            Todo al Calendario
           </button>
         </div>
-
-        {/* ─── Tip ─── */}
-        <p className="text-xs text-center text-muted-foreground mt-3">
-          Toca cualquier idea para ver más opciones. Para regenerar todas, pulsa "Empezar de nuevo".
-        </p>
 
         {/* ─── Diálogo de conflicto de calendario ─── */}
         <AnimatePresence>
@@ -604,7 +773,7 @@ export function Planificar() {
 
                 <div className="space-y-2">
                   <button
-                    onClick={() => confirmSendToCalendar('replace')}
+                    onClick={() => confirmSendAllToCalendar('replace')}
                     className="w-full p-3.5 rounded-2xl border-2 border-[#591427] text-left hover:bg-[#591427]/5 transition-colors"
                   >
                     <p className="font-bold text-sm text-[#591427]">Sustituir lo que ya tenía</p>
@@ -613,7 +782,7 @@ export function Planificar() {
                     </p>
                   </button>
                   <button
-                    onClick={() => confirmSendToCalendar('add')}
+                    onClick={() => confirmSendAllToCalendar('add')}
                     className="w-full p-3.5 rounded-2xl border-2 border-[#C1DBE8] text-left hover:bg-[#C1DBE8]/10 transition-colors"
                   >
                     <p className="font-bold text-sm text-foreground">Añadir a continuación</p>
@@ -633,11 +802,27 @@ export function Planificar() {
           )}
         </AnimatePresence>
 
-        {/* ─── Modal de ficha completa ─── */}
+        {/* ─── Modal de ficha completa con guion ─── */}
         {modalOpen && openItem && (
-          <SimpleItemModal
+          <FichaCompletaModal
             item={openItem}
-            onClose={() => { setModalOpen(false); setOpenItem(null) }}
+            script={scriptModal}
+            isGenerating={generandoScript}
+            onClose={() => { setModalOpen(false); setOpenItem(null); setScriptModal(null) }}
+            onSaveToBiblioteca={() => {
+              const idx = items.findIndex(it => it.id === openItem.id)
+              if (idx >= 0) saveItemToBiblioteca(idx)
+              setModalOpen(false)
+              setOpenItem(null)
+              setScriptModal(null)
+            }}
+            onSaveToCalendario={() => {
+              const idx = items.findIndex(it => it.id === openItem.id)
+              if (idx >= 0) saveItemToCalendario(idx)
+              setModalOpen(false)
+              setOpenItem(null)
+              setScriptModal(null)
+            }}
           />
         )}
       </motion.div>
@@ -645,8 +830,27 @@ export function Planificar() {
   )
 }
 
-// ─── Modal simple para ver ficha rápida ──────────────────────
-function SimpleItemModal({ item, onClose }: { item: ContentItem; onClose: () => void }) {
+// ─── Modal: ficha completa con guion ──────────────────────
+function FichaCompletaModal({
+  item, script, isGenerating, onClose, onSaveToBiblioteca, onSaveToCalendario,
+}: {
+  item: ContentItem
+  script: any
+  isGenerating: boolean
+  onClose: () => void
+  onSaveToBiblioteca: () => void
+  onSaveToCalendario: () => void
+}) {
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+
+  const copy = (field: string, text: string) => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    toast.success('Copiado')
+    setTimeout(() => setCopiedField(null), 2000)
+  }
+
   return (
     <div
       className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -656,8 +860,9 @@ function SimpleItemModal({ item, onClose }: { item: ContentItem; onClose: () => 
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         onClick={e => e.stopPropagation()}
-        className="bg-background rounded-3xl shadow-2xl max-w-md w-full max-h-[85vh] overflow-y-auto"
+        className="bg-background rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
       >
+        {/* Header */}
         <div className="brave-gradient p-5 text-white sticky top-0 z-10">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
@@ -669,7 +874,9 @@ function SimpleItemModal({ item, onClose }: { item: ContentItem; onClose: () => 
             <button onClick={onClose} className="text-white/70 hover:text-white text-2xl leading-none shrink-0">×</button>
           </div>
         </div>
-        <div className="p-5 space-y-3">
+
+        <div className="p-5 space-y-4">
+          {/* Info rápida */}
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="bg-muted/50 px-3 py-1 rounded-full">
               <strong className="text-foreground">{item.servicio || 'General'}</strong>
@@ -677,18 +884,85 @@ function SimpleItemModal({ item, onClose }: { item: ContentItem; onClose: () => 
             <span className="bg-muted/50 px-3 py-1 rounded-full capitalize">{item.objetivo}</span>
             <span className="bg-muted/50 px-3 py-1 rounded-full">{item.tipo}</span>
           </div>
+
+          {/* Descripción */}
           {item.descripcion && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Descripción</p>
               <p className="text-sm text-foreground leading-relaxed">{item.descripcion}</p>
             </div>
           )}
-          {!item.guion && !item.copy && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
-              <p className="text-xs text-amber-800">
-                Esta es una propuesta de idea. Para generar guion completo, guárdala en tu Biblioteca y luego ábrela para regenerar.
-              </p>
+
+          {/* Generando guion */}
+          {isGenerating && (
+            <div className="text-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-[#591427] mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Generando guion completo...</p>
             </div>
+          )}
+
+          {/* Guion completo */}
+          {!isGenerating && script?.guion && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-foreground uppercase tracking-wide">Guion completo</label>
+                <button
+                  onClick={() => copy('guion', script.guion)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  {copiedField === 'guion' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copiedField === 'guion' ? 'Copiado' : 'Copiar'}
+                </button>
+              </div>
+              <div className="bg-muted/40 rounded-xl p-3 text-sm text-foreground whitespace-pre-line leading-relaxed max-h-60 overflow-y-auto">
+                {script.guion}
+              </div>
+            </div>
+          )}
+
+          {/* Copy + Hashtags */}
+          {!isGenerating && script?.copy && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-foreground uppercase tracking-wide">Copy + Hashtags</label>
+                <button
+                  onClick={() => copy('copy', script.copy)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  {copiedField === 'copy' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copiedField === 'copy' ? 'Copiado' : 'Copiar'}
+                </button>
+              </div>
+              <div className="bg-muted/40 rounded-xl p-3 text-sm text-foreground whitespace-pre-line leading-relaxed">
+                {script.copy}
+              </div>
+            </div>
+          )}
+
+          {/* Acciones */}
+          {!isGenerating && script && (
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
+              <button
+                onClick={onSaveToBiblioteca}
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                Guardar en Biblioteca
+              </button>
+              <button
+                onClick={onSaveToCalendario}
+                className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+              >
+                <CalendarPlus className="w-3.5 h-3.5" />
+                Agendar
+              </button>
+            </div>
+          )}
+
+          {!isGenerating && !script && (
+            <p className="text-xs text-center text-muted-foreground py-4">
+              No se pudo generar el guion. Cierra e inténtalo de nuevo.
+            </p>
           )}
         </div>
       </motion.div>

@@ -107,12 +107,15 @@ export const BravyBot = memo(function BravyBot({
     <div className={`relative inline-flex items-center justify-center ${className}`} style={{ width: s, height: s }}>
       {speechBubble && (
         <motion.div
-          initial={{ opacity: 0, y: 8, scale: 0.8 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="absolute -top-14 left-1/2 -translate-x-1/2 bg-white rounded-2xl px-3.5 py-2.5 shadow-lg shadow-black/[0.08] border border-gray-100 max-w-[180px] z-10"
+          initial={{ opacity: 0, x: -8, scale: 0.8 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          // Bocadillo a la derecha del robot para no taparlo.
+          // En móvil (pantalla pequeña) se posiciona arriba para no desbordar.
+          className="absolute top-1/2 -translate-y-1/2 left-full ml-2 bg-white rounded-2xl px-3.5 py-2.5 shadow-lg shadow-black/[0.08] border border-gray-100 max-w-[160px] z-10 sm:max-w-[180px]"
         >
           <p className="text-[11px] font-medium text-gray-700 leading-snug text-center">{speechBubble}</p>
-          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-gray-100 rotate-45" />
+          {/* Cola del bocadillo apuntando al robot (hacia la izquierda) */}
+          <div className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-3 h-3 bg-white border-l border-b border-gray-100 -rotate-45" />
         </motion.div>
       )}
 

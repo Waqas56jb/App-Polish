@@ -167,3 +167,54 @@ Stage Summary:
 - Temáticas personalizables: combinación de servicios del perfil + 24 temáticas base
 - Vista de resultado más ligera: solo lo esencial, expandir opcional para detalle
 - Flujo simplificado: genera ideas → revisa → elige guardar en biblioteca o mover a calendario
+
+---
+Task ID: 5
+Agent: main
+Task: 8 mejoras UX - temáticas max 3, bocadillo bravybot, ficha completa planificar, reactivar módulo, tipo contenido, botones visibles, días repartidos, calendario drag&drop
+
+Work Log:
+- BravyBot: bocadillo reposicionado de -top-14 (tapando robot) a la derecha (left-full ml-2)
+  - Cola del bocadillo ahora apunta a la izquierda (hacia el robot)
+  - Ya no tapa al robot en ninguna expresión
+- Sidebar: clic en módulo activo dispara CustomEvent 'module-reactivate'
+  - Cada módulo puede escucharlo para resetear su estado
+  - Planificar escucha el evento y vuelve a la pantalla de configuración
+- Planificar: añadido máximo 3 temáticas con aviso visual (X/3)
+  - Chips deshabilitados con opacidad cuando se alcanza el máximo
+  - Mensaje "Máximo 3 temáticas" al intentar añadir más
+  - Checkmark ✓ en temáticas seleccionadas
+- Planificar: añadido paso 4 "Tipo de contenido" (reels / carruseles / mixto)
+  - Mixto = mayoría reels (70%) + algunos carruseles (30%)
+  - API case 'plan' actualizado con reparto automático según tipoContenido
+- Planificar: ficha completa con guion al pulsar idea
+  - Modal nuevo (FichaCompletaModal) genera guion bajo demanda
+  - Muestra: descripción + guion completo + copy+hashtags
+  - Botones: Guardar en Biblioteca / Agendar
+  - Si ya tenía guion (regenerado), lo muestra directamente
+- Planificar: botones visibles en cada idea sin desplegar
+  - Cada ficha tiene 3 botones siempre visibles: Regenerar / Biblioteca / Calendario
+  - Plus CTA global abajo: Todo a Biblioteca / Todo al Calendario
+- Planificar: días repartidos proporcionalmente
+  - Nueva función repartirFechasSemana() en cliente
+  - Prioridad: Martes (2), Jueves (4), Domingo (0), Miércoles (3), Sábado (6), Lunes (1), Viernes (5)
+  - Si hay conflictos de fecha, avanza a siguiente semana
+  - Resultado: 3 publicaciones → Martes, Jueves, Domingo (no seguidas)
+- Calendario: rediseñado con drag & drop completo
+  - Vista calendario: HTML5 drag, arrastrar idea a otro día del grid
+  - Vista lista: @dnd-kit/sortable, reordenar con drag handle (GripVertical)
+  - Al reordenar lista, se reasignan fechas manteniendo orden cronológico
+  - Highlight verde al hacer drag over un día
+  - Toast feedback al mover
+- Calendario: modal ahora permite cambiar fecha
+  - Para items ya agendados: botón "Cambiar fecha" abre selector inline
+  - Mantiene "Ver en el Calendario" como acción secundaria
+- Imports corregidos: useSensors y useSensor en @dnd-kit/core, sortableKeyboardCoordinates en @dnd-kit/sortable
+- Verificado: lint limpio, build exitoso, dev server 200 OK, API funciona con tipoContenido
+
+Stage Summary:
+- 8 mejoras implementadas y verificadas
+- UX más clara para mujer no técnica: límites visuales, botones siempre visibles, drag intuitivo
+- Días de publicación repartidos estratégicamente (Mar/Jue/Dom preferidos, evita Lun/Vie/Sáb)
+- Calendario ahora totalmente interactivo: drag en vista calendario + drag en vista lista
+- Modularidad mejorada: evento 'module-reactivate' permite reset desde sidebar

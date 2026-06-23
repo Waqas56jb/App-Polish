@@ -35,6 +35,19 @@ export async function POST(req: NextRequest) {
         const totalItems = frecuencia * totalSemanas
         const today = fechaInicio || new Date().toISOString().split('T')[0]
 
+        // Determinar reparto de tipos según tipoContenido
+        let repartoTipos = ''
+        if (tipoContenido === 'reels') {
+          repartoTipos = '- TODOS los contenidos deben ser tipo "reel"'
+        } else if (tipoContenido === 'carruseles') {
+          repartoTipos = '- TODOS los contenidos deben ser tipo "carrusel"'
+        } else {
+          // mezcla: mayoría reels (70%), algunos carruseles (30%)
+          const numReels = Math.ceil(totalItems * 0.7)
+          const numCarruseles = totalItems - numReels
+          repartoTipos = `- Mezcla: ${numReels} reels y ${numCarruseles} carruseles (mayoría reels)`
+        }
+
         systemPrompt = `Eres una experta en marketing para salones de belleza. Generas planes de contenido RÁPIDOS y efectivos. Respondes SOLO en JSON válido, en español. Sé concisa.`
 
         userPrompt = [
@@ -48,8 +61,8 @@ export async function POST(req: NextRequest) {
           '',
           'REGLAS:',
           '- Distribuye en días laborables, alternando reel y carrusel.',
-          '- Fechas reales empezando desde ' + today + '.',
           '- NO generes guion, copy ni hashtags ahora. Solo la propuesta.',
+          repartoTipos,
           '',
           'Responde SOLO con un JSON array:',
           '[{',

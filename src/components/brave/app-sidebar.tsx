@@ -72,7 +72,15 @@ export function AppSidebar() {
         {modules.map((mod, index) => (
           <motion.button
             key={mod.key}
-            onClick={() => setActiveModule(mod.key)}
+            onClick={() => {
+              // Si se pulsa el módulo activo, dispatch evento para que el módulo
+              // pueda resetear su estado (ej: Planificar vuelve a configuración).
+              if (activeModule === mod.key) {
+                window.dispatchEvent(new CustomEvent('module-reactivate', { detail: { module: mod.key } }))
+              } else {
+                setActiveModule(mod.key)
+              }
+            }}
             initial={{ x: -10, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: index * 0.03, duration: 0.2 }}
