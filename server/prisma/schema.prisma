@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model BrandProfile {
+  id                    String   @id @default(cuid())
+  nombre                String   @default("")
+  salon                 String   @default("")
+  ciudad                String   @default("")
+  instagram             String   @default("")
+  experiencia           String   @default("")
+  servicios             String   @default("[]")
+  serviciosPrioritarios String   @default("[]")
+  objetivos             String   @default("")
+  clientaIdeal          String   @default("")
+  preguntasFrecuentes   String   @default("")
+  erroresFrecuentes     String   @default("")
+  nivelCamara           String   @default("")
+  facturacion           String   @default("")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model ContentItem {
+  id            String   @id @default(cuid())
+  tipo          String   @default("reel")
+  titulo        String   @default("")
+  objetivo      String   @default("")
+  servicio      String   @default("")
+  guion         String   @default("")
+  copy          String   @default("")
+  hashtags      String   @default("")
+  textoPortada  String   @default("")
+  formato       String   @default("")
+  estado        String   @default("borrador")
+  fecha         String   @default("")
+  slides        String   @default("[]")
+  storiesData   String   @default("[]")
+  planId        String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ContentPlan {
+  id          String   @id @default(cuid())
+  tipo        String   @default("semanal")
+  servicios   String   @default("[]")
+  frecuencia  Int      @default(3)
+  objetivo    String   @default("")
+  contenido   String   @default("[]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Lossless snapshot of the client's persisted workspace (Zustand state).
+// Single-row table (id = "singleton"); the source of truth for the live app.
+// The relational models above are kept in sync as a normalized projection
+// of this snapshot so the REST API can expose them.
+model Workspace {
+  id        String   @id @default("singleton")
+  payload   String   @default("")
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,433 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans);
+  --font-serif: var(--font-cormorant);
+  --font-mono: var(--font-dm-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* ===== SERVIFY — Sage / Cream Palette ===== */
+  --color-brave-sage: #8BAF8D;          /* primary accent */
+  --color-brave-sage-dark: #759E77;     /* hover */
+  --color-brave-sage-light: #C8DEC9;    /* soft accents, big numerals, borders */
+  --color-brave-sage-pale: #EEF4EE;     /* icon bg, hover fills, chips */
+  --color-brave-cream: #FAF7F2;         /* main background */
+  --color-brave-warm: #F2ECE3;          /* alt surface, panels */
+  --color-brave-charcoal: #2A2A28;      /* headings, dark sections */
+  --color-brave-mid: #5C5C58;           /* sub-text */
+  --color-brave-muted: #9A9A94;         /* captions, meta */
+  --color-brave-gold: #C9A96E;          /* premium accent, ratings */
+  --color-brave-gold-light: #E8D5B0;    /* soft gold */
+  --color-brave-success: #4CAF50;       /* live dot */
+
+  /* Aliases kept so legacy class names resolve to the new palette */
+  --color-brave-buttermilk: #E8D5B0;
+  --color-brave-pastel-blue: #C8DEC9;
+  --color-brave-chocolate: #8BAF8D;
+  --color-brave-mocha: #A9947D;
+  --color-brave-terracotta: #C9A96E;
+  --color-brave-buttercup: #C9A96E;
+  --color-brave-glazed-green: #759E77;
+  --color-brave-purple-sage: #8BAF8D;
+  --color-brave-midnight: #2A2A28;
+  --color-brave-digital-lavender: #C8DEC9;
+  --color-brave-solar-orange: #C9A96E;
+  --color-brave-peach: #E8D5B0;
+  --color-brave-rose-quartz: #E8D5B0;
+  --color-brave-ai-lavender: #C8DEC9;
+  --color-brave-sky-blue: #C8DEC9;
+  --color-brave-mint: #C8DEC9;
+  --color-brave-coral: #C9A96E;
+  --color-brave-sky: #EEF4EE;
+  --color-brave-burgundy-light: #759E77;
+  --color-brave-dark: #2A2A28;
+  --color-brave-warm-gray: #F2ECE3;
+  --color-brave-blue-deep: #8BAF8D;
+  --color-brave-rose: #E8D5B0;
+}
+
+:root {
+  --radius: 1.25rem;
+  --background: #FAF7F2;
+  --foreground: #2A2A28;
+  --card: #FFFFFF;
+  --card-foreground: #2A2A28;
+  --popover: #FFFFFF;
+  --popover-foreground: #2A2A28;
+  --primary: #8BAF8D;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F2ECE3;
+  --secondary-foreground: #2A2A28;
+  --muted: #EEF4EE;
+  --muted-foreground: #9A9A94;
+  --accent: #EEF4EE;
+  --accent-foreground: #2A2A28;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: rgba(42, 42, 40, 0.1);
+  --input: rgba(42, 42, 40, 0.12);
+  --ring: #8BAF8D;
+  --chart-1: #8BAF8D;
+  --chart-2: #C8DEC9;
+  --chart-3: #C9A96E;
+  --chart-4: #759E77;
+  --chart-5: #E8D5B0;
+  --sidebar: #2A2A28;
+  --sidebar-foreground: #FAF7F2;
+  --sidebar-primary: #8BAF8D;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #3A3A36;
+  --sidebar-accent-foreground: #FAF7F2;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #8BAF8D;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-dm-sans), system-ui, sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-cormorant), Georgia, serif;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* ========== CUSTOM SCROLLBAR — thin ========== */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 175, 141, 0.35);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 175, 141, 0.6);
+}
+
+/* ========== SERVIFY DESIGN SYSTEM ========== */
+
+/* Card / surface — solid white so it reads on the cream background */
+.brave-glass {
+  background: #FFFFFF;
+  border: 1px solid rgba(42, 42, 40, 0.08);
+  box-shadow: 0 2px 20px rgba(42, 42, 40, 0.04);
+}
+/* Translucent nav surface (used over content, e.g. mobile top bar) */
+.brave-glass-nav {
+  background: rgba(250, 247, 242, 0.88);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid rgba(42, 42, 40, 0.06);
+}
+.brave-glass-strong {
+  background: #FFFFFF;
+  border: 1px solid rgba(42, 42, 40, 0.08);
+  box-shadow: 0 12px 48px rgba(42, 42, 40, 0.12);
+}
+
+/* Gradients — sage / gold / charcoal family */
+.brave-gradient {
+  background: linear-gradient(160deg, #2A2A28 0%, #34342F 55%, #3A3A34 100%);
+}
+.brave-gradient-warm {
+  background: linear-gradient(135deg, #E8D5B0 0%, #C9A96E 100%);
+}
+.brave-gradient-blue {
+  background: linear-gradient(135deg, #C8DEC9 0%, #8BAF8D 100%);
+}
+.brave-gradient-sunset {
+  background: linear-gradient(135deg, #C9A96E 0%, #A9947D 100%);
+}
+.brave-gradient-lavender {
+  background: linear-gradient(135deg, #C8DEC9 0%, #8BAF8D 100%);
+}
+.brave-gradient-mint {
+  background: linear-gradient(135deg, #C8DEC9 0%, #759E77 100%);
+}
+.brave-gradient-sage {
+  background: linear-gradient(135deg, #8BAF8D 0%, #759E77 100%);
+}
+
+/* Soft editorial background pattern */
+.brave-bg-pattern {
+  background-color: #FAF7F2;
+  background-image:
+    radial-gradient(at 18% 12%, rgba(139, 175, 141, 0.10) 0%, transparent 48%),
+    radial-gradient(at 82% 78%, rgba(201, 169, 110, 0.07) 0%, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(200, 222, 201, 0.10) 0%, transparent 42%);
+}
+
+/* Card hover — gentle editorial lift */
+.brave-card-hover {
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              box-shadow 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.brave-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(42, 42, 40, 0.1);
+}
+
+/* Soft glow / resting card shadow */
+.brave-glow {
+  box-shadow: 0 2px 20px rgba(42, 42, 40, 0.04);
+}
+.brave-glow-color {
+  box-shadow: 0 8px 32px -8px rgba(139, 175, 141, 0.25),
+              0 4px 12px -2px rgba(201, 169, 110, 0.18);
+}
+
+/* Eyebrow / section label */
+.brave-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8BAF8D;
+}
+.brave-eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: #8BAF8D;
+  display: inline-block;
+}
+
+/* Floating animation */
+.brave-float {
+  animation: brave-float 3s ease-in-out infinite;
+}
+@keyframes brave-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Gentle bounce */
+.brave-bounce {
+  animation: brave-bounce 2.2s ease-in-out infinite;
+}
+@keyframes brave-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.02); }
+}
+
+/* Shimmer loading */
+.brave-shimmer {
+  background: linear-gradient(90deg, #F2ECE3 0%, #C8DEC9 40%, #EEF4EE 60%, #F2ECE3 100%);
+  background-size: 300% 100%;
+  animation: brave-shimmer 2s ease-in-out infinite;
+}
+@keyframes brave-shimmer {
+  0% { background-position: 300% 0; }
+  100% { background-position: -300% 0; }
+}
+
+/* Pulse ring */
+.brave-pulse-ring {
+  animation: brave-pulse-ring 2s ease-out infinite;
+}
+@keyframes brave-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(139, 175, 141, 0.45); }
+  70% { box-shadow: 0 0 0 12px rgba(139, 175, 141, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(139, 175, 141, 0); }
+}
+
+/* Live dot pulse */
+.brave-pulse {
+  animation: brave-pulse 1.5s ease-in-out infinite;
+}
+@keyframes brave-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Scroll reveal */
+.brave-fade-up {
+  animation: brave-fade-up 0.7s ease both;
+}
+@keyframes brave-fade-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sparkle animation */
+.brave-sparkle {
+  animation: brave-sparkle 1.5s ease-in-out infinite;
+}
+@keyframes brave-sparkle {
+  0%, 100% { opacity: 0.4; transform: scale(0.8) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.1) rotate(180deg); }
+}
+
+/* Sidebar navigation item */
+.brave-nav-item {
+  position: relative;
+  overflow: hidden;
+}
+.brave-nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background: rgba(139, 175, 141, 0.14);
+  border-radius: 0 14px 14px 0;
+  transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.brave-nav-item:hover::before,
+.brave-nav-item.active::before {
+  width: 100%;
+}
+
+/* Badge pill */
+.brave-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Category color chips */
+.brave-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.brave-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(42, 42, 40, 0.08);
+}
+.brave-chip.active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px -4px rgba(42, 42, 40, 0.12);
+}
+
+/* Pill button helper */
+.brave-btn-pill {
+  border-radius: 40px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Smooth transitions */
+.brave-transition {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Focus ring */
+.brave-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FAF7F2, 0 0 0 4px #8BAF8D;
+  border-radius: inherit;
+}
+
+/* Hook card accent borders — sage / gold editorial set */
+.hook-card-gradient-1 { border-left: 3px solid #8BAF8D; }
+.hook-card-gradient-2 { border-left: 3px solid #759E77; }
+.hook-card-gradient-3 { border-left: 3px solid #C8DEC9; }
+.hook-card-gradient-4 { border-left: 3px solid #C9A96E; }
+.hook-card-gradient-5 { border-left: 3px solid #E8D5B0; }
+.hook-card-gradient-6 { border-left: 3px solid #8BAF8D; }
+.hook-card-gradient-7 { border-left: 3px solid #759E77; }
+.hook-card-gradient-8 { border-left: 3px solid #C9A96E; }
+.hook-card-gradient-9 { border-left: 3px solid #A9947D; }
+.hook-card-gradient-10 { border-left: 3px solid #C8DEC9; }
+
+/* Mascot motivational banner */
+.mascot-banner {
+  background: linear-gradient(135deg,
+    rgba(200, 222, 201, 0.28) 0%,
+    rgba(238, 244, 238, 0.5) 50%,
+    rgba(232, 213, 176, 0.22) 100%
+  );
+  border: 1px solid rgba(139, 175, 141, 0.3);
+}
+
+/* ─── Safe area for mobile (notch, home indicator) ─── */
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-area-pb-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
