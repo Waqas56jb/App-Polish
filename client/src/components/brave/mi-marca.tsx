@@ -5,10 +5,10 @@ import { motion } from 'framer-motion'
 import { useAppStore, BrandProfile } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { BravyBot } from '@/components/brave/bravy-bot'
+import { PageHeader } from '@/components/brave/page-header'
 import {
   Crown, Mic, Save, Sparkles, CheckCircle2, Upload, FileText,
-  ListChecks, Loader2, FileUp, X, RefreshCw, Square, ChevronDown, ChevronUp, Copy, Check
+  ListChecks, Loader2, FileUp, Square, ChevronDown, ChevronUp, Copy, Check
 } from 'lucide-react'
 import { fetchJSON } from '@/lib/fetch-safe'
 import { toast } from 'sonner'
@@ -270,19 +270,12 @@ export function MiMarca() {
       transition={{ duration: 0.5 }}
       className="max-w-2xl mx-auto space-y-5"
     >
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="flex items-center justify-center gap-3">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full brave-gradient shadow-lg">
-            <Crown className="w-7 h-7 text-white" />
-          </div>
-          <BravyBot expression="happy" size={44} />
-        </div>
-        <h2 className="text-2xl font-bold text-foreground">Mi Marca</h2>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          La información de tu salón. Personaliza todo lo que la IA crea para ti.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Tu identidad"
+        title="Mi"
+        accent="Marca"
+        subtitle="La información de tu salón. Personaliza todo lo que la IA crea para ti."
+      />
 
       {/* ─── Selección de método ─── */}
       <div className="space-y-2">

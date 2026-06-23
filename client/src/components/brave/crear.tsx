@@ -71,7 +71,7 @@ export function Crear() {
     return (
       <div className="max-w-xl mx-auto space-y-4">
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">Crear</h2>
+          <h2 className="font-serif text-3xl font-light text-[#2A2A28]">Crear</h2>
           <p className="text-sm text-muted-foreground">Genera contenido para tu Instagram</p>
         </div>
         <Card className="border-l-4 border-l-[#E8D5B0] bg-[#EEF4EE] shadow-md brave-glass rounded-3xl">
@@ -335,7 +335,7 @@ export function Crear() {
     <div className="max-w-2xl mx-auto space-y-5">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-foreground">Crear</h2>
+        <h2 className="font-serif text-3xl font-light text-[#2A2A28]">Crear</h2>
         <p className="text-sm text-muted-foreground">Genera contenido para tu Instagram</p>
         <BravyBot size={36} expression="happy" animate />
       </div>

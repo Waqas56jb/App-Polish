@@ -481,7 +481,7 @@ export function Planificar() {
             <div className="brave-float inline-block mb-2">
               <BravyBot size={48} expression="excited" animate />
             </div>
-            <h2 className="text-2xl font-bold text-foreground">Planificar contenido</h2>
+            <h2 className="font-serif text-3xl font-light text-[#2A2A28]">Planificar contenido</h2>
             <p className="text-sm text-muted-foreground mt-1">
               En 5 pasos te doy las mejores ideas para tu salón
             </p>
@@ -662,7 +662,7 @@ export function Planificar() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-foreground">
+            <h2 className="font-serif text-2xl font-light text-[#2A2A28]">
               Tu plan {planTipo === 'semanal' ? 'semanal' : 'mensual'}
             </h2>
             <p className="text-sm text-muted-foreground">

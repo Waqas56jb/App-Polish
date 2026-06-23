@@ -125,7 +125,7 @@ export function InicioHome() {
           {/* BravyBot */}
           <div className="shrink-0 relative order-1 md:order-2">
             <div className="brave-float">
-              <BravyBot size={132} expression="wave" animate speechBubble={welcomePhrase} />
+              <BravyBot size={132} expression="wave" animate />
             </div>
             <div className="absolute inset-0 -z-10 blur-3xl opacity-40">
               <div className="w-full h-full rounded-full bg-[#8BAF8D]/40" />

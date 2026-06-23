@@ -105,7 +105,7 @@ export function DameUnaIdea() {
         {/* Header with gradient */}
         <div className="brave-gradient p-6 text-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+            <DialogTitle className="font-serif text-2xl font-light text-white flex items-center gap-2">
               <Lightbulb className="w-6 h-6" />
               ¡Dame una idea!
             </DialogTitle>

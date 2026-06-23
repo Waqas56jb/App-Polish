@@ -166,7 +166,7 @@ export function CalendarioView() {
         <div className="brave-float inline-block mb-4">
           <BravyBot size={72} expression="happy" animate />
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Tu Calendario está vacío</h2>
+        <h2 className="font-serif text-3xl font-light text-[#2A2A28] mb-2">Tu Calendario está vacío</h2>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-4">
           Cuando generes un plan o agendes ideas, aparecerán aquí. Podrás arrastrarlas para cambiar de día.
         </p>
@@ -185,7 +185,7 @@ export function CalendarioView() {
     <div className="max-w-3xl mx-auto space-y-4">
       {/* Header */}
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">Calendario</h2>
+        <h2 className="font-serif text-3xl font-light text-[#2A2A28] tracking-tight">Calendario</h2>
         <p className="text-sm text-muted-foreground">
           {scheduledItems.length} contenidos programados · arrastra para cambiar de día
         </p>

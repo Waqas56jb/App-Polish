@@ -11,6 +11,17 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
 
+  // Ocultar el indicador de desarrollo de Next ("N" en la esquina)
+  devIndicators: false,
+
+  // Permitir imágenes HD externas (Unsplash) en la landing
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "plus.unsplash.com" },
+    ],
+  },
+
   // Proxy all /api/* calls to the backend server so the frontend code can keep
   // using relative paths (/api/ai, /api/asr, /api/workspace, ...) unchanged.
   async rewrites() {

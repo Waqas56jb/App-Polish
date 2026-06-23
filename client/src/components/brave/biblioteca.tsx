@@ -91,7 +91,7 @@ export function Biblioteca() {
         <div className="brave-float inline-block mb-4">
           <BravyBot size={72} expression="happy" animate />
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Tu Biblioteca está vacía</h2>
+        <h2 className="font-serif text-3xl font-light text-[#2A2A28] mb-2">Tu Biblioteca está vacía</h2>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
           Aquí aparecerán todas las ideas y contenidos que guardes. Empieza creando contenido o pidiendo una idea.
         </p>
@@ -103,7 +103,7 @@ export function Biblioteca() {
     <div className="max-w-2xl mx-auto space-y-5">
       {/* ── Header ── */}
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">Biblioteca</h2>
+        <h2 className="font-serif text-3xl font-light text-[#2A2A28] tracking-tight">Biblioteca</h2>
         <p className="text-sm text-muted-foreground">
           {libraryItems.length} {libraryItems.length === 1 ? 'contenido guardado' : 'contenidos guardados'} · toca cualquiera para verlo completo
         </p>

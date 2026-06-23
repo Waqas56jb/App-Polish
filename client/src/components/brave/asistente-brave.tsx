@@ -293,7 +293,7 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
             <Bot className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#2A2A28]">Asistente BRÄVE</h2>
+            <h2 className="font-serif text-3xl font-light text-[#2A2A28]">Asistente BRÄVE</h2>
             <p className="text-sm text-[#8BAF8D]/70 mt-1">
               Pregúntame qué publicar, cómo avanzar o qué mejorar hoy.
             </p>

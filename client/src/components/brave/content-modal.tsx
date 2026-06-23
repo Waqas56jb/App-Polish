@@ -255,7 +255,7 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
                 </span>
               )}
             </div>
-            <DialogTitle className="text-xl font-bold text-white leading-snug">
+            <DialogTitle className="font-serif text-2xl font-light text-white leading-snug">
               {item.titulo}
             </DialogTitle>
           </DialogHeader>

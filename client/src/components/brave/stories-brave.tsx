@@ -134,7 +134,7 @@ export function StoriesBrave() {
       <div className="brave-gradient rounded-2xl p-6 text-white shadow-lg">
         <div className="flex items-center gap-3 mb-2">
           <Instagram className="w-7 h-7" />
-          <h1 className="text-2xl font-bold">Stories BRÄVE</h1>
+          <h1 className="font-serif text-3xl font-light">Stories BRÄVE</h1>
         </div>
         <p className="text-white/80 text-sm max-w-2xl">
           Convierte el trabajo de hoy en Stories que terminan en reserva, o prepara respuestas

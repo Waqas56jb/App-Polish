@@ -224,7 +224,7 @@ export function BancoGanchos() {
         <div className="brave-float inline-block">
           <BravyBot size={56} expression="excited" animate />
         </div>
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Banco de Ganchos</h1>
+        <h1 className="font-serif text-3xl font-light text-[#2A2A28] tracking-tight">Banco de Ganchos</h1>
         <p className="text-sm text-muted-foreground">
           Elige un tema y te doy ideas que captan atención en los primeros 3 segundos
         </p>

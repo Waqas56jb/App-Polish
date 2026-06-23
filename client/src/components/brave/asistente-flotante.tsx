@@ -3,7 +3,7 @@
 import { useAppStore } from '@/lib/store'
 import { AsistenteBrave } from './asistente-brave'
 import { BravyBotMini } from './bravy-bot'
-import { X } from 'lucide-react'
+import { X, MessageCircle, Maximize2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSyncExternalStore } from 'react'
 
@@ -17,7 +17,7 @@ export function AsistenteFlotante() {
 
   return (
     <>
-      {/* Botón flotante with mascot */}
+      {/* Botón flotante (bottom-right) */}
       <AnimatePresence>
         {!asistenteAbierto && (
           <motion.button
@@ -26,63 +26,76 @@ export function AsistenteFlotante() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             onClick={() => setAsistenteAbierto(true)}
-            // En móvil: subimos el botón para que no se solape con la bottom bar (h-16 ≈ 64px)
-            // En desktop: bottom-6 right-6 normal
-            className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 group flex items-center gap-2.5 pl-2 pr-4 py-2 rounded-full brave-gradient shadow-xl text-white hover:scale-105 transition-transform brave-glow"
-            title="Abrir Asistente BRÄVE"
+            className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-40 group flex items-center gap-2.5 pl-2.5 pr-5 py-2.5 rounded-full bg-[#2A2A28] shadow-xl text-[#FAF7F2] hover:bg-[#34342F] hover:-translate-y-0.5 transition-all duration-300"
+            title="Abrir Asistente Bräve"
           >
             <div className="brave-float">
               <BravyBotMini />
             </div>
-            <span className="text-sm font-semibold hidden sm:inline">Chat</span>
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#E8D5B0] rounded-full border-2 border-white animate-pulse" />
+            <span className="text-[0.8rem] font-medium tracking-[0.04em] uppercase">Chat</span>
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-[#8BAF8D] rounded-full border-2 border-[#2A2A28] brave-pulse" />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* Diálogo flotante */}
+      {/* Widget de conversación — docked bottom-right (full-screen en móvil) */}
       <AnimatePresence>
         {asistenteAbierto && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/20 backdrop-blur-sm p-0 sm:p-4"
-            onClick={() => setAsistenteAbierto(false)}
-          >
+          <>
+            {/* Backdrop solo en móvil */}
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-[#EEF4EE] w-full sm:max-w-2xl sm:rounded-3xl shadow-2xl max-h-[95vh] overflow-hidden flex flex-col brave-glass-strong pt-14 sm:pt-0"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed inset-0 z-40 bg-[#2A2A28]/30 backdrop-blur-sm"
+              onClick={() => setAsistenteAbierto(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 24, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 24, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              className="fixed z-50 flex flex-col overflow-hidden bg-[#FAF7F2] shadow-2xl border border-[rgba(42,42,40,0.1)]
+                         inset-x-0 bottom-0 top-14 rounded-t-3xl
+                         md:inset-auto md:bottom-6 md:right-6 md:top-auto md:w-[400px] md:h-[600px] md:max-h-[80vh] md:rounded-3xl"
             >
-              <div className="p-4 sm:p-6 overflow-y-auto">
-                <AsistenteBrave
-                  compacto
-                  onClose={() => setAsistenteAbierto(false)}
-                />
+              {/* Header */}
+              <div className="shrink-0 flex items-center justify-between px-5 py-3.5 bg-[#2A2A28] text-[#FAF7F2]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                    <MessageCircle className="w-4 h-4 text-[#8BAF8D]" strokeWidth={1.75} />
+                  </div>
+                  <div className="leading-tight">
+                    <p className="font-serif text-lg font-light">Asistente <span className="italic text-[#8BAF8D]">Bräve</span></p>
+                    <p className="text-[10px] text-[#C8DEC9] flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] inline-block" /> En línea
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => { setAsistenteAbierto(false); setActiveModule('asistente') }}
+                    className="p-2 rounded-lg text-[#FAF7F2]/60 hover:text-[#FAF7F2] hover:bg-white/10 transition-colors"
+                    title="Abrir versión completa"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setAsistenteAbierto(false)}
+                    className="p-2 rounded-lg text-[#FAF7F2]/60 hover:text-[#FAF7F2] hover:bg-white/10 transition-colors"
+                    aria-label="Cerrar"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="px-4 pb-4 sm:px-6 sm:pb-6 flex gap-2 border-t border-[#F2ECE3] pt-3">
-                <button
-                  onClick={() => {
-                    setAsistenteAbierto(false)
-                    setActiveModule('asistente')
-                  }}
-                  className="flex-1 text-xs px-3 py-2.5 rounded-2xl brave-gradient text-white font-semibold hover:opacity-90 transition-opacity"
-                >
-                  Abrir versión completa
-                </button>
-                <button
-                  onClick={() => setAsistenteAbierto(false)}
-                  className="px-4 py-2.5 rounded-2xl bg-white border border-[#E5E0D8] text-[#2A2A28] hover:bg-[#F2ECE3] transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+
+              {/* Body */}
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5">
+                <AsistenteBrave compacto onClose={() => setAsistenteAbierto(false)} />
               </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

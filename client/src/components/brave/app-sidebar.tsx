@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 
 // ============================================================
 // SIDEBAR RESPONSIVE — Servify sage/cream theme
@@ -76,21 +77,16 @@ export function AppSidebar() {
           TABLET / DESKTOP SIDEBAR (md+) — charcoal premium panel
       ════════════════════════════════════════════════════════════ */}
       <aside
-        className={`hidden md:flex sticky top-0 h-screen brave-gradient flex-col transition-[width] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] shadow-2xl overflow-hidden shrink-0 z-40 ${
+        className={`hidden md:flex h-screen brave-gradient flex-col transition-[width] duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] shadow-2xl overflow-hidden shrink-0 z-40 ${
           collapsed ? 'w-20' : 'w-64'
         }`}
       >
         {/* Logo + toggle */}
         <div className="px-3 py-5 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="shrink-0"
-            >
+          <div className={`flex ${collapsed ? 'flex-col items-center gap-3' : 'items-center gap-2.5'}`}>
+            <Link href="/" className="shrink-0" title="Ir al inicio">
               <BravyBotMini />
-            </motion.div>
+            </Link>
             {showLabels && (
               <div className="min-w-0 flex-1">
                 <h1 className="font-serif text-2xl font-light text-[#FAF7F2] tracking-tight leading-none">
@@ -103,15 +99,15 @@ export function AppSidebar() {
             )}
             <button
               onClick={() => setCollapsed(v => !v)}
-              className="shrink-0 p-1.5 rounded-lg text-[#FAF7F2]/50 hover:text-[#FAF7F2] hover:bg-white/10 transition-colors"
+              className="shrink-0 p-1.5 rounded-lg text-[#FAF7F2]/60 hover:text-[#FAF7F2] hover:bg-white/10 transition-colors"
               aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
             >
-              {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              {collapsed ? <PanelLeftOpen className="w-[18px] h-[18px]" /> : <PanelLeftClose className="w-[18px] h-[18px]" />}
             </button>
           </div>
 
           {showLabels && (
-            <div className="mt-3 mascot-banner rounded-2xl px-3 py-2 backdrop-blur-sm">
+            <div className="mt-3 mascot-banner rounded-2xl px-3 py-2">
               <p className="text-[11px] text-[#FAF7F2]/90 font-light leading-snug">{mascotPhrase}</p>
             </div>
           )}
