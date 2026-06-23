@@ -97,7 +97,7 @@ Responde SOLO con un JSON array de 10 elementos, sin texto adicional.`
       case 'script': {
         const { titulo, tipo, objetivo, servicio, formato } = context
         const objetivoDesc = getObjetivoDescription(objetivo)
-        systemPrompt = `Eres una guionista experta en contenido para Instagram de salones de belleza. Creas guiones cortos y efectivos. Siempre respondes en español. El formato de salida debe ser JSON válido.`
+        systemPrompt = `Eres una guionista experta en contenido para Instagram de salones de belleza. Creas guiones claros y efectivos. Siempre respondes en español. El formato de salida debe ser JSON válido.`
         userPrompt = `${brandContext}
 
 Crea un guión completo para un ${tipo} con estas especificaciones:
@@ -110,22 +110,40 @@ IMPORTANTE - El guión debe estar alineado con el objetivo "${objetivo}":
 ${objetivoDesc}
 
 - Si es AUTORIDAD: el CTA debe invitar a guardar, compartir o seguir para más contenido educativo
-- Si es RESERVAS: el CTA debe invitar a reservar cita, escribir por DM, con urgencia
-- Si es VISIBILIDAD: el CTA debe invitar a comentar, etiquetar amigas, compartir
+- Si es VENTA: el CTA debe invitar a reservar cita, escribir por DM, con urgencia
+- Si es VIRALIDAD: el CTA debe invitar a comentar, etiquetar amigas, compartir
 
-El guión debe seguir esta estructura:
+El guión debe seguir esta estructura, SEPARADA EN PÁRRAFOS CLAROS (cada parte con su etiqueta en mayúsculas en una línea propia, seguida del texto en la siguiente línea y una línea en blanco entre secciones):
+
 1. GANCHO - Primera frase que captura la atención (3-5 segundos)
 2. CONTEXTO - Desarrolla el tema (15-25 segundos)
 3. SOLUCIÓN - Presenta la solución o valor (10-15 segundos)
-4. CTA - Llamada a la acción clara alineada al objetivo (3-5 segundos)
+4. LLAMADA A LA ACCIÓN - CTA claro alineado al objetivo (3-5 segundos)
 
-Duración total: 40-50 segundos.
+Formato EXACTO del guion (cada etiqueta en su propia línea, separadas por líneas en blanco):
+GANCHO
+"[frase de gancho aquí]"
+
+CONTEXTO
+[párrafo de contexto aquí]
+
+SOLUCIÓN
+[párrafo de solución aquí]
+
+LLAMADA A LA ACCIÓN
+[frase de CTA aquí]
+
+Duración total del reel: 40-50 segundos.
+
+IMPORTANTE SOBRE EL COPY:
+- El copy debe INCLUIR los hashtags al final, en el mismo texto
+- NO generes un campo "hashtags" separado
+- Pon 5-8 hashtags relevantes al final del copy
 
 Responde SOLO con un JSON con esta estructura:
 {
-  "guion": "guión completo con marcadores GANCHO, CONTEXTO, SOLUCIÓN, CTA",
-  "copy": "texto para la descripción del post, alineado al objetivo",
-  "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5",
+  "guion": "guión con la estructura GANCHO/CONTEXTO/SOLUCIÓN/LLAMADA A LA ACCIÓN separada por párrafos como se indicó",
+  "copy": "texto para la descripción del post INCLUYENDO los hashtags al final en el mismo texto",
   "textoPortada": "texto corto para la portada del reel/carrusel"
 }`
         break
@@ -198,9 +216,12 @@ Responde SOLO con un JSON con esta estructura:
           '- Servicio: ' + servicio,
           '- Objetivo: ' + objetivo,
           '',
-          'Story 1: Captar atención (con encuesta, pregunta o sticker interactivo)',
-          'Story 2: Problema/Solución (con historia, consejo o caso real)',
-          'Story 3: CTA (con mensaje, reserva o interacción)',
+          'REGLAS:',
+          '- Story 1: CAPTAR ATENCIÓN (con encuesta, pregunta o sticker interactivo)',
+          '- Story 2: DESARROLLAR (problema/solución, historia, consejo o caso real)',
+          '- Story 3: LLAMADA A LA ACCIÓN clara (reservar, escribir DM, visitar perfil)',
+          '- El ÚLTIMO story SIEMPRE debe tener un CTA explícito',
+          '- NO incluyas hashtags (no se usan en stories)',
           '',
           'Responde SOLO con un JSON con esta estructura:',
           '{',
@@ -389,7 +410,7 @@ Responde SOLO con un JSON con esta estructura:
 
       case 'carousel': {
         const { servicio, objetivo, numSlides } = context
-        systemPrompt = 'Eres una experta en Carruseles de Instagram para salones de belleza. Creas contenido educativo y atractivo. Siempre respondes en español. El formato de salida debe ser JSON válido.'
+        systemPrompt = 'Eres una experta en Carruseles de Instagram para salones de belleza. Creas contenido educativo y atractivo con textos CORTOS. Siempre respondes en español. El formato de salida debe ser JSON válido.'
         userPrompt = [
           brandContext,
           '',
@@ -398,17 +419,24 @@ Responde SOLO con un JSON con esta estructura:
           '- Objetivo: ' + objetivo,
           '- Número de slides: ' + numSlides,
           '',
+          'REGLAS IMPORTANTES:',
+          '- Cada slide debe tener TEXTO CORTO (máximo 20-30 palabras por slide)',
+          '- El primer slide debe ser un GANCHO que capte la atención',
+          '- Los slides del medio deben dar CONTEXTO y SOLUCIÓN paso a paso',
+          '- El último slide debe ser una LLAMADA A LA ACCIÓN clara',
+          '- Cada slide debe tener un campo "tipo" indicando: gancho, contexto, solución o cta',
+          '- El copy debe INCLUIR los hashtags al final en el mismo texto (5-7 hashtags)',
+          '',
           'Responde SOLO con un JSON con esta estructura:',
           '{',
           '  "slides": [',
           '    {',
           '      "numero": 1,',
-          '      "texto": "texto completo del slide"',
+          '      "texto": "texto corto del slide",',
+          '      "tipo": "gancho"',
           '    }',
           '  ],',
-          '  "copy": "texto para la descripción del post",',
-          '  "hashtags": "#hashtag1 #hashtag2 #hashtag3 #hashtag4 #hashtag5",',
-          '  "cta": "llamada a la acción del último slide"',
+          '  "copy": "descripción del post INCLUYENDO hashtags al final"',
           '}',
         ].filter(Boolean).join('\n')
         break
@@ -731,8 +759,10 @@ function getObjetivoDescription(objetivo: string): string {
   switch ((objetivo || '').toLowerCase()) {
     case 'autoridad':
       return 'Posiciónate como experta. El contenido debe demostrar conocimiento técnico, educar a la audiencia, desmentir mitos del sector, compartir consejos profesionales y mostrar tu experiencia. El tono es didáctico pero cercano.'
+    case 'venta':
     case 'reservas':
       return 'Genera conversaciones y citas. El contenido debe enfocarse en transformaciones (antes/después), casos de éxito reales, ofertas limitadas, urgencia (citas limitadas, descuentos por tiempo), y siempre con un claro llamado a reservar o escribir por DM.'
+    case 'viralidad':
     case 'visibilidad':
       return 'Llega a más personas y consigue más alcance. El contenido debe ser viral, usar tendencias actuales, retos, polémicas suaves del sector, contenido muy compartible, preguntas que generen debate y comentarios.'
     default:

@@ -813,28 +813,8 @@ function SecuenciaStories() {
             })}
           </div>
 
-          {/* Hashtags */}
-          {resultado.hashtags && (
-            <Card className="border-[#E8DDD5]">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-[#591427]">Hashtags</label>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => copyField('hashtags', resultado.hashtags)}
-                    className="text-[#C1DBE8] hover:bg-[#F5F0EB] h-7"
-                  >
-                    {copiedField === 'hashtags' ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
-                    Copiar
-                  </Button>
-                </div>
-                <div className="bg-[#FFFBF0] p-3 rounded-xl text-sm text-[#C1DBE8] mt-2">
-                  {resultado.hashtags}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Hashtags - se omiten en stories (no se usan) */}
+          {!resultado.hashtags && null}
 
           {/* Action buttons */}
           <Card className="border-[#E8DDD5]">

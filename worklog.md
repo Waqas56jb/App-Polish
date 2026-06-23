@@ -73,3 +73,61 @@ Stage Summary:
 - API route más legible: 60 líneas de lógica inline → 2 funciones helper reutilizables
 - Sin cambios de comportamiento — solo optimizaciones seguras que respetan la funcionalidad existente
 - Archivos modificados: src/app/page.tsx, src/components/brave/bravy-bot.tsx, src/components/brave/inicio-home.tsx, src/components/brave/app-sidebar.tsx, src/components/brave/biblioteca.tsx, src/components/brave/calendario.tsx, src/components/brave/content-modal.tsx, src/app/api/ai/route.ts
+
+---
+Task ID: 3
+Agent: main
+Task: Rediseño UX para mujer 30-45 no técnica - Mi Marca, Crear, Stories, Biblioteca, API
+
+Work Log:
+- Mi Marca completamente reescrito: 3 opciones simples (Audio+Preguntas / Subir documento / Pegar texto)
+  - Opción Audio RECOMENDADA como primera: lista de 13 preguntas para leer mientras se graba
+  - Transcripción en vivo con Web Speech API (es-ES, continuous)
+  - Subida de archivo de audio (fallback vía /api/asr)
+  - Generación de ficha automática desde cualquier método
+  - Ficha expandible con todos los campos editables y copiables individualmente
+  - Botón de actualizar siempre visible al final (mismas 3 opciones)
+- Simplificación de objetivos: 6 opciones → 3 (Autoridad, Venta, Viralidad)
+  - Mapeo en API: 'reservas' → 'venta', 'visibilidad' → 'viralidad', 'autoridad' se mantiene
+  - Actualizado getObjetivoDescription() con casos para los 3 nuevos valores
+- Simplificación de formatos: 3 opciones → 2 (hablando a cámara / voz en off)
+- Crear Reels rediseñado:
+  - Genera 10 ideas
+  - Cada tarjeta clicable: al pulsar se despliega
+  - Opciones al desplegar: Generar guion completo / Guardar idea sola / Agendar
+  - Date picker inline para agendar directamente
+  - Guion con párrafos separados: GANCHO / CONTEXTO / SOLUCIÓN / LLAMADA A LA ACCIÓN
+  - Copy + Hashtags unidos en un solo bloque
+- Crear Carruseles rediseñado:
+  - Estructura obligatoria: gancho → contexto → solución → cta
+  - Cada slide con texto corto (max 20-30 palabras) y campo "tipo"
+  - Botón copiar individual por slide + copiar todo
+  - Copy incluye hashtags en el mismo bloque
+- Sección Stories quitada de Crear (solo Reels y Carruseles)
+- Stories independiente:
+  - "Recomendado: 3" ya estaba como badge (se mantiene)
+  - Quitada sección de hashtags (no se usan en stories)
+  - Botón copiar individual por story ya existente (se mantiene)
+  - API actualizado: último story siempre con CTA explícito, sin hashtags
+- Content Modal (Biblioteca) mejorado:
+  - Slides del carrusel: copiar individual + copiar todo
+  - Stories: copiar texto individual de cada story + copiar todo
+  - CTA principal claro: "Agendar en calendario" con date picker inline
+  - "Ver en el Calendario" cuando ya está programado
+- API actualizado:
+  - Case 'script': prompt exige estructura GANCHO/CONTEXTO/SOLUCIÓN/LLAMADA A LA ACCIÓN separada por párrafos
+  - Case 'script': copy debe INCLUIR hashtags en el mismo texto (no campo separado)
+  - Case 'carousel': pide "tipo" por slide, textos cortos, copy con hashtags incluidos
+  - Case 'stories': último story con CTA explícito, sin hashtags
+  - Case 'plan': eliminada variable objetivoDesc no usada
+- Toast notifications (sonner) añadidas a content-modal y crear para feedback claro
+- Verificado: lint limpio (0 errores), build exitoso (8.9s), dev server 200 OK
+
+Stage Summary:
+- Mi Marca: de formulario complejo de 3 pestañas → 3 opciones claras con audio como recomendado
+- Crear: de 6 objetivos + 3 formatos + 3 submódulos → 3 objetivos + 2 formatos + 2 submódulos (sin Stories)
+- Guiones: siempre con estructura clara en 4 párrafos etiquetados
+- Copy + Hashtags: siempre juntos en un solo bloque copiable
+- Stories: sin hashtags, siempre con CTA en el último
+- Biblioteca: cada slide y cada story copiable individualmente además de "copiar todo"
+- Sin cambios en el store o base de datos - compatible con datos existentes
