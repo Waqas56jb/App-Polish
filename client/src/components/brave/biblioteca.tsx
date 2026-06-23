@@ -100,7 +100,7 @@ export function Biblioteca() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <div className="max-w-6xl mx-auto space-y-5">
       {/* ── Header ── */}
       <div className="text-center space-y-1">
         <h2 className="font-serif text-3xl font-light text-[#2A2A28] tracking-tight">Biblioteca</h2>

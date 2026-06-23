@@ -69,7 +69,7 @@ export function Crear() {
 
   if (!brandProfile) {
     return (
-      <div className="max-w-xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4">
         <div className="text-center space-y-2">
           <h2 className="font-serif text-3xl font-light text-[#2A2A28]">Crear</h2>
           <p className="text-sm text-muted-foreground">Genera contenido para tu Instagram</p>
@@ -332,7 +332,7 @@ export function Crear() {
 
   // ─── Render ───
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <div className="max-w-4xl mx-auto space-y-5">
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="font-serif text-3xl font-light text-[#2A2A28]">Crear</h2>
@@ -386,7 +386,7 @@ export function Crear() {
 
               <div>
                 <label className="text-sm font-semibold text-foreground mb-2 block">Objetivo</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {OBJETIVOS.map(o => (
                     <button
                       key={o.value}
@@ -614,7 +614,7 @@ export function Crear() {
 
               <div>
                 <label className="text-sm font-semibold text-foreground mb-2 block">Objetivo</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {OBJETIVOS.map(o => (
                     <button
                       key={o.value}
@@ -632,7 +632,7 @@ export function Crear() {
 
               <div>
                 <label className="text-sm font-semibold text-foreground mb-2 block">Número de slides</label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {[3, 4, 5, 6, 7].map(n => (
                     <button
                       key={n}

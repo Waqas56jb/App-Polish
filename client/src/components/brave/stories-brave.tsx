@@ -431,7 +431,7 @@ function SecuenciaStories() {
                 Las clientas no reservan porque vean un balayage bonito. Reservan porque se identifican con un problema
                 y entienden que existe una solución para ellas.
               </p>
-              <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                 {VISTAS_TIPO_STORY.map(v => (
                   <div key={v.n} className="bg-white rounded-lg p-2 border border-[#E5E0D8]">
                     <div className="flex items-center gap-1.5 mb-1">

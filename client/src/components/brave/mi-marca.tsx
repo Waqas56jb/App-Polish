@@ -268,7 +268,7 @@ export function MiMarca() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="max-w-2xl mx-auto space-y-5"
+      className="max-w-4xl mx-auto space-y-5"
     >
       <PageHeader
         eyebrow="Tu identidad"
@@ -282,7 +282,7 @@ export function MiMarca() {
         <label className="text-sm font-semibold text-foreground">
           {isComplete ? '¿Cómo quieres actualizar tu marca?' : '¿Cómo quieres crear tu marca?'}
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {([
             { key: 'audio' as Metodo, label: 'Audio + Preguntas', icon: <Mic className="w-4 h-4" />, recommended: true },
             { key: 'documento' as Metodo, label: 'Subir documento', icon: <FileUp className="w-4 h-4" /> },

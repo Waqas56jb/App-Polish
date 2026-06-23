@@ -99,13 +99,13 @@ export default function StudioPage() {
       <AppSidebar />
 
       {/* Main Content — único elemento con scroll vertical */}
-      <main className="flex-1 h-screen overflow-y-auto min-w-0">
+      <main className="flex-1 h-screen overflow-y-auto overflow-x-hidden min-w-0">
         <motion.div
           key={activeModule}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="px-4 pt-16 pb-28 md:px-8 lg:px-10 md:pt-10 md:pb-12 max-w-[1100px] mx-auto safe-area-pt safe-area-pb"
+          className="px-4 pt-16 pb-28 md:px-8 lg:px-10 md:pt-10 md:pb-12 max-w-[1400px] mx-auto safe-area-pt safe-area-pb"
         >
           {moduleElement}
         </motion.div>

@@ -218,7 +218,7 @@ export function BancoGanchos() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <div className="max-w-4xl mx-auto space-y-5">
       {/* ── Header ── */}
       <div className="text-center space-y-2">
         <div className="brave-float inline-block">

@@ -474,7 +474,7 @@ export function Planificar() {
   // ════════════════════════════════════════════════════════════
   if (view === 'config') {
     return (
-      <div className="max-w-md mx-auto">
+      <div className="max-w-3xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           {/* Header */}
           <div className="text-center mb-5">
@@ -520,7 +520,7 @@ export function Planificar() {
             <label className="text-sm font-semibold text-foreground mb-2 block">
               2. ¿Cuántas publicaciones por semana?
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {FRECUENCIAS.map(f => (
                 <button
                   key={f.value}
@@ -578,7 +578,7 @@ export function Planificar() {
             <label className="text-sm font-semibold text-foreground mb-2 block">
               4. ¿Qué tipo de contenido?
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {TIPOS_CONTENIDO.map(t => (
                 <button
                   key={t.value}
@@ -657,7 +657,7 @@ export function Planificar() {
   // VISTA DE RESULTADO — botones visibles en cada ficha
   // ════════════════════════════════════════════════════════════
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">

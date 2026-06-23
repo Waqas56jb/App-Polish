@@ -316,7 +316,7 @@ export function AsistenteBrave({ compacto = false, onClose }: AsistenteBraveProp
             Te recomiendo enfocarte en lo más bajo
           </p>
         </div>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
             { key: 'comunicacion', label: 'Comunicación' },
             { key: 'stories', label: 'Stories' },
