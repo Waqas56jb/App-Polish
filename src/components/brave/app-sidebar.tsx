@@ -32,7 +32,6 @@ const modules: { key: ModuleType; label: string; icon: React.ReactNode; color: s
 export function AppSidebar() {
   const { activeModule, setActiveModule } = useAppStore()
   const mascotPhrase = useMemo(() => getRandomBravyPhrase(activeModule), [activeModule])
-  const activeColor = modules.find(m => m.key === activeModule)?.color || '#60B5FF'
 
   return (
     <aside className="w-[72px] hover:w-[240px] min-h-screen brave-gradient flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group/sidebar shadow-2xl overflow-hidden shrink-0">

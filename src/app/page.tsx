@@ -2,26 +2,78 @@
 
 import { useAppStore } from '@/lib/store'
 import { AppSidebar } from '@/components/brave/app-sidebar'
-import { InicioHome } from '@/components/brave/inicio-home'
-import { MiMarca } from '@/components/brave/mi-marca'
-import { Planificar } from '@/components/brave/planificar'
-import { Crear } from '@/components/brave/crear'
-import { Biblioteca } from '@/components/brave/biblioteca'
-import { CalendarioView } from '@/components/brave/calendario'
-import { StoriesBrave } from '@/components/brave/stories-brave'
-import { AsistenteBrave } from '@/components/brave/asistente-brave'
-import { BancoGanchos } from '@/components/brave/banco-ganchos'
+import dynamic from 'next/dynamic'
 import { AsistenteFlotante } from '@/components/brave/asistente-flotante'
 import { DameUnaIdea } from '@/components/brave/dame-una-idea'
 import { BravyBot } from '@/components/brave/bravy-bot'
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, useMemo } from 'react'
 import { motion } from 'framer-motion'
+
+// Lazy-load módulos pesados para reducir el bundle inicial.
+// Cada módulo se carga bajo demanda cuando el usuario navega a él.
+const InicioHome = dynamic(() => import('@/components/brave/inicio-home').then(m => ({ default: m.InicioHome })), {
+  loading: () => <ModuleSkeleton />,
+})
+const MiMarca = dynamic(() => import('@/components/brave/mi-marca').then(m => ({ default: m.MiMarca })), {
+  loading: () => <ModuleSkeleton />,
+})
+const Planificar = dynamic(() => import('@/components/brave/planificar').then(m => ({ default: m.Planificar })), {
+  loading: () => <ModuleSkeleton />,
+})
+const Crear = dynamic(() => import('@/components/brave/crear').then(m => ({ default: m.Crear })), {
+  loading: () => <ModuleSkeleton />,
+})
+const Biblioteca = dynamic(() => import('@/components/brave/biblioteca').then(m => ({ default: m.Biblioteca })), {
+  loading: () => <ModuleSkeleton />,
+})
+const CalendarioView = dynamic(() => import('@/components/brave/calendario').then(m => ({ default: m.CalendarioView })), {
+  loading: () => <ModuleSkeleton />,
+})
+const StoriesBrave = dynamic(() => import('@/components/brave/stories-brave').then(m => ({ default: m.StoriesBrave })), {
+  loading: () => <ModuleSkeleton />,
+})
+const AsistenteBrave = dynamic(() => import('@/components/brave/asistente-brave').then(m => ({ default: m.AsistenteBrave })), {
+  loading: () => <ModuleSkeleton />,
+})
+const BancoGanchos = dynamic(() => import('@/components/brave/banco-ganchos').then(m => ({ default: m.BancoGanchos })), {
+  loading: () => <ModuleSkeleton />,
+})
+
+function ModuleSkeleton() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center">
+        <div className="brave-float inline-block mb-4">
+          <BravyBot size={64} expression="excited" animate />
+        </div>
+        <p className="text-sm text-[#7A7A8A]">Cargando módulo...</p>
+      </div>
+    </div>
+  )
+}
 
 const emptySubscribe = () => () => {}
 
 export default function Home() {
   const { activeModule, isLoading, loadingMessage } = useAppStore()
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false)
+
+  // Memoizamos el módulo activo ANTES del early return para respetar rules-of-hooks.
+  // El memo evita re-renders cuando cambia estado no relacionado (isLoading, etc).
+  const moduleElement = useMemo(() => {
+    switch (activeModule) {
+      case 'inicio': return <InicioHome />
+      case 'marca': return <MiMarca />
+      case 'planificar': return <Planificar />
+      case 'crear': return <Crear />
+      case 'stories': return <StoriesBrave />
+      case 'ganchos': return <BancoGanchos />
+      case 'asistente': return <AsistenteBrave />
+      case 'biblioteca': return <Biblioteca />
+      case 'calendario': return <CalendarioView />
+      default: return <InicioHome />
+    }
+  }, [activeModule])
 
   if (!mounted) {
     return (
@@ -41,21 +93,6 @@ export default function Home() {
     )
   }
 
-  const renderModule = () => {
-    switch (activeModule) {
-      case 'inicio': return <InicioHome />
-      case 'marca': return <MiMarca />
-      case 'planificar': return <Planificar />
-      case 'crear': return <Crear />
-      case 'stories': return <StoriesBrave />
-      case 'ganchos': return <BancoGanchos />
-      case 'asistente': return <AsistenteBrave />
-      case 'biblioteca': return <Biblioteca />
-      case 'calendario': return <CalendarioView />
-      default: return <InicioHome />
-    }
-  }
-
   const mostrarFlotante = activeModule !== 'asistente'
 
   return (
@@ -72,7 +109,7 @@ export default function Home() {
           transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="p-6 md:p-8 max-w-[1200px] mx-auto"
         >
-          {renderModule()}
+          {moduleElement}
         </motion.div>
       </main>
 

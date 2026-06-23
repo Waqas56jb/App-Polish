@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useAppStore, ContentItem, generateId } from '@/lib/store'
 import { ContentCardModal } from './content-modal'
 import { BravyBot } from './bravy-bot'
@@ -28,10 +28,13 @@ export function CalendarioView() {
   const [openItem, setOpenItem] = useState<ContentItem | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  // All scheduled/approved items with dates
-  const scheduledItems = libraryItems.filter(i => i.estado === 'programado' && i.fecha)
+  // All scheduled/approved items with dates — memoizado por libraryItems
+  const scheduledItems = useMemo(
+    () => libraryItems.filter(i => i.estado === 'programado' && i.fecha),
+    [libraryItems]
+  )
 
-  const getItemsForDate = (date: Date) => {
+  const getItemsForDate = useCallback((date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd')
     return scheduledItems.filter(item => {
       if (!item.fecha) return false
@@ -39,42 +42,47 @@ export function CalendarioView() {
         return isSameDay(parseISO(item.fecha), date)
       } catch { return false }
     })
-  }
+  }, [scheduledItems])
 
-  // Calendar grid
-  const monthStart = startOfMonth(currentDate)
-  const monthEnd = endOfMonth(currentDate)
-  const calStart = startOfWeek(monthStart, { weekStartsOn: 1 })
-  const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
+  // Calendar grid — memoizado por currentDate (no se recalcula en otros renders)
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentDate)
+    const monthEnd = endOfMonth(currentDate)
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 1 })
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 })
+    const days: Date[] = []
+    let day = calStart
+    while (day <= calEnd) {
+      days.push(day)
+      day = addDays(day, 1)
+    }
+    return days
+  }, [currentDate])
 
-  const calendarDays: Date[] = []
-  let day = calStart
-  while (day <= calEnd) {
-    calendarDays.push(day)
-    day = addDays(day, 1)
-  }
+  // List sorted by date — memoizado por scheduledItems
+  const sortedList = useMemo(
+    () => [...scheduledItems].sort((a, b) => {
+      if (!a.fecha && !b.fecha) return 0
+      if (!a.fecha) return 1
+      if (!b.fecha) return -1
+      return a.fecha.localeCompare(b.fecha)
+    }),
+    [scheduledItems]
+  )
 
-  // List sorted by date
-  const sortedList = [...scheduledItems].sort((a, b) => {
-    if (!a.fecha && !b.fecha) return 0
-    if (!a.fecha) return 1
-    if (!b.fecha) return -1
-    return a.fecha.localeCompare(b.fecha)
-  })
-
-  const navigatePrev = () => {
+  const navigatePrev = useCallback(() => {
     setCurrentDate(viewMode === 'calendario' ? subMonths(currentDate, 1) : subWeeks(currentDate, 1))
-  }
-  const navigateNext = () => {
+  }, [viewMode, currentDate])
+  const navigateNext = useCallback(() => {
     setCurrentDate(viewMode === 'calendario' ? addMonths(currentDate, 1) : addWeeks(currentDate, 1))
-  }
-  const goToToday = () => setCurrentDate(new Date())
+  }, [viewMode, currentDate])
+  const goToToday = useCallback(() => setCurrentDate(new Date()), [])
 
-  const handleOpen = (item: ContentItem) => {
+  const handleOpen = useCallback((item: ContentItem) => {
     const current = libraryItems.find(c => c.id === item.id) || item
     setOpenItem(current)
     setModalOpen(true)
-  }
+  }, [libraryItems])
 
   const handleRegenerate = async (item: ContentItem) => {
     setIsLoading(true, 'Regenerando contenido...')
@@ -106,22 +114,22 @@ export function CalendarioView() {
     }
   }
 
-  const getTipoColor = (tipo: string) => {
+  const getTipoColor = useCallback((tipo: string) => {
     switch (tipo) {
       case 'reel': return 'bg-[#C1DBE8] text-[#2A1520]'
       case 'carrusel': return 'bg-[#FFF1B5] text-[#591427]'
       case 'story': return 'bg-[#591427] text-white'
       default: return 'bg-gray-400 text-white'
     }
-  }
-  const getTipoIcon = (tipo: string) => {
+  }, [])
+  const getTipoIcon = useCallback((tipo: string) => {
     switch (tipo) {
       case 'reel': return <Film className="w-3 h-3" />
       case 'carrusel': return <LayoutGrid className="w-3 h-3" />
       case 'story': return <MessageSquare className="w-3 h-3" />
       default: return null
     }
-  }
+  }, [])
 
   const weekDayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
   const today = new Date()

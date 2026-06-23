@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { BravyBot } from '@/components/brave/bravy-bot'
 import { useAppStore, ContentItem } from '@/lib/store'
 import { Button } from '@/components/ui/button'
@@ -26,7 +26,9 @@ export function Biblioteca() {
   const [openItem, setOpenItem] = useState<ContentItem | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  const filteredItems = libraryItems.filter((item) => {
+  // Memoizamos el filtrado para no recalcular en cada render
+  // (por ejemplo, cuando se abre/cierra un modal sin cambiar los filtros).
+  const filteredItems = useMemo(() => libraryItems.filter((item) => {
     if (filterType !== 'todos' && item.tipo !== filterType) return false
     if (filterObjetivo && item.objetivo !== filterObjetivo) return false
     if (searchQuery) {
@@ -38,38 +40,39 @@ export function Biblioteca() {
       )
     }
     return true
-  })
+  }), [libraryItems, filterType, filterObjetivo, searchQuery])
 
-  const getTipoIcon = (tipo: string) => {
+  // Helpers estables: se recrean solo si cambian las dependencias (nunca en este caso).
+  const getTipoIcon = useCallback((tipo: string) => {
     switch (tipo) {
       case 'reel': return <Film className="w-4 h-4" />
       case 'carrusel': return <LayoutGrid className="w-4 h-4" />
       case 'story': return <MessageSquare className="w-4 h-4" />
       default: return <FileText className="w-4 h-4" />
     }
-  }
+  }, [])
 
-  const getTipoColor = (tipo: string) => {
+  const getTipoColor = useCallback((tipo: string) => {
     switch (tipo) {
       case 'reel': return 'bg-[#C1DBE8]'
       case 'carrusel': return 'bg-[#FFF1B5]'
       case 'story': return 'bg-[#591427]'
       default: return 'bg-gray-500'
     }
-  }
+  }, [])
 
-  const getEstadoBadge = (estado: string) => {
+  const getEstadoBadge = useCallback((estado: string) => {
     switch (estado) {
       case 'borrador': return <Badge variant="secondary" className="bg-[#F5F0EB] text-[#2A1520]">Borrador</Badge>
       case 'aprobado': return <Badge className="bg-[#FFF1B5] text-white">Aprobado</Badge>
       case 'programado': return <Badge className="bg-green-600 text-white">Programado</Badge>
       default: return <Badge variant="secondary">Borrador</Badge>
     }
-  }
+  }, [])
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text)
-  }
+  }, [])
 
   if (libraryItems.length === 0) {
     return (

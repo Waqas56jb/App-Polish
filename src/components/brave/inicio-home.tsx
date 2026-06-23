@@ -120,6 +120,7 @@ export function InicioHome() {
   const savedHooksCount = savedHooks.length
 
   const welcomePhrase = useMemo(() => getRandomBravyPhrase('inicio'), [])
+  const motivationalTip = useMemo(() => getRandomMotivationalTip(), [])
   const currentTip = TIPS_ROTATION[tipIndex]
 
   return (
@@ -297,7 +298,7 @@ export function InicioHome() {
       >
         <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#C1DBE8]/20 via-[#FFF1B5]/20 to-[#BDB2FF]/20 rounded-full px-5 py-2.5 border border-[#C1DBE8]/20">
           <BravyBot size={22} expression="motivate" animate={false} />
-          <p className="text-xs font-medium text-foreground/70">{getRandomMotivationalTip()}</p>
+          <p className="text-xs font-medium text-foreground/70">{motivationalTip}</p>
         </div>
       </motion.div>
     </div>

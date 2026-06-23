@@ -31,7 +31,6 @@ export async function POST(req: NextRequest) {
     switch (type) {
       case 'plan': {
         const { tipo, servicios, frecuencia, objetivo, tipoContenido, fechaInicio } = context
-        const objetivoDesc = getObjetivoDescription(objetivo)
         const totalSemanas = tipo === 'semanal' ? 1 : 4
         const totalItems = frecuencia * totalSemanas
         const today = fechaInicio || new Date().toISOString().split('T')[0]
@@ -683,44 +682,8 @@ Responde SOLO con un JSON:
       stream: false,
     })
 
-    let content = ''
-    if (typeof response === 'string') {
-      content = response
-    } else if (response?.choices?.[0]?.message?.content) {
-      content = response.choices[0].message.content
-    } else if (response?.content) {
-      content = response.content
-    } else {
-      content = JSON.stringify(response)
-    }
-
-    // Try to extract JSON from the response
-    let parsed: any = null
-    try {
-      // First try direct parse
-      parsed = JSON.parse(content)
-    } catch {
-      // Detect top-level structure to prefer the right regex
-      const trimmed = content.trim()
-      let jsonMatch: string | null = null
-      if (trimmed.startsWith('{')) {
-        jsonMatch = (content.match(/\{[\s\S]*\}/) || [])[0] || null
-      } else if (trimmed.startsWith('[')) {
-        jsonMatch = (content.match(/\[[\s\S]*\]/) || [])[0] || null
-      } else {
-        // Fallback: try object first (more informative), then array
-        jsonMatch = (content.match(/\{[\s\S]*\}/) || content.match(/\[[\s\S]*\]/) || [])[0] || null
-      }
-      if (jsonMatch) {
-        try {
-          parsed = JSON.parse(jsonMatch)
-        } catch {
-          parsed = { raw: content }
-        }
-      } else {
-        parsed = { raw: content }
-      }
-    }
+    const content = extractContent(response)
+    const parsed = parseJsonFromContent(content)
 
     return NextResponse.json({ result: parsed })
   } catch (error: any) {
@@ -729,6 +692,38 @@ Responde SOLO con un JSON:
       { error: 'Error generando contenido', details: error.message },
       { status: 500 }
     )
+  }
+}
+
+// ─── Helpers extraídos para claridad y reutilización ─────────
+function extractContent(response: any): string {
+  if (typeof response === 'string') return response
+  if (response?.choices?.[0]?.message?.content) return response.choices[0].message.content
+  if (response?.content) return response.content
+  return JSON.stringify(response)
+}
+
+function parseJsonFromContent(content: string): any {
+  try {
+    return JSON.parse(content)
+  } catch {
+    const trimmed = content.trim()
+    let jsonMatch: string | null = null
+    if (trimmed.startsWith('{')) {
+      jsonMatch = (content.match(/\{[\s\S]*\}/) || [])[0] || null
+    } else if (trimmed.startsWith('[')) {
+      jsonMatch = (content.match(/\[[\s\S]*\]/) || [])[0] || null
+    } else {
+      jsonMatch = (content.match(/\{[\s\S]*\}/) || content.match(/\[[\s\S]*\]/) || [])[0] || null
+    }
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch)
+      } catch {
+        return { raw: content }
+      }
+    }
+    return { raw: content }
   }
 }
 

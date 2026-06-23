@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { memo } from 'react'
 
 interface BravyBotProps {
   size?: number
@@ -12,7 +13,9 @@ interface BravyBotProps {
 
 // ─── Main BravyBot ───────────────────────────────────────────
 // Style: white minimalist 3D robot, black visor face, blue glowing eyes, antenna, floating
-export function BravyBot({
+// Memoizamos: BravyBot se renderiza mucho (loading, sidebar, headers, floating assistant).
+// Con memo evitamos re-renders cuando el parent cambia estado no relacionado.
+export const BravyBot = memo(function BravyBot({
   size = 64,
   expression = 'happy',
   className = '',
@@ -424,7 +427,7 @@ export function BravyBot({
       </svg>
     </div>
   )
-}
+})
 
 // ─── Mini version for sidebar ────────────────────────────────
 export function BravyBotMini({ className = '' }: { className?: string }) {

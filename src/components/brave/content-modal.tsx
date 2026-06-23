@@ -168,6 +168,9 @@ export function ContentCardModal({ item, isOpen, onClose, onDelete, showConvertB
     onClose()
   }
 
+  // Nota: estos helpers se definen después del early-return `if (!item)`.
+  // No los envolvemos en useCallback para no violar rules-of-hooks.
+  // Solo se recrean cuando el modal está abierto, lo cual es aceptable.
   const getTipoColor = (tipo: string) => {
     switch (tipo) {
       case 'reel': return 'bg-[#C1DBE8]'

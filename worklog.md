@@ -42,3 +42,34 @@ Stage Summary:
 - Calendar handles overlapping plans with replace/add-next-weeks dialog
 - Mobile-responsive throughout
 
+
+---
+Task ID: 2
+Agent: main
+Task: Optimizar app BRAVE STUDIO — enfoque en rendimiento + código, riesgo equilibrado
+
+Work Log:
+- Instaladas dependencias (827 paquetes) y generado Prisma client
+- Medido baseline: bundle 1.5MB, chunk principal 376KB
+- Convertidos 9 módulos a next/dynamic lazy-loading en page.tsx (InicioHome, MiMarca, Planificar, Crear, Biblioteca, CalendarioView, StoriesBrave, AsistenteBrave, BancoGanchos)
+- Añadido ModuleSkeleton para estado de carga consistente
+- Memoizado módulo activo con useMemo antes del early-return (respeta rules-of-hooks)
+- BravyBot envuelto en React.memo (se renderiza en loading, sidebar, headers, floating assistant)
+- InicioHome: memoizado getRandomMotivationalTip con useMemo (antes se ejecutaba en cada render)
+- AppSidebar: eliminada variable `activeColor` no usada
+- Biblioteca: useMemo para filteredItems, useCallback para getTipoIcon/getTipoColor/getEstadoBadge/copyToClipboard
+- Calendario: useMemo para scheduledItems/calendarDays/sortedList, useCallback para handlers
+- ContentModal: helpers comentados correctamente (no useCallback por early-return)
+- API route /api/ai/route.ts: extraídos helpers extractContent() y parseJsonFromContent() para claridad
+- API route: eliminada variable `objetivoDesc` no usada en case 'plan'
+- Corregidos 5 errores de lint (rules-of-hooks en page.tsx y content-modal.tsx)
+- Eliminada carpeta extracted/ que duplicaba archivos y causaba conflicto de lint
+- Verificado: lint limpio (0 errores), build exitoso (7.9s), dev server responde 200 OK
+
+Stage Summary:
+- Chunk principal: 376KB → 220KB (-41%), bundle se divide en chunks por módulo
+- App carga solo el módulo activo; los demás se cargan bajo demanda
+- Re-renders reducidos mediante memoización estratégica en componentes de listas (Biblioteca, Calendario) y helpers estables
+- API route más legible: 60 líneas de lógica inline → 2 funciones helper reutilizables
+- Sin cambios de comportamiento — solo optimizaciones seguras que respetan la funcionalidad existente
+- Archivos modificados: src/app/page.tsx, src/components/brave/bravy-bot.tsx, src/components/brave/inicio-home.tsx, src/components/brave/app-sidebar.tsx, src/components/brave/biblioteca.tsx, src/components/brave/calendario.tsx, src/components/brave/content-modal.tsx, src/app/api/ai/route.ts
