@@ -5,7 +5,7 @@ import { BravyBotMini, getRandomBravyPhrase } from './bravy-bot'
 import {
   Sparkles, Calendar, PenTool, BookOpen, Crown,
   Lightbulb, Instagram, Bot, LayoutGrid, Home,
-  MoreHorizontal, X, PanelLeftClose, PanelLeftOpen,
+  MoreHorizontal, X, PanelLeftClose, PanelLeftOpen, Menu,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useMemo, useEffect } from 'react'
@@ -165,16 +165,24 @@ export function AppSidebar() {
           MÓVIL TOP BAR — logo + botón "Dame una idea"
       ════════════════════════════════════════════════════════════ */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-30 brave-glass border-b border-[rgba(42,42,40,0.06)] safe-area-pt">
-        <div className="flex items-center justify-between px-4 py-2.5">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {/* Hamburguesa → abre el panel lateral izquierdo */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="shrink-0 p-2 -ml-1 rounded-xl text-[#2A2A28] hover:bg-[#EEF4EE] transition-colors"
+              aria-label="Abrir menú"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
             <BravyBotMini />
-            <h1 className="font-serif text-xl font-light text-[#2A2A28] leading-none">
+            <h1 className="font-serif text-xl font-light text-[#2A2A28] leading-none truncate">
               Bräve<span className="text-[#8BAF8D] italic"> Studio</span>
             </h1>
           </div>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('openDameUnaIdea'))}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#E8D5B0] to-[#C9A96E] text-[#2A2A28] font-semibold text-[11px] tracking-[0.04em] uppercase shadow-md"
+            className="shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#E8D5B0] to-[#C9A96E] text-[#2A2A28] font-semibold text-[11px] tracking-[0.04em] uppercase shadow-md"
           >
             <Lightbulb className="w-3.5 h-3.5" />
             Idea
@@ -236,62 +244,74 @@ export function AppSidebar() {
               onClick={() => setMobileMenuOpen(false)}
               className="md:hidden fixed inset-0 bg-[#2A2A28]/40 backdrop-blur-sm z-40"
             />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FAF7F2] rounded-t-3xl shadow-2xl pb-4 safe-area-pb"
+            {/* Panel lateral izquierdo (drawer) */}
+            <motion.aside
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 34 }}
+              className="md:hidden fixed top-0 bottom-0 left-0 z-50 w-[82%] max-w-[300px] brave-gradient shadow-2xl flex flex-col safe-area-pt safe-area-pb"
             >
-              <div className="flex justify-center pt-2 pb-1">
-                <div className="w-10 h-1 rounded-full bg-[#C8DEC9]" />
-              </div>
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(42,42,40,0.08)]">
-                <h3 className="font-serif text-xl font-light text-[#2A2A28]">Todos los módulos</h3>
+              {/* Header */}
+              <div className="px-4 py-5 border-b border-white/10 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <BravyBotMini />
+                  <div className="min-w-0">
+                    <h3 className="font-serif text-2xl font-light text-[#FAF7F2] leading-none">
+                      Bräve<span className="italic text-[#8BAF8D]"> Studio</span>
+                    </h3>
+                    <p className="text-[8px] text-[#C8DEC9] font-medium tracking-[0.22em] uppercase mt-1">
+                      Tu contenido, sin pensar
+                    </p>
+                  </div>
+                </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 rounded-full hover:bg-[#EEF4EE] transition-colors"
+                  className="shrink-0 p-1.5 rounded-lg text-[#FAF7F2]/60 hover:text-[#FAF7F2] hover:bg-white/10 transition-colors"
                   aria-label="Cerrar"
                 >
-                  <X className="w-4 h-4 text-[#5C5C58]" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-3 p-5">
+
+              {/* Nav */}
+              <nav className="flex-1 overflow-y-auto no-scrollbar px-2.5 py-4 space-y-1">
+                <p className="brave-eyebrow px-2.5 mb-2 text-[0.62rem]">Módulos</p>
                 {modules.map(mod => {
                   const isActive = activeModule === mod.key
                   return (
                     <button
                       key={mod.key}
                       onClick={() => handleModuleClick(mod.key)}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all ${
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-sm font-medium transition-all duration-200 brave-nav-item ${
                         isActive
-                          ? 'bg-[#8BAF8D] text-white shadow-md'
-                          : 'bg-white text-[#2A2A28] border border-[rgba(42,42,40,0.08)] hover:bg-[#EEF4EE]'
+                          ? 'active bg-white/12 text-[#FAF7F2] shadow-lg shadow-black/20'
+                          : 'text-[#FAF7F2]/60 hover:bg-white/8 hover:text-[#FAF7F2]'
                       }`}
                     >
-                      <span className="shrink-0" style={{ color: isActive ? 'white' : mod.color }}>
+                      <span className="shrink-0" style={{ color: isActive ? mod.color : undefined }}>
                         {mod.icon}
                       </span>
-                      <span className={`text-[11px] font-medium text-center leading-tight ${isActive ? 'text-white' : ''}`}>
-                        {mod.label}
-                      </span>
+                      <span className="truncate">{mod.label}</span>
                     </button>
                   )
                 })}
-              </div>
-              <div className="px-5 pb-2">
+              </nav>
+
+              {/* Dame una idea */}
+              <div className="px-2.5 pb-4 pt-1 border-t border-white/10">
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false)
                     window.dispatchEvent(new CustomEvent('openDameUnaIdea'))
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-gradient-to-r from-[#E8D5B0] to-[#C9A96E] text-[#2A2A28] font-semibold text-sm tracking-[0.04em] uppercase shadow-md"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-gradient-to-r from-[#E8D5B0] to-[#C9A96E] text-[#2A2A28] font-semibold text-[12px] tracking-[0.04em] uppercase shadow-lg"
                 >
                   <Lightbulb className="w-4 h-4" />
                   Dame una idea
                 </button>
               </div>
-            </motion.div>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
