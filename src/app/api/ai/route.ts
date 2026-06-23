@@ -732,17 +732,25 @@ function extractContent(response: any): string {
 }
 
 function parseJsonFromContent(content: string): any {
+  // Limpiar fences de markdown ```json ... ``` o ``` ... ```
+  let cleaned = content.trim()
+  // Quitar fence inicial ```json o ```
+  cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '')
+  // Quitar fence final ```
+  cleaned = cleaned.replace(/\n?```\s*$/i, '')
+  cleaned = cleaned.trim()
+
   try {
-    return JSON.parse(content)
+    return JSON.parse(cleaned)
   } catch {
-    const trimmed = content.trim()
+    const trimmed = cleaned
     let jsonMatch: string | null = null
     if (trimmed.startsWith('{')) {
-      jsonMatch = (content.match(/\{[\s\S]*\}/) || [])[0] || null
+      jsonMatch = (cleaned.match(/\{[\s\S]*\}/) || [])[0] || null
     } else if (trimmed.startsWith('[')) {
-      jsonMatch = (content.match(/\[[\s\S]*\]/) || [])[0] || null
+      jsonMatch = (cleaned.match(/\[[\s\S]*\]/) || [])[0] || null
     } else {
-      jsonMatch = (content.match(/\{[\s\S]*\}/) || content.match(/\[[\s\S]*\]/) || [])[0] || null
+      jsonMatch = (cleaned.match(/\{[\s\S]*\}/) || cleaned.match(/\[[\s\S]*\]/) || [])[0] || null
     }
     if (jsonMatch) {
       try {

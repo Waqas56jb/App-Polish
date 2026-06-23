@@ -4,11 +4,9 @@ import { useState, useCallback } from 'react'
 import { useAppStore, ContentItem, generateId } from '@/lib/store'
 import { fetchJSON } from '@/lib/fetch-safe'
 import { BravyBot } from './bravy-bot'
-import { ContentCardModal } from './content-modal'
 import {
   Calendar, Sparkles, Loader2, BookOpen, CalendarPlus,
   RefreshCw, Film, LayoutGrid, ChevronDown, ChevronUp,
-  ArrowRight,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { format, addDays, nextMonday } from 'date-fns'
@@ -20,10 +18,10 @@ type PlanView = 'config' | 'resultado'
 
 // ============================================================
 // PLANIFICAR — Versión simplificada
-// 1. Configura duración + frecuencia + objetivo (3 clics)
-// 2. Ve las mejores ideas propuestas
-// 3. Regenera las que no le gusten (individualmente)
-// 4. Confirma: guarda en Biblioteca o mueve al Calendario
+// 1. Configura: duración + frecuencia (hasta 5) + objetivo + temáticas
+// 2. Ve las ideas propuestas (solo títulos + info esencial)
+// 3. Acciones globales: regenerar todas / guardar en biblioteca / mover al calendario
+// 4. Opcional: desplegar cada idea para ver detalle
 // ============================================================
 
 const OBJETIVOS = [
@@ -36,6 +34,18 @@ const FRECUENCIAS = [
   { value: 2, label: '2', desc: 'Suave' },
   { value: 3, label: '3', desc: 'Recomendado' },
   { value: 4, label: '4', desc: 'Intenso' },
+  { value: 5, label: '5', desc: 'Muy intenso' },
+]
+
+// Temáticas comunes en salones de belleza (además de los servicios del perfil)
+const TEMATICAS_BASE = [
+  'Balayage', 'Rubios', 'Coloración', 'Cortes', 'Peinado',
+  'Alisados', 'Permanente', 'Tratamientos', 'Keratina',
+  'Extensiones', 'Canas', 'Decoloración', 'Reflejos',
+  'Matizadores', 'Cepillado', 'Recogidos',
+  'Mitos del sector', 'Errores comunes', 'Tendencias',
+  'Cuidado del cabello', 'Productos profesionales',
+  'Antes y después', 'Casos reales', 'Día a día en el salón',
 ]
 
 export function Planificar() {
@@ -45,6 +55,13 @@ export function Planificar() {
   const [planTipo, setPlanTipo] = useState<PlanTipo>('semanal')
   const [frecuencia, setFrecuencia] = useState(3)
   const [objetivo, setObjetivo] = useState('autoridad')
+  const [tematicas, setTematicas] = useState<string[]>(
+    brandProfile?.serviciosPrioritarios?.length
+      ? brandProfile.serviciosPrioritarios.slice(0, 3)
+      : brandProfile?.servicios?.length
+        ? brandProfile.servicios.slice(0, 3)
+        : ['Balayage', 'Cortes', 'Tratamientos']
+  )
 
   // ─── Resultado ───
   const [view, setView] = useState<PlanView>('config')
@@ -67,8 +84,24 @@ export function Planificar() {
   const calendarioItems = libraryItems.filter(i => i.estado === 'programado')
   const hasCalendarioContent = calendarioItems.length > 0
 
+  // Temáticas disponibles = combinación de servicios del perfil + temáticas base, sin duplicados
+  const tematicasDisponibles = Array.from(new Set([
+    ...(brandProfile?.servicios || []),
+    ...TEMATICAS_BASE,
+  ]))
+
+  const toggleTematica = (t: string) => {
+    setTematicas(prev =>
+      prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
+    )
+  }
+
   // ─── Generar plan ───
   const generatePlan = useCallback(async () => {
+    if (tematicas.length === 0) {
+      toast.error('Selecciona al menos una temática')
+      return
+    }
     setGenerando(true)
     setPlanError('')
     setIsLoading(true, 'Creando tu plan con las mejores ideas...')
@@ -81,15 +114,15 @@ export function Planificar() {
           brandProfile,
           context: {
             tipo: planTipo,
-            servicios: brandProfile?.serviciosPrioritarios?.length ? brandProfile.serviciosPrioritarios : brandProfile?.servicios,
+            servicios: tematicas,
             frecuencia,
             objetivo,
             fechaInicio,
           },
         }),
-        timeoutMs: 90000,
+        timeoutMs: 120000,
       })
-      if (error) { setPlanError(error); return }
+      if (error) { setPlanError(error); toast.error(error); return }
       let raw = data?.result
       if (typeof raw === 'string') {
         try { raw = JSON.parse(raw) } catch { raw = [] }
@@ -117,18 +150,21 @@ export function Planificar() {
         }))
         setItems(parsed)
         setView('resultado')
-        toast.success(`¡Plan con ${parsed.length} ideas listo!`)
+        setExpandedIdx(null)
+        toast.success(`¡${parsed.length} ideas listas!`)
       } else {
         setPlanError('No se pudo generar el plan. Intenta de nuevo.')
+        toast.error('No se pudo generar el plan')
       }
     } catch (e) {
       console.error('Plan generation error:', e)
       setPlanError('Error inesperado. Intenta de nuevo.')
+      toast.error('Error inesperado')
     } finally {
       setGenerando(false)
       setIsLoading(false)
     }
-  }, [planTipo, frecuencia, objetivo, brandProfile, setIsLoading])
+  }, [planTipo, frecuencia, objetivo, tematicas, brandProfile, setIsLoading])
 
   // ─── Regenerar idea individual ───
   const regenerateItem = async (index: number) => {
@@ -151,7 +187,7 @@ export function Planificar() {
         timeoutMs: 60000,
       })
       if (error) {
-        toast.error('No se pudo regenerar. Intenta otra vez.')
+        toast.error('No se pudo regenerar')
         return
       }
       let raw = data?.result
@@ -159,7 +195,6 @@ export function Planificar() {
         try { raw = JSON.parse(raw) } catch { raw = [] }
       }
       if (Array.isArray(raw) && raw.length > 0) {
-        // Tomar la primera idea nueva
         const nueva = raw[0]
         setItems(prev => prev.map((it, i) => i === index ? {
           ...it,
@@ -171,14 +206,14 @@ export function Planificar() {
       }
     } catch (e) {
       console.error('Regenerate error:', e)
-      toast.error('No se pudo regenerar.')
+      toast.error('No se pudo regenerar')
     } finally {
       setRegenerandoIdx(null)
       setIsLoading(false)
     }
   }
 
-  // ─── Guardar en Biblioteca (sin calendario) ───
+  // ─── Guardar en Biblioteca ───
   const saveToBiblioteca = () => {
     addLibraryItems(items.map(item => ({ ...item, id: generateId(), estado: 'aprobado' as const })))
     toast.success(`${items.length} ideas guardadas en tu Biblioteca`)
@@ -251,18 +286,18 @@ export function Planificar() {
       <div className="max-w-md mx-auto">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           {/* Header */}
-          <div className="text-center mb-6">
-            <div className="brave-float inline-block mb-3">
-              <BravyBot size={56} expression="excited" animate />
+          <div className="text-center mb-5">
+            <div className="brave-float inline-block mb-2">
+              <BravyBot size={48} expression="excited" animate />
             </div>
             <h2 className="text-2xl font-bold text-foreground">Planificar contenido</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              En 3 clics te doy las mejores ideas para tu salón
+              En 4 clics te doy las mejores ideas para tu salón
             </p>
           </div>
 
-          {/* ─── Duración ─── */}
-          <div className="mb-5">
+          {/* ─── 1. Duración ─── */}
+          <div className="mb-4">
             <label className="text-sm font-semibold text-foreground mb-2 block">
               1. ¿Cuánto tiempo quieres planificar?
             </label>
@@ -274,7 +309,7 @@ export function Planificar() {
                 <button
                   key={opt.value}
                   onClick={() => setPlanTipo(opt.value)}
-                  className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                  className={`p-3.5 rounded-2xl border-2 text-left transition-all ${
                     planTipo === opt.value
                       ? 'border-[#591427] bg-[#591427]/5 shadow-md'
                       : 'border-border bg-card hover:border-[#591427]/30'
@@ -289,33 +324,38 @@ export function Planificar() {
             </div>
           </div>
 
-          {/* ─── Frecuencia ─── */}
-          <div className="mb-5">
+          {/* ─── 2. Frecuencia ─── */}
+          <div className="mb-4">
             <label className="text-sm font-semibold text-foreground mb-2 block">
               2. ¿Cuántas publicaciones por semana?
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {FRECUENCIAS.map(f => (
                 <button
                   key={f.value}
                   onClick={() => setFrecuencia(f.value)}
-                  className={`p-3 rounded-2xl border-2 text-center transition-all ${
+                  className={`relative p-2.5 rounded-2xl border-2 text-center transition-all ${
                     frecuencia === f.value
                       ? 'border-[#591427] bg-[#591427]/5 shadow-md'
                       : 'border-border bg-card hover:border-[#591427]/30'
                   }`}
                 >
+                  {f.desc === 'Recomendado' && (
+                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-[#FFF1B5] text-[#591427] text-[8px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                      TOP
+                    </span>
+                  )}
                   <p className={`font-bold text-lg ${frecuencia === f.value ? 'text-[#591427]' : 'text-foreground'}`}>
                     {f.label}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">{f.desc}</p>
+                  <p className="text-[9px] text-muted-foreground">{f.desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* ─── Objetivo ─── */}
-          <div className="mb-6">
+          {/* ─── 3. Objetivo ─── */}
+          <div className="mb-4">
             <label className="text-sm font-semibold text-foreground mb-2 block">
               3. ¿Qué quieres conseguir?
             </label>
@@ -324,7 +364,7 @@ export function Planificar() {
                 <button
                   key={o.value}
                   onClick={() => setObjetivo(o.value)}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all ${
+                  className={`w-full flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all ${
                     objetivo === o.value
                       ? 'border-[#591427] bg-[#591427]/5 shadow-md'
                       : 'border-border bg-card hover:border-[#591427]/30'
@@ -342,10 +382,43 @@ export function Planificar() {
             </div>
           </div>
 
+          {/* ─── 4. Temáticas de servicios ─── */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold text-foreground">
+                4. ¿De qué temáticas quieres hablar?
+              </label>
+              <span className="text-xs text-muted-foreground">
+                {tematicas.length} seleccionada{tematicas.length === 1 ? '' : 's'}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto p-1">
+              {tematicasDisponibles.map(t => {
+                const sel = tematicas.includes(t)
+                return (
+                  <button
+                    key={t}
+                    onClick={() => toggleTematica(t)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      sel
+                        ? 'brave-gradient text-white shadow-sm'
+                        : 'bg-white border border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Selecciona los servicios o temas sobre los que quieres crear contenido
+            </p>
+          </div>
+
           {/* ─── Botón principal ─── */}
           <button
             onClick={generatePlan}
-            disabled={generando || !brandProfile}
+            disabled={generando || tematicas.length === 0}
             className="w-full py-4 rounded-2xl brave-gradient text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-lg hover:opacity-90 transition-all disabled:opacity-50"
           >
             {generando ? (
@@ -359,39 +432,27 @@ export function Planificar() {
           {planError && (
             <p className="text-xs text-center text-red-500 mt-3">{planError}</p>
           )}
-
-          {!brandProfile && (
-            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-center">
-              <p className="text-xs text-amber-800">
-                Configura primero tu marca para personalizar el plan
-              </p>
-              <button
-                onClick={() => setActiveModule('marca')}
-                className="text-xs text-amber-900 font-semibold underline mt-1"
-              >
-                Ir a Mi Marca →
-              </button>
-            </div>
-          )}
         </motion.div>
       </div>
     )
   }
 
   // ════════════════════════════════════════════════════════════
-  // VISTA DE RESULTADO
+  // VISTA DE RESULTADO — Simplificada
+  // Lista simple de ideas, cada una con acciones inline.
+  // Expandir opcional para ver descripción.
   // ════════════════════════════════════════════════════════════
   return (
     <div className="max-w-2xl mx-auto">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-bold text-foreground">
               Tu plan {planTipo === 'semanal' ? 'semanal' : 'mensual'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {items.length} ideas · revisa y regenera las que quieras
+              {items.length} ideas · revisa y elige qué hacer
             </p>
           </div>
           <button
@@ -403,31 +464,29 @@ export function Planificar() {
           </button>
         </div>
 
-        {/* ─── Lista de tarjetas ─── */}
-        <div className="space-y-2.5">
+        {/* ─── Lista simple de ideas ─── */}
+        <div className="space-y-2">
           {items.map((item, idx) => {
             const isExpanded = expandedIdx === idx
             return (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.04, 0.3) }}
-                className="brave-glass rounded-2xl border border-border/50 overflow-hidden"
+                transition={{ delay: Math.min(idx * 0.03, 0.3) }}
+                className="brave-glass rounded-2xl border border-border/50"
               >
-                {/* Header clickable */}
-                <button
-                  onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-                  className="w-full text-left p-4 flex items-start gap-3"
-                >
+                {/* Fila principal clicable */}
+                <div className="p-3 flex items-center gap-3">
                   {/* Tipo badge */}
-                  <span className={`shrink-0 mt-0.5 ${getTipoColor(item.tipo)} rounded-lg px-2 py-1 text-[10px] font-bold flex items-center gap-1`}>
+                  <span className={`shrink-0 ${getTipoColor(item.tipo)} rounded-lg px-2 py-1 text-[10px] font-bold flex items-center gap-1`}>
                     {getTipoIcon(item.tipo)}
                     {getTipoLabel(item.tipo)}
                   </span>
 
+                  {/* Info principal */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
                       {item.fecha && (
                         <span className="text-[10px] font-semibold text-[#591427] bg-[#FFF1B5]/60 px-2 py-0.5 rounded-full">
                           {item.diaSemana} {formatDate(item.fecha)}
@@ -437,45 +496,49 @@ export function Planificar() {
                         <span className="text-[10px] text-muted-foreground">{item.servicio}</span>
                       )}
                     </div>
-                    <h3 className="font-semibold text-sm text-foreground leading-snug">{item.titulo}</h3>
-                    {item.descripcion && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.descripcion}</p>
-                    )}
+                    <h3 className="font-semibold text-sm text-foreground leading-snug line-clamp-1">
+                      {item.titulo}
+                    </h3>
                   </div>
 
-                  <div className="shrink-0 mt-1">
-                    {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                  </div>
-                </button>
+                  {/* Botón expandir */}
+                  <button
+                    onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+                    className="shrink-0 p-1.5 text-muted-foreground hover:text-foreground"
+                    aria-label="Ver detalle"
+                  >
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                </div>
 
-                {/* Expanded: acciones */}
+                {/* Descripción (expandible) */}
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
+                      transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-4 pb-4 space-y-2 border-t border-border/30 pt-3">
-                        <p className="text-xs text-foreground/70 leading-relaxed">
-                          {item.descripcion}
-                        </p>
+                      <div className="px-3 pb-3 space-y-3 border-t border-border/30 pt-3">
+                        {item.descripcion && (
+                          <p className="text-xs text-foreground/70 leading-relaxed">{item.descripcion}</p>
+                        )}
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={(e) => { e.stopPropagation(); regenerateItem(idx) }}
+                            onClick={() => regenerateItem(idx)}
                             disabled={regenerandoIdx === idx}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-border hover:bg-muted/50 transition-colors disabled:opacity-50"
                           >
                             {regenerandoIdx === idx ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                            Regenerar idea
+                            Regenerar
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); setOpenItem(item); setModalOpen(true) }}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
+                            onClick={() => { setOpenItem(item); setModalOpen(true) }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-[#C1DBE8]/50 text-[#591427] hover:bg-[#C1DBE8]/10 transition-colors"
                           >
-                            Ver ficha completa
+                            Ver ficha
                           </button>
                         </div>
                       </div>
@@ -488,7 +551,7 @@ export function Planificar() {
         </div>
 
         {/* ─── CTA final fijo abajo ─── */}
-        <div className="mt-6 grid grid-cols-2 gap-3 sticky bottom-4 z-10">
+        <div className="mt-5 grid grid-cols-2 gap-2 sticky bottom-4 z-10">
           <button
             onClick={saveToBiblioteca}
             className="py-3.5 rounded-2xl bg-white border-2 border-[#C1DBE8] text-[#591427] font-bold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-[#C1DBE8]/10 transition-all"
@@ -507,7 +570,7 @@ export function Planificar() {
 
         {/* ─── Tip ─── */}
         <p className="text-xs text-center text-muted-foreground mt-3">
-          Si una idea no te convence, ábrela y pulsa "Regenerar idea"
+          Toca cualquier idea para ver más opciones. Para regenerar todas, pulsa "Empezar de nuevo".
         </p>
 
         {/* ─── Diálogo de conflicto de calendario ─── */}
@@ -571,12 +634,63 @@ export function Planificar() {
         </AnimatePresence>
 
         {/* ─── Modal de ficha completa ─── */}
-        <ContentCardModal
-          item={openItem}
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          showConvertButton={false}
-        />
+        {modalOpen && openItem && (
+          <SimpleItemModal
+            item={openItem}
+            onClose={() => { setModalOpen(false); setOpenItem(null) }}
+          />
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── Modal simple para ver ficha rápida ──────────────────────
+function SimpleItemModal({ item, onClose }: { item: ContentItem; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        onClick={e => e.stopPropagation()}
+        className="bg-background rounded-3xl shadow-2xl max-w-md w-full max-h-[85vh] overflow-y-auto"
+      >
+        <div className="brave-gradient p-5 text-white sticky top-0 z-10">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-white/70 uppercase tracking-wide font-semibold mb-1">
+                {item.diaSemana} {item.fecha && `· ${item.fecha}`}
+              </p>
+              <h3 className="text-lg font-bold leading-snug">{item.titulo}</h3>
+            </div>
+            <button onClick={onClose} className="text-white/70 hover:text-white text-2xl leading-none shrink-0">×</button>
+          </div>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="bg-muted/50 px-3 py-1 rounded-full">
+              <strong className="text-foreground">{item.servicio || 'General'}</strong>
+            </span>
+            <span className="bg-muted/50 px-3 py-1 rounded-full capitalize">{item.objetivo}</span>
+            <span className="bg-muted/50 px-3 py-1 rounded-full">{item.tipo}</span>
+          </div>
+          {item.descripcion && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Descripción</p>
+              <p className="text-sm text-foreground leading-relaxed">{item.descripcion}</p>
+            </div>
+          )}
+          {!item.guion && !item.copy && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
+              <p className="text-xs text-amber-800">
+                Esta es una propuesta de idea. Para generar guion completo, guárdala en tu Biblioteca y luego ábrela para regenerar.
+              </p>
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>
   )

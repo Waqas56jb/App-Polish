@@ -131,3 +131,39 @@ Stage Summary:
 - Stories: sin hashtags, siempre con CTA en el último
 - Biblioteca: cada slide y cada story copiable individualmente además de "copiar todo"
 - Sin cambios en el store o base de datos - compatible con datos existentes
+
+---
+Task ID: 4
+Agent: main
+Task: Fix error en planificación + añadir 5 publicaciones/semana + temáticas de servicios + simplificar vista
+
+Work Log:
+- Bug fix: API devolvía JSON envuelto en fences ```json ... ``` causando parseo como {raw: ...} y error en planificación
+- Solución: parseJsonFromContent() ahora limpia fences de markdown antes del parseo
+- Probado: curl al endpoint devuelve JSON limpio, parseable
+- Añadida frecuencia 5 (5 publicaciones/semana, "Muy intenso")
+- FRECUENCIAS ahora: 2, 3, 4, 5 (antes 2, 3, 4)
+- Badge "TOP" en frecuencia 3 (recomendado) como indicador visual
+- Añadido selector de temáticas de servicios (paso 4 de la config):
+  - Combina servicios del perfil + 24 temáticas base (Balayage, Rubios, Mitos del sector, Errores comunes, etc.)
+  - Multi-selección con chips
+  - Contador "X seleccionadas"
+  - Inicializa con los servicios prioritarios del perfil (o 3 por defecto)
+  - El plan usa estas temáticas en lugar de solo servicios prioritarios
+- Vista de resultado simplificada:
+  - Lista simple de ideas (no tarjetas grandes expandibles por defecto)
+  - Cada idea muestra: tipo + fecha + servicio + título
+  - Botón expandir (chevron) para ver descripción y acciones (regenerar / ver ficha)
+  - CTA fijo abajo: Guardar en Biblioteca / Mover al Calendario
+  - Modal simple para ver ficha (sin sobrecargar con campos vacíos)
+- Timeout aumentado a 120s para planes mensuales (más contenidos a generar)
+- Validación: si no hay temáticas seleccionadas, no permite generar
+- Toast feedback para todos los estados (éxito, error, info)
+- Verificado: lint limpio, build exitoso, dev server 200 OK, API devuelve JSON parseable
+
+Stage Summary:
+- Error de planificación resuelto: el JSON ahora se parsea correctamente sin importar si la IA lo envuelve en markdown
+- Frecuencia configurable: 2, 3 (recomendado), 4, 5 publicaciones por semana
+- Temáticas personalizables: combinación de servicios del perfil + 24 temáticas base
+- Vista de resultado más ligera: solo lo esencial, expandir opcional para detalle
+- Flujo simplificado: genera ideas → revisa → elige guardar en biblioteca o mover a calendario
